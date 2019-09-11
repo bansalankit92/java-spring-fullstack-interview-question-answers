@@ -103,6 +103,35 @@ Contains almost all topics for Interview Preparation for a full stack developer 
 * [Code smells](https://gist.github.com/bansalankit92/6119c4f7fabe11b7a174a99f5a7bb376#code-smells)
 
 ### Design Patterns
+-- Design patterns are typical solutions to common problems in software design. Each pattern is like a blueprint that you can customize to solve a particular design problem in your code.
+
+* **Creational patterns** provide object creation mechanisms that increase flexibility and reuse of existing code.
+  * [Factory Method](https://refactoring.guru/design-patterns/factory-method)
+  * [Abstract Factory Method](https://refactoring.guru/design-patterns/abstract-factory)
+  * [Builder](https://refactoring.guru/design-patterns/builder)
+  * [Prototype](https://refactoring.guru/design-patterns/prototype)
+  * [Singleton](https://refactoring.guru/design-patterns/singleton)
+
+* **Structural patterns** explain how to assemble objects and classes into larger structures, while keeping the structures flexible and efficient.
+  * [Adapter](https://refactoring.guru/design-patterns/adapter)
+  * [Bridge](https://refactoring.guru/design-patterns/bridge)
+  * [Composite](https://refactoring.guru/design-patterns/composite)
+  * [Decorator](https://refactoring.guru/design-patterns/decorator)
+  * [Facade](https://refactoring.guru/design-patterns/facade)
+  * [Flyweight](https://refactoring.guru/design-patterns/flyweight)
+  * [Proxy](https://refactoring.guru/design-patterns/proxy)
+
+* **Behavioral patterns** take care of effective communication and the assignment of responsibilities between objects.
+  * [Chain Of Responsibility](https://refactoring.guru/design-patterns/chain-of-responsibility)
+  * [Command](https://refactoring.guru/design-patterns/command)
+  * [Iterator](https://refactoring.guru/design-patterns/iterator)
+  * [Mediator](https://refactoring.guru/design-patterns/mediator)
+  * [Memento](https://refactoring.guru/design-patterns/memento)
+  * [Observer](https://refactoring.guru/design-patterns/observer)
+  * [State](https://refactoring.guru/design-patterns/state)
+  * [Strategy](https://refactoring.guru/design-patterns/strategy)
+  * [Template Method](https://refactoring.guru/design-patterns/template-method)
+  * [Visitor](https://refactoring.guru/design-patterns/visitor)
 
 ### System Design
 
