@@ -1,5 +1,6 @@
 # Computer science foundation/ Interview preparation/ Junior to Senior Developer
 Contains almost all topics for Interview Preparation for a full stack developer or frontend engineer or backend developer or to become a junior to senior developer
+Consolidated place to prepare for tech interviews(Currently adding all topic's name and then will add the contents).
 
 **Table of contents**
 - [Computer science foundation/ Interview preparation/ Junior to Senior Developer](#computer-science-foundation--interview-preparation--junior-to-senior-developer)
@@ -134,6 +135,52 @@ Contains almost all topics for Interview Preparation for a full stack developer 
   * [Visitor](https://refactoring.guru/design-patterns/visitor)
 
 ### System Design
+
+**Design Baics**
+* Concurrency
+* CAP Theorem
+* Load Balancing
+* Consistent Hashing
+* Caching
+* Indexes
+* Proxies
+* SQL vs. NoSQL
+* Data Partitioning
+* Data Replication
+* Horizontal vs Vertical Scaling
+* Map Reduce
+* Long-Polling vs WebSockets vs Server-Sent Events
+
+**Design Problems**
+* Design Full Text Search
+* Design Lift/Elevator
+* Design Coffee Vending machine
+* Design Parking System
+* Design a URL Shortening service like TinyURL
+* Design Quartz Scheduler
+* Design a Web Crawler
+* Design Pastebin
+* Design Push notification.
+* Design Instagram
+* Design Dropbox/Google drive
+* Design Facebook Messenger
+* Design Twitter
+* Design Youtube or Netflix
+* Design Movie ticket system(BookMyShow)
+* Design Typeahead Suggestion
+* Design an API Rate Limiter
+* Design Event Management System
+* Design Twitter Search
+* Design Facebook’s Newsfeed
+* Design Yelp or Nearby Friends
+* Design Uber backend
+* Other famous platforms like Quora, UberEats, Reddit, Hackerrank
+
+Read:  
+https://gist.github.com/vasanthk/485d1c25737e8e72759f  
+http://highscalability.com/  
+Video:  
+https://www.youtube.com/watch?v=ZgdS0EUmn70  
 
 ## Frontend  
 ### Js
