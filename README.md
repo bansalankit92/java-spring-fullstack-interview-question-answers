@@ -185,9 +185,96 @@ https://www.youtube.com/watch?v=ZgdS0EUmn70
 ## Frontend  
 ### Js
 
+**Basics**
+* JavaScript Fundamentals
+* Code quality
+* Objects: (this, GC, new)
+* Data types and DS
+* Advanced working with functions (Closures, NFE, call/apply)
+* Object properties configuration
+* Prototypes, inheritance
+* Classes
+* Error handling
+* Promises, async/await, callbacks
+* Generators, advanced iteration
+* Modules
+
+**Advanced**
+* Browser: Document, Events, Interfaces
+* Frames and windows
+* Binary data, files
+* Network requests - websockets/http
+* Storage and IndexDB
+* Animation
+* Web components
+* Regular expressions
+* Web workers
+* Caching API
+* Accessibility
+
+**New features**
+* ES2015
+* ES6
+* ES7  
+
+[JavaScript Concepts JavaScript Professionals Must Know Well](http://javascriptissexy.com/16-javascript-concepts-you-must-know-well/)  
 ### HTML
+* What were some of the key goals and motivations for the HTML5 specification?
+* What are some of the key new features in HTML5?
+* What are “web workers”?
+* How do you indicate the character set being used by an HTML5 document? How does this differ from older HTML standards?
+* Discuss the differences between an HTML specification and a browser’s implementation thereof.
+* Briefly describe the correct usage of the following HTML5 semantic elements: `<header>, <article>, <section>, <footer>`.
+* Can a `<section>` contain `<article>` elements? Can an `<article>` contain `<section>` elements? Provide usage examples.
+* Can a web page contain multiple `<header>` elements? What about `<footer>` elements?
+* Describe the relationship between the `<header>` and `<h1>` tags in HTML5.
+* Give a simple implementation of the `<video>` tag to embed a video stored at http://www.example.com/amazing_video.mp4. Give the video a width of 640 pixels by 360 pixels. Provide the user with controls.
+* Write the code necessary to create a 300 pixel by 300 pixel `<canvas>`. Within it, paint a blue 100 pixel by 100 pixel square with the top-left corner of the square located 50 pixels from both the top and left edges of the canvas.
+* What is HTML5 Web Storage? Explain localStorage, sessionStorage, cookies.
+* What is the difference between span and div?
+* What is the Geolocation API in HTML5?
+* What’s one main result if you do not specify a doctype in an HTML page?
+* What’s the difference between the `<svg> and <canvas>` elements?
+* Describe the difference between `<script>, <script async> and <script defer>`.
+* Why is it generally a good idea to position CSS `<link>s between <head></head> and JS <script>`s just before `</body>`? Do you know any exceptions?
+* Why Meta tags are used in HTML?
 
 ### CSS
+* CSS Selectors
+* CSS Box Model
+* CSS Layout
+* Styling Text with CSS
+* Styling Boxes with CSS
+* CSS Units
+* CSS Colors and Gradients
+* CSS Transitions and Animations
+* CSS Transforms
+* CSS Pseudo-classes and Pseudo-elements
+* CSS At-Rules (e.g. Media Queries)
+* CSS Specificity
+* CSS Preprocessors
+* CSS Naming Systems and Architecture
+
+**Interview Questions**
+* Describe Floats and how they work.
+* Describe z-index and how stacking context is formed.
+* Describe BFC (Block Formatting Context) and how it works.
+* How would you approach fixing browser-specific styling issues?
+* Have you ever used a grid system, and if so, what do you prefer?
+* Have you used or implemented media queries or mobile specific layouts/CSS?
+* Can you give an example of an @media property other than screen?
+* What are the advantages/disadvantages of using CSS preprocessors?
+* Explain your understanding of the box model and how you would tell the browser in CSS to render your layout in different box models.
+* What does * { box-sizing: border-box; } do? What are its advantages?
+* What is the CSS display property and can you give a few examples of its use?
+* What’s the difference between inline and inline-block?
+* What’s the difference between the “nth-of-type()” and “nth-child()” selectors?
+* What’s the difference between a relative, fixed, absolute and statically positioned element?
+* What existing CSS frameworks have you used locally, or in production? How would you change/improve them?
+* Have you played around with the new CSS Flexbox or Grid specs?
+* Can you explain the difference between coding a web site to be responsive versus using a mobile-first strategy?
+* What is CSS selector specificity and how does it work?
+
 
 ## Backend
 ### Java
