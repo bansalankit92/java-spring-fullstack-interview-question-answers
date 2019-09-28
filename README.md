@@ -278,12 +278,71 @@ https://www.youtube.com/watch?v=ZgdS0EUmn70
 
 ## Backend
 ### Java
-
+* Object oriented programming basics
+* Advanced object oriented concepts
+* Java Platform
+* Wrapper Classes
+* Strings
+* Advanced object oriented concepts
+* Modifiers
+* Exception handling
+* Miscellaneous topics
+* Collections
+* Advanced collections
+* Generics
+* Multi threading
+* Functional Programming - Lamdba expressions and Streams
+* New Features Java 7,8,11
+  
 [OOPs in Java](https://www.geeksforgeeks.org/object-oriented-programming-oops-concept-in-java/)  
 [Solid Principles in Java](https://www.baeldung.com/solid-principles)
 
 ### Spring
-
+**Spring Core**
+* What Is Spring Framework?
+* What Are the Benefits of Using Spring?
+* What Spring Sub-Projects Do You Know? Describe Them Briefly.
+* What Is Dependency Injection?
+* How Can We Inject Beans in Spring?
+* Which Is the Best Way of Injecting Beans and Why
+* What Is the Difference Between Beanfactory and Applicationcontext?
+* What Is a Spring Bean?
+* What Is the Default Bean Scope in Spring Framework?
+* How to Define the Scope of a Bean?
+* Are Singleton Beans Thread-Safe?
+* What Does the Spring Bean Lifecycle Look Like?
+* What Is the Spring Java-Based Configuration?
+* Can We Have Multiple Spring Configuration Files in One Project?
+* What Is Spring Security?
+* What Is Spring Boot?
+* Name Some of the Design Patterns Used in the Spring Framework?
+* How Does the Scope Prototype Work?
+ 
+**Spring Web MVC**
+* How to Get Servletcontext and Servletconfig Objects in a Spring Bean?
+* What Is a Controller in Spring Mvc?
+* How Does the @Requestmapping Annotation Work?
+ 
+**Spring Data Access**
+* What Is Spring Jdbctemplate Class and How to Use It?
+* How Would You Enable Transactions in Spring and What Are Their Benefits?
+* What Is Spring Dao?
+ 
+**Spring Aspect-Oriented Programming (AOP)**
+* What Is Aspect-Oriented Programming?
+* What Are Aspect, Advice, Pointcut, and Joinpoint in Aop?
+* What Is Weaving?
+ 
+**Spring 5**
+* What Is Reactive Programming?
+* What Is Spring Webflux?
+* What Are the Mono and Flux Types?
+* What Is the Use of Webclient and Webtestclient?
+* What Are the Disadvantages of Using Reactive Streams?
+* Is Spring 5 Compatible with Older Versions of Java?
+* How Ow Spring 5 Integrates with Jdk 9 Modularity?
+* Can We Use Both Web Mvc and Webflux in the Same Application?
+ 
 ### JPA
 
 ## Databases
