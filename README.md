@@ -621,6 +621,89 @@ https://github.com/in28minutes/in28minutes-initiatives/blob/master/The-in28Minut
 
 ## Databases
 ### MongodDB
+* Does Mongodb Support Foreign Key Constraints?   	
+* Which are the most important features of MongoDB?   	
+* How many indexes does MongoDB create by default for a new collection?   	
+* Explain what is MongoDB?   	
+* What is “Namespace” in MongoDB?   	
+* Why does Profiler use in MongoDB?   	
+* If you remove an object attribute, is it deleted from the database?   	
+* Does MongoDB need a lot space of Random Access Memory (RAM)?   	
+* What is a replica set?   	
+*  What Is Replication In MongoDB?   	
+*  Compare SQL databases and MongoDB at a high level.   	
+*  What is BSON in MongoDB?   	
+*  How is data stored in MongoDB?   	
+*  Mention the command to insert a document in a database called school and collection called persons.   	
+*  What are Indexes in MongoDB?   	
+*  Can you create an index on an array field in MongoDB? If yes, what happens in this case?   	
+*  When should we embed one document within another in MongoDB?   	
+*  What do you understand by NoSQL databases? Explain.   	
+*  What is the difference between MongoDB and MySQL?   	
+*  What is the difference b/w MongoDB and CouchDB?   	
+*  Explain the structure of ObjectID in MongoDB   	
+*  What is sharding?   	
+*  What are NoSQL databases? What are the different types of NoSQL databases?   	
+*  How is MongoDB better than other SQL databases?   	
+*  What does MongoDB not being ACID compliant really mean?   	
+*  How can you achieve primary key - foreign key relationships in MongoDB?   	
+*  Does MongoDB pushes the writes to disk immediately or lazily?   	
+*  If you remove a document from database, does MongoDB remove it from disk?   	
+*  What is a covered query in MongoDB?   	
+*  How can you achieve transaction and locking in MongoDB?   	
+*  What is Aggregation in MongoDB?   	
+*  What is Sharding in MongoDB? Explain.   	
+*  Why are MongoDB data files large in size?   	
+*  Why MongoDB is not preferred over a 32-bit system?   	
+*  Mention the command to check whether you are on the master server or not.   	
+*  Can one MongoDB operation lock more than one databases? If yes, how?   	
+*  What is oplog?   	
+*  Is there an “upsert” option in the mongodb insert command?   	
+*  How to query MongoDB with “like”?   	
+*  Find objects between two dates MongoDB   	
+*  How can I combine data from multiple collections into one collection?   	
+*  When to use MongoDB or other document oriented database systems?   	
+*  How do I perform the SQL JOIN equivalent in MongoDB?   	
+*  How to query MongoDB with %like%?   	
+*  What is use of capped collection in MongoDB?   	
+*  Does MongoDB support ACID transaction management and locking functionalities?   	
+*  Should I normalize my data before storing it in MongoDB?    
+**Senior**
+*  How replication works in MongoDB?   	
+*  What are alternatives to MongoDB?   	
+*  Where can I run MongoDB?   	
+*  How does MongoDB ensure high availability?   	
+*  Is MongoDB schema-less?   	
+*  Why is a covered query important?   	
+*  Does MongoDB provide a facility to do text searches? How?   	
+*  What happens if an index does not fit into RAM?   	
+*  Mention the command to list all the indexes on a particular collection.   	
+*  At what interval does MongoDB write updates to the disk?   	
+*  What are Primary and Secondary Replica sets?   	
+*  By default, MongoDB writes and reads data from both primary and secondary replica sets. True or False.   	
+*  How does Journaling work in MongoDB?   	
+*  How does MongoDB provide concurrency?   
+*  How can you isolate your cursors from intervening with the write operations?   	
+*  Update MongoDB field using value of another field   	
+*  How to remove a field completely from a MongoDB document?   	
+*  When to Redis or MongoDB?   	
+*  MongoDB relationships. What to use - embed or reference?   	
+*  How to get the last N records from find?   	
+*  How to find MongoDB records where array field is not empty?   	
+*  How to check if a field contains a substring?   	   
+  **Expert**
+*  What's the advantage of the backup features in Ops Manager versus traditional backup strategies?   	
+*  What is a Storage Engine in MongoDB   	
+*  Which are the two storage engines used by MongoDB?   	
+*  What is splitting in mongodb?   	
+*  How to condense large volumes of data in Mongo?   	
+*  What are three primary concerns when choosing a data management system?   	
+*  How to find document with array that contains a specific value?   	
+*  Is it possible to update MongoDB field using value of another field?   	
+*  Explain what is horizontal scalability?   	
+*  What are the differences between MongoDB and MySQL?  
+  
+https://www.fullstack.cafe/
 ### MySQL
 
 ## Microservices
