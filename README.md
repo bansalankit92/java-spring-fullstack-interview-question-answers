@@ -707,9 +707,104 @@ https://www.fullstack.cafe/
 http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 
 ### MySQL
+* Define a temp table    	
+* What is a view?    	
+* What is PRIMARY KEY?    	
+* What is the difference between WHERE clause and HAVING clause?    	
+* What’s the difference between a local temp table and a global temp table?    	
+* What is FOREIGN KEY?    	
+* What is Normalization?    	
+* What is DEFAULT?    	
+* What is blocking?    	
+*  How can a column with a default value be added to an existing table?    	
+*  What is the difference between inner and outer join?    	
+*  What is the difference between JOIN and UNION?    	
+*  What is the difference between UNION and UNION ALL?    	
+*  How to select first 5 records from a table?    	
+*  Describe the difference between truncate and delete    	
+*  What are the difference between clustered and a non-clustered index?    	
+*  What are the advantages of using Stored Procedures?    	
+*  What is Denormalization?    	
+*  Define ACID Properties    	
+*  What is a cursor how does it work?    	
+*  What is collation?    	
+*  What are row constructors?    	
+*  Is table size reduced, when you delete data from the table?    	
+*  What is the difference between “INNER JOIN” and “OUTER JOIN”?    	
+*  How do I UPDATE from a SELECT in SQL Server?    	
+*  How a database index can help performance?    	
+*  How does a hash table index work?    	
+*  Finding duplicate values in a SQL table    	
+*  How do I perform an IF…THEN in an SQL SELECT?    	
+*  Discuss INNER JOIN ON vs WHERE clause    	
+*  Explain Function vs. Stored Procedure in SQL Server    	
+*  What is the difference among UNION, MINUS and INTERSECT?    	
+*  How can we transpose a table using SQL (changing rows to column or vice-versa) ?    	
+*  How to generate row number in SQL Without ROWNUM    	
+*  What's the difference between a primary key and a unique key?    	
+*  Name types of Triggers    	
+*  What is a linked server?    	
+*  Explain a usage difference between user defined functions and stored procedures    	
+*  How does truncate and delete operation effect Identity?    	
+*  Explain the difference between exclusive lock and update lock    	
+*  What are DMV's and DMF's?    	
+*  What are statistics?    	
+*  How deadlock is resolved?    	
+*  What is a filegroup?    	
+*  What would happen without an index?    	
+*  How does B-trees index work?    	
+*  What is the cost of having a database index?    	
+*  Delete duplicate values in a SQL table    	
+*  How can I do an UPDATE statement with JOIN in SQL?    	
+*  How does primary key constraint and unique key constraint effect null?    	
+*  What is Optimistic Locking and Pessimistic locking?    	
+*  How does database indexing work?    	
+*  Name some disadvantages of a hash index    	
+*  What are some other types of indexes?    	
+*  Insert results of a stored procedure into a temporary table    	
+*  Select first row in each GROUP BY group (greatest-n-per-group problem)? 
 
 ## Microservices
+
+* Why Would You Opt For Microservices Architecture? 
+* List down the advantages of Microservices Architecture 
+* Define Microservice Architecture 
+* What Are The Fundamentals Of Microservices Design? 
+* What are the features of Microservices? 
+* How does Microservice Architecture work? 
+* What is the difference between Monolithic, SOA and Microservices Architecture? 
+* What are the challenges you face while working Microservice Architectures? 
+* How can we perform Cross-Functional testing? 
+*  What are main differences between Microservices and Monolithic Architecture? 
+*  What are the standard patterns of orchestrating microservices? 
+*  What are smart endpoints and dumb pipes? 
+*  What is the difference between a proxy server and a reverse proxy server? 
+*  Whether do you find GraphQL the right fit for designing microservice architecture? 
+*  What is Idempotence? 
+*  What are the pros and cons of Microservice Architecture? 
+*  What do you understand by Distributed Transaction? 
+*  What do you understand by Contract Testing? 
+*  What is the role of an architect in Microservices architecture? 
+*  Can we create State Machines out of Microservices? 
+*  Explain what is the API Gateway pattern 
+*  Mention some benefits and drawbacks of an API Gateway 
+*  What is Materialized View pattern and when will you use it? 
+*  How should the various services share a common DB Schema and code? 
+*  What Did The Law Stated By Melvin Conway Implied? 
+*  Name the main differences between SOA and Microservices? 
+*  What is the difference between cohesion and coupling? 
+*  What is a Consumer-Driven Contract (CDC)? 
+*  What are Reactive Extensions in Microservices? 
+*  What is the most accepted transaction strategy for microservices 
+*  What does it mean that shifting to microservices creates a run-time problem? 
+*  Why would one use sagas over 2PC and vice versa? 
+*  Provide an example of "smart pipes" and "dumb endpoint" 
+*  How would you implement SSO for Microservice Architecture? 
 ### Apache Kafka
+https://mindmajix.com/apache-kafka-interview-questions
+
+https://www.edureka.co/blog/interview-questions/top-apache-kafka-interview-questions-for-beginners/
+https://data-flair.training/blogs/kafka-interview-questions/
 
 ### Kubernetes
 
@@ -718,6 +813,48 @@ http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 ### Redis
 
 ### Akka
+
+## Questions to Ask after interview
+Please always do ask atleast one question when interview ask you "If you have any questions for us?"  
+
+* What is the most important/valuable thing you have learnt from working here? 
+* How do your clients and customers define success? 
+* What would you change around here if you could? 
+* How do you evaluate new technologies? Who makes the final decisions? 
+* How do you know what to work on each day? 
+* Do you tend to roll your own solutions more often or rely on third party tools? What's the rationale in a specific case? 
+* How do you measure individual performance? 
+* What does a typical day look like for you? 
+* What do you think the company can improve at? 
+*  What is your policy on working from home/remotely? 
+*  What are the engineering challenges that the company/team is facing? 
+*  What is the most fulfilling/exciting/technically complex project that you've worked on here so far? 
+*  What is your stack? What is the rationale for/story behind this specific stack? 
+*  What do you measure? What are your most important product metrics? 
+*  What does the company do to nurture and train its employees? 
+*  If you hire person, what do you have for him to study product you're working on and processes in general? Do you have specifications, requirements, documentation? 
+*  Tell me about the main products of your company. 
+*  How do you train/ramp up engineers who are new to the team? 
+*  What are some weaknesses of the organization?   	 	
+*  Why did you choose to come to this company?   	 	
+*  What is the most frustrating part about working here?   	 	
+*  How does the engineering team balance resources between feature requests and engineering maintenance?   	 	
+*  What makes your product competitive?   	 	
+*  Is the team growing, and what sort of opportunities will there be in the next year/3 years?   	 	
+*  What is your team's biggest challenge right now?   	 	
+*  What is the current team composition like?   	 	
+*  Why have the last few people left?   	 	
+*  How are you funded?   	 	
+*  What is unique about working at this company that you have not experienced elsewhere?   	 	
+*  When was the last time you interacted with a founder? What was it regarding? Generally how involved are the founders in the day-to-day?   	 	
+*  What has been the worst technical blunder that has happened in the recent past? How did you guys deal with it? What changes were implemented afterwards to make sure it didn't happen again?   	 	
+*  What is the most costly technical decision made early on that the company is living with now?   	 	
+*  How much time do you spend on new project development versus maintenance?   	 	
+*  What are your highest priorities right now? For example, new features, new products, solidifying existing code, reducing operations overhead?   	 	
+*  Does the company culture encourage entrepreneurship? Could you give me any specific examples?   	 	
+*  What would I work on if I joined this team and who would I work most closely with?   	 	
+*  Are you profitable? If no, what's your plan for becoming profitable?   	 	
+*  How long does the average engineer stay at the company?   
 
 ## Open source contributions
 [Awesome Repo for beginners](https://github.com/MunGell/awesome-for-beginners)
