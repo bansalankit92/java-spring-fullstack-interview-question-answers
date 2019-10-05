@@ -882,6 +882,31 @@ https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038
 [Reference Interview Questions](https://data-flair.training/blogs/kafka-interview-questions/)
 
 ### Kubernetes
+**[Tutorial/Concept](https://kubernetes.io/docs/concepts/)**
+- Architecture
+- Containers - Images
+- Jobs
+- Labels & Selectors
+- Namespace
+- [Nodes](https://kubernetes.io/docs/concepts/architecture/nodes/)
+- Service
+- Workloads - Pods
+- Replication Controller
+- Ingress
+- Replica Sets
+- Deployments
+- Volumes Snapshots
+- Configurations
+- Secrets
+- Network Policy
+- Secret
+- Scheduling
+- Cluster Administration
+- Extension  
+
+**Interview Questions**   
+https://www.edureka.co/blog/interview-questions/kubernetes-interview-questions/  
+https://www.algrim.co/posts/145-kubernetes-interview-questions#q-1
 
 ### Docker
 
