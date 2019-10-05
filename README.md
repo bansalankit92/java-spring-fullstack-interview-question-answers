@@ -801,10 +801,85 @@ http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 *  Provide an example of "smart pipes" and "dumb endpoint" 
 *  How would you implement SSO for Microservice Architecture? 
 ### Apache Kafka
-https://mindmajix.com/apache-kafka-interview-questions
+**Topics**  
+* Architecture
+* Workflow
+* Cluster
+* Producer
+* Consumer
+* Broker
+* Queuing
+* Client
+* Connect
+* Docker
+* Monitoring Tools
+* Role of Zookeeper
+* Streams
+* Spark Streaming
+* Performance Tuning
+* Load Testing
+* Storm Kafka Integration
+* Security  
+[Tutorials](https://data-flair.training/blogs/apache-kafka-tutorial/)   
 
-https://www.edureka.co/blog/interview-questions/top-apache-kafka-interview-questions-for-beginners/
-https://data-flair.training/blogs/kafka-interview-questions/
+**Interview Questions**  
+
+- [Q.1 What is Apache Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q1-what-is-apache-kafka-)
+- [Q.2 Enlist the several components in Kafka.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q2-enlist-the-several-components-in-kafka)
+- [Q.3 Explain the role of the offset.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q3-explain-the-role-of-the-offset)
+- [Q.4 What is a Consumer Group?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q4-what-is-a-consumer-group-)
+- [Q.5 What is the role of the ZooKeeper in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q5-what-is-the-role-of-the-zookeeper-in-kafka-)
+- [Q.6 Is it possible to use Kafka without ZooKeeper?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q6-is-it-possible-to-use-kafka-without-zookeeper-)
+- [Q.7 What do you know about Partition in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q7-what-do-you-know-about-partition-in-kafka-)
+- [Q.8 Why is Kafka technology significant to use?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q8-why-is-kafka-technology-significant-to-use-)
+- [Q.9 What are main APIs of Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q9-what-are-main-apis-of-kafka-)
+- [Q.10 What are consumers or users?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q10-what-are-consumers-or-users-)
+- [Q.11 Explain the concept of Leader and Follower.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q11-explain-the-concept-of-leader-and-follower)
+- [Q.12 What ensures load balancing of the server in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q12-what-ensures-load-balancing-of-the-server-in-kafka-)
+- [Q.13 What roles do Replicas and the ISR play?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q13-what-roles-do-replicas-and-the-isr-play-)
+- [Q.14 Why are Replications critical in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q14-why-are-replications-critical-in-kafka-)
+- [Q.15 If a Replica stays out of the ISR for a long time, what does it signify?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q15-if-a-replica-stays-out-of-the-isr-for-a-long-time--what-does-it-signify-)
+- [Q.16 What is the process for starting a Kafka server?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q16-what-is-the-process-for-starting-a-kafka-server-)
+- [Q.17 In the Producer, when does QueueFullException occur?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q17-in-the-producer--when-does-queuefullexception-occur-)
+- [Q.18 Explain the role of the Kafka Producer API.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q18-explain-the-role-of-the-kafka-producer-api)
+- [Q.19 What is the main difference between Kafka and Flume?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q19-what-is-the-main-difference-between-kafka-and-flume-)
+- [Q.20 Is Apache Kafka is a distributed streaming platform? if yes, what you can do with it?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q20-is-apache-kafka-is-a-distributed-streaming-platform--if-yes--what-you-can-do-with-it-)
+- [Q. 21 What can you do with Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q-21-what-can-you-do-with-kafka-)
+- [Q.22 What is the purpose of retention period in Kafka cluster?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q22-what-is-the-purpose-of-retention-period-in-kafka-cluster-)
+- [Q.23 Explain the maximum size of a message that can be received by the Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q23-explain-the-maximum-size-of-a-message-that-can-be-received-by-the-kafka-)
+- [Q.24 What are the types of traditional method of message transfer?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q24-what-are-the-types-of-traditional-method-of-message-transfer-)
+- [Q.25 What does ISR stand in Kafka environment?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q25-what-does-isr-stand-in-kafka-environment-)
+- [Q.26 What is Geo-Replication in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q26-what-is-geo-replication-in-kafka-)
+- [Q.27 Explain Multi-tenancy?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q27-explain-multi-tenancy-)
+- [Q.28 What is the role of Consumer API?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q28-what-is-the-role-of-consumer-api-)
+- [Q.29 Explain the role of Streams API?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q29-explain-the-role-of-streams-api-)
+- [Q.30 What is the role of Connector API?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q30-what-is-the-role-of-connector-api-)
+- [Q.31 Explain Producer?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q31-explain-producer-)
+- [Q.32 Compare: RabbitMQ vs Apache Kafka](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q32-compare--rabbitmq-vs-apache-kafka)
+- [Q.33 Compare: Traditional queuing systems vs Apache Kafka](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q33-compare--traditional-queuing-systems-vs-apache-kafka)
+- [Q.34 Why Should we use Apache Kafka Cluster?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q34-why-should-we-use-apache-kafka-cluster-)
+- [Q.35 Explain the term “Log Anatomy”.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q35-explain-the-term--log-anatomy-)
+- [Q.36 What is Data Log in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q36-what-is-data-log-in-kafka-)
+- [Q.37 Explain how to Tune Kafka for Optimal Performance.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q37-explain-how-to-tune-kafka-for-optimal-performance)
+- [Q.38 State Disadvantages of Apache Kafka.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q38-state-disadvantages-of-apache-kafka)
+- [Q.39 Enlist all Apache Kafka Operations.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q39-enlist-all-apache-kafka-operations)
+- [Q.40 Explain Apache Kafka Use Cases?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q40-explain-apache-kafka-use-cases-)
+- [Q.41 Some of the most notable applications of Kafka.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q41-some-of-the-most-notable-applications-of-kafka)
+- [Q.42 Features of Kafka Stream.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q42-features-of-kafka-stream)
+- [Q.43 What do you mean by Stream Processing in Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q43-what-do-you-mean-by-stream-processing-in-kafka-)
+- [Q.44 What are the types of System tools?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q44-what-are-the-types-of-system-tools-)
+- [Q.45 What are Replication Tool and its types?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q45-what-are-replication-tool-and-its-types-)
+- [Q.46 What is Importance of Java in Apache Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q46-what-is-importance-of-java-in-apache-kafka-)
+- [Q.47 State one best feature of Kafka.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q47-state-one-best-feature-of-kafka)
+- [Q.48 Explain the term “Topic Replication Factor”.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q48-explain-the-term--topic-replication-factor-)
+- [Q.49 Explain some Kafka Streams real-time Use Cases.](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q49-explain-some-kafka-streams-real-time-use-cases)
+- [Q.50 What are Guarantees provided by Kafka?](https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038#q50-what-are-guarantees-provided-by-kafka-)
+  
+https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038
+  
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Questions generated with markdown-toc</a></i></small>
+
+[Reference Interview Questions](https://data-flair.training/blogs/kafka-interview-questions/)
 
 ### Kubernetes
 
