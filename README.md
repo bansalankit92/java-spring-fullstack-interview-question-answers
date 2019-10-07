@@ -881,6 +881,100 @@ https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038
 
 [Reference Interview Questions](https://data-flair.training/blogs/kafka-interview-questions/)
 
+### Docker
+
+**Tutorials**
+* [Getting Started](https://docs.docker.com/get-started/)
+* [Orientation](https://docs.docker.com/get-started/part1/)
+* [Containers](https://docs.docker.com/get-started/part2/)
+* [Services](https://docs.docker.com/get-started/part3/)
+* [Swarms](https://docs.docker.com/get-started/part4/)
+* [Stack](https://docs.docker.com/get-started/part5/)
+
+[Interview Questions and Answers](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593)
+
+- [What is Hypervisor?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-hypervisor)
+- [What is virtualization?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-virtualization)
+- [What is containerization?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-containerization)
+- [Difference between virtualization and containerization](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#difference-between-virtualization-and-containerization)
+- [What is Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-docker)
+- [What is a Docker Container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-a-docker-container)
+- [What are Docker Images?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-are-docker-images)
+- [What is Docker Hub?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-docker-hub)
+- [Explain Docker Architecture?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#explain-docker-architecture)
+- [What is a Dockerfile?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-a-dockerfile)
+- [Tell us something about Docker Compose.](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#tell-us-something-about-docker-compose)
+- [What is Docker Swarm?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-docker-swarm)
+- [What is a Docker Namespace?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-a-docker-namespace)
+- [What is the lifecycle of a Docker Container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-lifecycle-of-a-docker-container)
+- [What is Docker Machine?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-docker-machine)
+- [Tell some important Docker commands?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#tell-some-important-docker-commands)
+- [Suppose you have 3 containers running and out of these, you wish to access one of them. How do you access a running container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#suppose-you-have-3-containers-running-and-out-of-these--you-wish-to-access-one-of-them-how-do-you-access-a-running-container)
+- [Will you lose your data, when a docker container exits?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#will-you-lose-your-data--when-a-docker-container-exits)
+- [Where all do you think Docker is being used?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#where-all-do-you-think-docker-is-being-used)
+- [How is Docker different from other containerization methods?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-is-docker-different-from-other-containerization-methods)
+- [Can I use JSON instead of YAML for my compose file in Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#can-i-use-json-instead-of-yaml-for-my-compose-file-in-docker)
+- [How have you used Docker in your previous position?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-have-you-used-docker-in-your-previous-position)
+- [How far do Docker containers scale? Are there any requirements for the same?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-far-do-docker-containers-scale--are-there-any-requirements-for-the-same)
+- [What platforms does docker run on?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-platforms-does-docker-run-on)
+- [Is there a way to identify the status of a Docker container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#is-there-a-way-to-identify-the-status-of-a-docker-container)
+- [Can you remove a paused container from Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#can-you-remove-a-paused-container-from-docker)
+- [Can a container restart by itself?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#can-a-container-restart-by-itself)
+- [Is it better to directly remove the container using the rm command or stop the container followed by remove container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#is-it-better-to-directly-remove-the-container-using-the-rm-command-or-stop-the-container-followed-by-remove-container)
+- [Will cloud overtake the use of Containerization?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#will-cloud-overtake-the-use-of-containerization)
+- [How many containers can run per host?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-many-containers-can-run-per-host)
+- [Is it a good practice to run stateful applications on Docker? or What type of applications - Stateless or Stateful are more suitable for Docker Container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#is-it-a-good-practice-to-run-stateful-applications-on-docker--or-what-type-of-applications---stateless-or-stateful-are-more-suitable-for-docker-container)
+- [Suppose you have an application that has many dependant services. Will docker compose wait for the current container to be ready to move to the running of the next service?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#suppose-you-have-an-application-that-has-many-dependant-services-will-docker-compose-wait-for-the-current-container-to-be-ready-to-move-to-the-running-of-the-next-service)
+- [How will you monitor Docker in production?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-will-you-monitor-docker-in-production)
+- [Is it a good practice to run Docker compose in production?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#is-it-a-good-practice-to-run-docker-compose-in-production)
+- [What changes are expected in your docker compose file while moving it to production?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-changes-are-expected-in-your-docker-compose-file-while-moving-it-to-production)
+- [Have you used Kubernetes? If you have, which one would you prefer amongst Docker and Kubernetes?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#have-you-used-kubernetes--if-you-have--which-one-would-you-prefer-amongst-docker-and-kubernetes)
+- [Are you aware of load balancing across containers and hosts? How does it work?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#are-you-aware-of-load-balancing-across-containers-and-hosts--how-does-it-work)
+- [What is a Docker Registry?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-a-docker-registry)
+- [How to build envrionment-agnostic systems with Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-to-build-envrionment-agnostic-systems-with-docker)
+- [When would you use ‘docker kill’ or ‘docker rm -f’?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#when-would-you-use--docker-kill--or--docker-rm--f-)
+- [How to link containers?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-to-link-containers)
+- [What is the difference between the `COPY` and `ADD` commands in a Dockerfile?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-difference-between-the--copy--and--add--commands-in-a-dockerfile)
+- [What is the difference between CMD and ENTRYPOINT in a Dockerfile?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile)
+- [How do I transfer a Docker image from one machine to another one without using a repository, no matter private or public?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-do-i-transfer-a-docker-image-from-one-machine-to-another-one-without-using-a-repository--no-matter-private-or-public)
+- [Do I lose my data when the Docker container exits?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#do-i-lose-my-data-when-the-docker-container-exits)
+- [What is Build Cache in Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-build-cache-in-docker)
+- [What is the difference between ‘docker run’ and ‘docker create’?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-difference-between--docker-run--and--docker-create-)
+- [What’s the difference between a repository and a registry?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-s-the-difference-between-a-repository-and-a-registry)
+- [What is the default CPU limit set for a container?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-default-cpu-limit-set-for-a-container)
+- [Can you create containers without their own PID namespace](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#can-you-create-containers-without-their-own-pid-namespace)
+- [Explain basic Docker usage workflow?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#explain-basic-docker-usage-workflow)
+- [What is the difference between Docker Image and Layer?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-difference-between-docker-image-and-layer)
+- [Could you explain what is Emulation?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#could-you-explain-what-is-emulation)
+- [Should I use Vagrant or Docker for creating an isolated environment?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#should-i-use-vagrant-or-docker-for-creating-an-isolated-environment)
+- [What is the difference between “expose” and “publish” in Docker?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-the-difference-between--expose--and--publish--in-docker)
+- [Docker Compose vs. Dockerfile - which is better?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#docker-compose-vs-dockerfile---which-is-better)
+- [What exactly do you mean by “Dockerized node”? Can this node be on-premises or in the cloud?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-exactly-do-you-mean-by--dockerized-node---can-this-node-be-on-premises-or-in-the-cloud)
+- [How can we control the startup order of services in Docker compose?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-can-we-control-the-startup-order-of-services-in-docker-compose)
+- [How will you monitor Docker in production?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-will-you-monitor-docker-in-production--1)
+- [What happens if you add more than one CMD instruction to a Dockerfile?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-happens-if-you-add-more-than-one-cmd-instruction-to-a-dockerfile)
+- [When you limit the memory for a container, does it reserve (guarantee) the memory?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#when-you-limit-the-memory-for-a-container-does-it-reserve-guarantee-the-memory)
+- [What is an orphant volume and how to remove it?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-an-orphant-volume-and-how-to-remove-it)
+- [How virtualization works at low level?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-virtualization-works-at-low-level)
+- [What is Paravirtualization?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#what-is-paravirtualization)
+- [How is Docker different from a virtual machine?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-is-docker-different-from-a-virtual-machine)
+- [Is it possible to generate a Dockerfile from an image?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#is-it-possible-to-generate-a-dockerfile-from-an-image)
+- [Can you explain dockerfile ONBUILD instruction?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#can-you-explain-dockerfile-onbuild-instruction)
+- [Why did Docker jump from version 1.13 to 17.03?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#why-did-docker-jump-from-version-113-to-1703)
+- [How does Docker run containers in non-Linux systems?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-does-docker-run-containers-in-non-linux-systems)
+- [How containers works at low level?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-containers-works-at-low-level)
+- [Name some limitations of containers vs VM](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#name-some-limitations-of-containers-vs-vm)
+- [How to use Docker with multiple environments?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#how-to-use-docker-with-multiple-environments)
+- [Why Docker compose does not wait for a container to be ready before moving on to start next service in dependency order?](https://gist.github.com/bansalankit92/1b2a310a3e4686e5e31159dfbdcc1593#why-docker-compose-does-not-wait-for-a-container-to-be-ready-before-moving-on-to-start-next-service-in-dependency-order)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Docker questions link generated with markdown-toc</a></i></small>
+
+References:   
+[https://www.edureka.co/blog/interview-questions/docker-interview-questions/](https://www.edureka.co/blog/interview-questions/docker-interview-questions/)    
+[https://www.educba.com/docker-interview-questions/](https://www.educba.com/docker-interview-questions/)    
+[https://www.fullstack.cafe/](https://www.fullstack.cafe/)
+
+
 ### Kubernetes
 **[Tutorial/Concept](https://kubernetes.io/docs/concepts/)**
 - Architecture
@@ -907,8 +1001,6 @@ https://gist.github.com/bansalankit92/9414ef3614229cdca6053464fedf5038
 **Interview Questions**   
 https://www.edureka.co/blog/interview-questions/kubernetes-interview-questions/  
 https://www.algrim.co/posts/145-kubernetes-interview-questions#q-1
-
-### Docker
 
 ### Redis
 
