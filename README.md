@@ -1004,6 +1004,111 @@ https://www.algrim.co/posts/145-kubernetes-interview-questions#q-1
 
 ### Redis
 
+**Topics**
+
+* Configuration
+* Data types
+* Key-Value Pair Commands 
+* SCAN & MATCH
+* Client & Config Commands
+* Keys
+* Strings
+* Hashes
+* Lists
+* Sets
+* Sorted Sets
+* HyperLogLog
+* Publish Subscribe
+* Transactions
+* Scripting
+* Connections
+* Server
+* Backup
+* Security
+* Pipelining
+* Partitioning
+* Data Persistence
+	* RDB & Snapshotting
+	* AOF - Append Only File
+	* RDB & AOF in Action   
+* Redis Cluster   
+   
+**Interview Questions**
+* What Is Redis?
+* What Is Main Feature Of Redis?
+* What Is Limitations Of Redis?
+* What Is Advantages Of Using Redis?
+* List The Data Structures Supported By Redis?
+* List Out The Operation Keys Of Redis?
+* What Is Redis-cli?
+* Explain Repl?
+* What The Basic Features Are Of Redis Which Makes It Awesome Compared To Memcache?
+* We All Know That Reds Is Fast, But Is It Also Durable?
+* What Are The Main Features Of Redis?
+* What Are The Things You Must Have To Take Care While Using Redis?
+* What Is The Difference Between Overriding A Value By Using Set Vs Append?
+* What Do You Mean By Data Modeling In Redis?
+* Why Redis Is Different As Compared To Other Key-value Stores?
+* How Do I Move A Redis Database From One Server To Another?
+* How to start stop restart Redis?
+* How To Get All Keys From Redis?
+* How To Get Array Data From Redis?
+* How To Set Multiple Values (array) In Redis?
+* How To Get Set Value From Redis?
+* How To Check Redis Is Running?
+* How To Remove All Database?
+* How To Delete Current Database?
+* What Do You Mean By "redis Is Binary Safe"?
+* How Does Redis Differ From Mongodb? Is There A Use Case When For Redis If Using Mongodb?
+* How to persist or take snapshot of Redis data?
+* Explain Redis use cases
+* How we will use redis to oauth token and authentication
+* Explain some important redis commands
+* Explain sharding and partitioning in redis
+* Can we use Redis for pub sub messaging
+* How to secure redis
+* Explain Pipelining in Redis
+* Can we add or write scripts in redis
+* How we maintain transactions in Redis
+* Can we use redis as primary database
+* Can we save blob data in redis
+* What is maximun allowed key size.    
+**Expert**    
+* How can we create auto expire keys and explain it?
+* Explain some blocking operations on list
+* How Automatic creation and removal of keys happens?
+* Can we create Lexicographical scores?
+* Explain HyperLogLogs
+* Can we iterate the key space of a large collection incrementally?
+* How can we insert huge data at once (pre-existing data)  
+* Explain Some Tricks for ram/memory optimization
+* How can we use Redis as LRU cache
+* How can we use Redis in distributed systems
+* How can we create secondary indexes with redis  
+
+https://redis.io/documentation   
+https://redis.io/topics/data-types-intro  
+
+
+##### Difference between Apache Kafka and Redis
+* Redis pub-sub is mostly like a fire and forget system where all the messages you produced will be delivered to all the consumers at once and the data is kept no where. You have limitation in memory with respect to redis. Also number of producers and consumers can affect the performance in Redis.
+* Kafka on other hand is a high throughput, distributed log that can be used like a queue. Here any number of users can produce and consumers can consume at any time they want. It also provides persistence for the messages sent through the queue.
+* One main difference is that Redis Pub/Sub is push based while Kafka Pub/Sub is pull based. That means messages published to Redis will be automatically delivered to subscribers instantly, while in Kafka Data/messages are never pushed out to consumers, the consumer will ask for messages when the consumer is ready to handle the message.    
+**Use Redis**
+* If you want fire and forget kind of system, where all the messages that you produce are delivered instantly to consumers.
+* If speed is most concerned.
+* If you can live up with data loss.
+* If you don't want your system to hold the message that has been sent.
+* Amount of data that is gonna be dealt is not huge.    
+**Use kafka**
+* If you want reliability.
+* If you want your system to have a copy of messages that has been sent even after consumption.
+* If you can't live up with data loss.
+* If Speed is not a big concern.
+* If data size is huge
+
+https://stackoverflow.com/a/37993809/4428927  
+
 ### Akka
 
 ## Questions to Ask after interview
