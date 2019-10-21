@@ -183,8 +183,25 @@ Video:
 https://www.youtube.com/watch?v=ZgdS0EUmn70  
 
 ## Frontend  
-### Js
+### General
 
+* What did you learn yesterday/this week?
+* What excites or interests you about coding?
+* What is a recent technical challenge you experienced and how did you solve it?
+* When building a new web site or maintaining one, can you explain some techniques you have used to increase performance?
+* Can you describe some SEO best practices or techniques you have used lately?
+* Can you explain any common techniques or recent issues solved in regards to front-end security?
+* What actions have you personally taken on recent projects to increase maintainability of your code?
+* Which version control systems are you familiar with?
+* Can you describe your workflow when you create a web page?
+* If you have 5 different stylesheets, how would you best integrate them into the site?
+* Can you describe the difference between progressive enhancement and graceful degradation?
+* How would you optimize a website's assets/resources?
+* What does CORS stand for and what issue does it address?
+* Do you have any pet projects? What kind?
+* Explain your current project with data flow architecture, file structure,...?
+
+### Js
 **Basics**
 * JavaScript Fundamentals
 * Code quality
@@ -1110,6 +1127,41 @@ https://redis.io/topics/data-types-intro
 https://stackoverflow.com/a/37993809/4428927  
 
 ### Akka
+Akka is a open-source library or a toolkit written in Scala to create concurrent, distributed and fault-tolerant application.   
+     
+**Tutorials**    
+* Akka Actor
+* Akka ActorSystem
+* Akka Props
+* Akka Child Actor
+* Akka Actor Lifecycle
+* Actor Send, Reply, Forward Messages
+* Actors
+	* Location transparency
+	* Supervision and monitoring
+	* Actor paths and addresses
+	* Message delivery reliability 
+* Akka Dispatchers
+* Akka Routers   
+* Akka HTTP    
+* Akka FSM
+* Akka TestKit
+**Experts**
+* Fault tolerance
+* Routing
+* Dispatching
+* Persistence
+* Streams
+* Clusters
+	* Pub Sub
+	* Sharding
+	* Distributed Data
+	* Cluster aware routers
+* Network
+* Discovery
+* Co-ordination  
+
+https://doc.akka.io/docs/akka/current/general/index.html
 
 ## Questions to Ask after interview
 Please always do ask atleast one question when interview ask you "If you have any questions for us?"  
@@ -1128,7 +1180,7 @@ Please always do ask atleast one question when interview ask you "If you have an
 *  What is the most fulfilling/exciting/technically complex project that you've worked on here so far? 
 *  What is your stack? What is the rationale for/story behind this specific stack? 
 *  What do you measure? What are your most important product metrics? 
-*  What does the company do to nurture and train its employees? 
+*  What does the company do to nurture and train its employees?
 *  If you hire person, what do you have for him to study product you're working on and processes in general? Do you have specifications, requirements, documentation? 
 *  Tell me about the main products of your company. 
 *  How do you train/ramp up engineers who are new to the team? 
