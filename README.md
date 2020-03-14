@@ -9,6 +9,7 @@ Consolidated place to prepare for tech interviews(Currently adding all topic's n
   * [Principles](#principles)
   * [Clean Code](#clean-code)
   * [Design Patterns](#design-patterns)
+  * [Object Oriented Design](#object-oriented-design)
   * [System Design](#system-design)
 - [Frontend](#frontend)
   * [General ui questions](#general)
@@ -143,6 +144,36 @@ Consolidated place to prepare for tech interviews(Currently adding all topic's n
   * [Strategy](https://refactoring.guru/design-patterns/strategy)
   * [Template Method](https://refactoring.guru/design-patterns/template-method)
   * [Visitor](https://refactoring.guru/design-patterns/visitor)
+
+### Object Oriented Design
+
+**Object-Oriented Design and UML**
+
+* Object-Oriented Basics
+* OO Analysis and Design
+* What is UML?
+* Use Case Diagrams
+* Class Diagram
+* Sequence diagram
+* Activity Diagrams
+
+**Object Oriented Design Case Studies**
+* Design a Library Management System
+* Design a Parking Lot
+* Design Amazon - Online Shopping System
+* Design Stack Overflow
+* Design a Movie Ticket Booking System
+* Design an ATM
+* Design an Airline Management System
+* Design Blackjack and a Deck of Cards
+* Design a Hotel Management System
+* Design a Restaurant Management system
+* Design Chess
+* Design an Online Stock Brokerage System
+* Design a Car Rental System
+* Design LinkedIn
+* Design Cricinfo
+* Design Facebook - a social network
 
 ### System Design
 
