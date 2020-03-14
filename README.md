@@ -38,6 +38,15 @@ Consolidated place to prepare for tech interviews(Currently adding all topic's n
   * [Kubernetes](#kubernetes)
   * [Redis](#redis)
   * [Akka](#akka)
+  * Netflix Stack
+    * Discovery Server - Eureka
+    * Client Side Load Balancer - Ribbon
+    * API Gateway - Zuul
+    * Circuit Breakers/Resilience/Fault tolerance - Hystrix
+- Others
+  * OAuth2
+  * SSL
+  * JWT
 - [Questions to Ask after interview](#questions-to-ask-after-interview)
 - [Open source contributions](#open-source-contributions)
 
@@ -858,6 +867,9 @@ http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 *  Why would one use sagas over 2PC and vice versa? 
 *  Provide an example of "smart pipes" and "dumb endpoint" 
 *  How would you implement SSO for Microservice Architecture? 
+*  Microservices Design Pattern (Saga Pattern)   
+[Good Reads](https://microservices.io/patterns/microservices.html)   
+
 ### Apache Kafka
 **Topics**  
 * Architecture
