@@ -41,7 +41,8 @@ Node 18 or newer. Nothing to install.
 1. Create an application from the GitHub repo.
 2. Build type: **Dockerfile**.
 3. Docker File: `app/Dockerfile`. Docker Context Path: `.` (the repo root, because the build reads `docs/` and `README.md`).
-4. Container port: **80**. Add your domain.
+4. Add your domain with Container Port **80** (nginx also listens on **3000**, Dokploy's default, so either works).
+   If you see "Bad Gateway", the domain's Container Port does not match: set it to 80.
 5. Turn on auto deploy, so every push rebuilds with the latest answers.
 
 Test it locally the same way:

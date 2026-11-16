@@ -14,5 +14,5 @@ RUN node app/build.mjs
 FROM nginx:1.27-alpine
 COPY app/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 80 3000
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
