@@ -48,6 +48,10 @@ img { max-width: 100%; height: auto; }
 .brand-mark { width: 34px; height: 26px; border-radius: 6px; background: var(--surface); border: 1.5px solid var(--ink); position: relative; transform: rotate(-4deg); }
 .brand-mark::after { content: ""; position: absolute; left: 6px; right: 6px; top: 9px; height: 5px; background: var(--hl); }
 .brand-name { font: 700 22px var(--display); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.gh { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.gh svg { width: 15px; height: 15px; fill: currentColor; }
+@media (max-width: 380px) { .gh span { display: none; } }
 .ghost { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
 .note { font-size: 13.5px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; margin: 0; }
 .label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }

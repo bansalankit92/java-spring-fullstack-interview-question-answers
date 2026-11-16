@@ -159,6 +159,7 @@
         '<div class="tools"><button class="chip" type="button" id="exportBtn">Export progress</button>' +
         '<button class="chip" type="button" id="importBtn">Import progress</button><input class="hidden-file" type="file" id="importFile" accept="application/json,.json">' +
         '<button class="chip" type="button" id="resetBtn">Reset progress</button></div></div>' +
+        '<p class="note">Free and open source. Every card comes from the guide on <a href="' + esc(DATA.repo.replace(/\/blob\/.*$/, "")) + '">GitHub</a>. Found a mistake or want to add an answer? Open a pull request.</p>' +
       "</div>";
     var q = $("#q"), timer;
     q.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(function () { runSearch(q.value); }, 120); });

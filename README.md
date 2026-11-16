@@ -4,6 +4,8 @@ One place to prepare for backend and full-stack interviews: **system design, mic
 
 Answers are written in **simple English**, with a real-life story first, a small example, a simple diagram where it helps, and a **"Say this in the interview"** line you can use as it is.
 
+> 📱 **Study on your phone: [interviewprep.ankitbansal.dev](https://interviewprep.ankitbansal.dev/)** — search any topic, swipe one card at a time, follow a plan, revise with flashcards.
+>
 > Started in 2019, rebuilt in 2026 for modern Java and senior-level interviews.
 > Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
