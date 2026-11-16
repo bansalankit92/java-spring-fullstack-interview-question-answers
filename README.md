@@ -1,56 +1,449 @@
-# Computer science foundation/ Interview preparation/ Junior to Senior Developer
-Contains almost all topics for Interview Preparation for a full stack developer or frontend engineer or backend developer or to become a junior to senior developer
-Consolidated place to prepare for tech interviews(Currently adding all topic's name and then will add the contents).
+# Java, Spring, Microservices & System Design Interview Guide (Junior to Senior)
+
+One place to prepare for backend and full-stack interviews: **system design, microservices, Java (8 to 25), Spring Boot (2 to 4), Kafka, databases, Node.js, Next.js and AWS.**
+
+Answers are written in **simple English**, with a real-life story first, a small example, a simple diagram where it helps, and a **"Say this in the interview"** line you can use as it is.
+
+> Started in 2019, rebuilt in 2026 for modern Java and senior-level interviews.
+> Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Table of contents**
+
+- [How to use this guide](#how-to-use-this-guide)
+- [Study plans](#study-plans)
+  - [2-week plan](#2-week-plan)
+  - [1-month plan](#1-month-plan)
+  - [2-month plan](#2-month-plan)
+- [Crash course (last-minute preparation)](#crash-course-last-minute-preparation)
+  - [The day before (about 6 hours)](#the-day-before-about-6-hours)
+  - [The last hour](#the-last-hour)
+  - [One-page sheet](#one-page-sheet)
+- [Top 20 questions to master first](#top-20-questions-to-master-first)
+- [Behavioral questions](#behavioral-questions)
+- [System Design](#system-design)
+  - [How to approach it](#how-to-approach-it)
+  - [Building blocks](#building-blocks)
+  - [Case studies](#case-studies)
 - [General Topics](#general-topics)
-  * [DS Algo](#ds-algo)
-  * [OOPS](#oops)
-  * [Principles](#principles)
-  * [Clean Code](#clean-code)
-  * [Design Patterns](#design-patterns)
-  * [Object Oriented Design](#object-oriented-design)
-  * [System Design](#system-design)
+  - [DS Algo](#ds-algo)
+  - [OOPS](#oops)
+  - [Principles](#principles)
+  - [Clean Code](#clean-code)
+  - [Design Patterns](#design-patterns)
+  - [Object Oriented Design](#object-oriented-design)
 - [Frontend](#frontend)
-  * [General ui questions](#general)
-  * [Js](#js)
-  * [HTML](#html)
-  * [CSS](#css)
+  - [General](#general)
+  - [Js](#js)
+  - [HTML](#html)
+  - [CSS](#css)
+  - [Next.js](#nextjs)
 - [Backend](#backend)
-  * [Java](#java)
-  * [Spring](#spring)
-    + [Spring Core](#spring-core)
-    + [Spring Web MVC](#spring-web-mvc)
-    + [Spring Boot](#spring-boot)
-    + [Spring Aspect-Oriented Programming (AOP)](#spring-aspect-oriented-programming--aop-)
-    + [Spring 5](#spring-5)
-  * [Database Connectivity - JDBC, Spring JDBC & JPA, Hibernate](#database-connectivity---jdbc--spring-jdbc---jpa--hibernate)
-  * [Unit Testing](#unit-testing)
+  - [Java](#java)
+  - [Spring](#spring)
+  - [Database Connectivity - JDBC, Spring JDBC & JPA, Hibernate](#database-connectivity---jdbc-spring-jdbc--jpa-hibernate)
+  - [Unit Testing](#unit-testing)
 - [Web Services](#web-services)
-  * [SOAP Web Services](#soap-web-services)
-  * [RESTful Web Services](#restful-web-services)
+  - [SOAP Web Services](#soap-web-services)
+  - [RESTful Web Services](#restful-web-services)
 - [Databases](#databases)
-  * [MongodDB](#mongoddb)
-  * [MySQL](#mysql)
+  - [SQL, transactions and locking](#sql-transactions-and-locking)
+  - [MongoDB](#mongodb)
+  - [MySQL](#mysql)
 - [Microservices](#microservices)
-  * [Apache Kafka](#apache-kafka)
-  * [Docker](#docker)
-  * [Kubernetes](#kubernetes)
-  * [Redis](#redis)
-  * [Akka](#akka)
-  * Netflix Stack
-    * Discovery Server - Eureka
-    * Client Side Load Balancer - Ribbon
-    * API Gateway - Zuul
-    * Circuit Breakers/Resilience/Fault tolerance - Hystrix
-- Others
-  * OAuth2
-  * SSL
-  * JWT
+  - [Microservices patterns](#microservices-patterns)
+  - [Microservices questions](#microservices-questions)
+  - [Apache Kafka](#apache-kafka)
+  - [Docker](#docker)
+  - [Kubernetes](#kubernetes)
+  - [Redis](#redis)
+  - [Akka](#akka)
 - [Questions to Ask after interview](#questions-to-ask-after-interview)
 - [Open source contributions](#open-source-contributions)
 
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+## How to use this guide
+
+1. **Pick a plan** below: [2 weeks](#2-week-plan), [1 month](#1-month-plan) or [2 months](#2-month-plan). Interview tomorrow? Go to the [crash course](#crash-course-last-minute-preparation).
+2. **Read the question first. Try to answer it out loud** before you read the answer. Speaking is the skill you are training.
+3. **Draw it.** For system design, draw boxes and arrows on paper or [Excalidraw](https://excalidraw.com).
+4. **Add your own story.** For each topic, think: "Where did I use this at work? What went wrong?" Senior interviews are won with real stories.
+5. **Tick the day and commit.** Each plan has one row per day. Mark it done and push. Small daily progress beats a big weekend.
+
+Every answer follows the same shape:
+
+| Part | Why it is there |
+|---|---|
+| **In one line** | Your first sentence in the interview |
+| **Story** | Helps you remember and explain |
+| **How it works** | The real details |
+| **Diagram / Example** | Show, don't only tell |
+| **Good and bad** | Seniors always talk about trade-offs |
+| **Say this in the interview** | Ready-made answer in simple words |
+| **They may ask next** | Follow-up questions |
+
+## Study plans
+
+**Every day, in every plan:**
+- **Coding:** solve 2 problems (pattern of the week below). Time-box 40 minutes each.
+- **Speak:** explain today's topic out loud for 2 minutes. Record yourself on the phone if you can.
+- **Revise:** read yesterday's "Say this in the interview" lines once more (10 minutes).
+- **Commit:** tick the day (✅) in the plan table and push. Commit message: `day-07: caching`.
+
+**Coding pattern of the week** (use it for the daily 2 problems):
+
+| Week | Pattern |
+|---|---|
+| 1 | Arrays, hashing, two pointers |
+| 2 | Sliding window, stack, queue |
+| 3 | Binary search, linked list |
+| 4 | Trees, BST, recursion |
+| 5 | Graphs (BFS, DFS, topological sort) |
+| 6 | Heap, intervals, greedy |
+| 7 | Dynamic programming |
+| 8 | Mixed, timed (like a real interview) |
+
+The 2-week plan uses weeks 1–2 only, mixed. The 1-month plan uses weeks 1–4.
+
+### 2-week plan
+
+For: interviews already scheduled. About **6–8 hours a day**. Focus only on what is asked most.
+
+| Day | Study | Practice | Done when you can... |
+|---|---|---|---|
+| 1 | [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question), [Capacity estimation](docs/system-design.md#capacity-estimation) | Estimate numbers for 3 systems (orders, chat, video) | do the "1M orders per day" math without notes |
+| 2 | [Scaling](docs/system-design.md#vertical-vs-horizontal-scaling), [Stateless services](docs/system-design.md#stateless-services), [Load balancing](docs/system-design.md#load-balancing), [Caching](docs/system-design.md#caching), [CDN](docs/system-design.md#cdn) | Draw a 3-tier app with cache and CDN | explain cache-aside and 2 cache problems |
+| 3 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing), [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [Indexes](docs/system-design.md#database-indexes) | Pick a shard key for orders, chat, and users | say when you need strong vs eventual consistency |
+| 4 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Unique IDs](docs/system-design.md#unique-id-generation), [Rate limiting](docs/system-design.md#rate-limiting-algorithms) | Design a rate limiter (30 min) | draw token bucket and explain it |
+| 5 | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices), [Sync vs async](docs/microservices.md#sync-vs-async-communication), [Saga](docs/microservices.md#saga-pattern), [Outbox](docs/microservices.md#transactional-outbox-pattern), [Idempotency](docs/microservices.md#idempotency) | Draw the order saga with compensations | explain the "dual write" problem |
+| 6 | [Timeouts](docs/microservices.md#timeouts), [Retries + jitter](docs/microservices.md#retry-with-exponential-backoff-and-jitter), [Circuit breaker](docs/microservices.md#circuit-breaker), [Bulkhead](docs/microservices.md#bulkhead), [API gateway](docs/microservices.md#api-gateway-and-bff) | Explain what happens when payment service is slow | describe circuit breaker states |
+| 7 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering), [Delivery](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | **Mock 1:** [Amazon order processing](docs/case-studies.md#amazon-order-processing) (45 min) | guarantee order per customer and handle duplicates |
+| 8 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | Write 5 SQL queries by hand (joins, 2nd highest salary) | explain optimistic vs pessimistic with the "last seat" story |
+| 9 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data), [Virtual threads](docs/java.md#virtual-threads) | Write a thread-safe counter 3 ways | explain race condition, volatile, deadlock |
+| 10 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Rewrite one old Java 8 class with records, switch, sealed | list 3 changes per LTS version |
+| 11 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), [Spring](#spring) core questions (DI, @Transactional) | Explain why `@Transactional` fails on self-call | explain auto-configuration and bean lifecycle |
+| 12 | [Case studies](#case-studies): news feed + WhatsApp | **Mock 2:** design WhatsApp (45 min) | handle offline users and message order |
+| 13 | [Case studies](#case-studies): BookMyShow + YouTube | **Mock 3:** design BookMyShow (45 min) | stop double booking of the same seat |
+| 14 | [Behavioral questions](#behavioral-questions), [Crash course](#crash-course-last-minute-preparation) | Say 6 STAR stories out loud | answer "tell me about yourself" in 2 minutes |
+
+### 1-month plan
+
+For: you have a few weeks before interviews start. About **4–5 hours a day**. Sundays are for a mock interview and revision.
+
+| Day | Study | Practice / Mock |
+|---|---|---|
+| 1 | [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) | Read the 60-minute plan, try it on "URL shortener" |
+| 2 | [Capacity estimation](docs/system-design.md#capacity-estimation) | Do numbers for orders, chat, video |
+| 3 | [Scaling](docs/system-design.md#vertical-vs-horizontal-scaling), [Stateless services](docs/system-design.md#stateless-services), [Load balancing](docs/system-design.md#load-balancing) | Draw a 3-tier app |
+| 4 | [Caching](docs/system-design.md#caching), [CDN](docs/system-design.md#cdn) | List cache problems and fixes |
+| 5 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing) | Pick shard keys for 3 systems |
+| 6 | [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql), [Indexes](docs/system-design.md#database-indexes) | Choose a database for 5 use cases |
+| 7 | **Mock:** URL shortener + rate limiter | Revise week 1 |
+| 8 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Blob storage](docs/system-design.md#blob-storage-files-images-videos) | Draw file upload with pre-signed URL |
+| 9 | [Unique IDs](docs/system-design.md#unique-id-generation), [Rate limiting](docs/system-design.md#rate-limiting-algorithms), [Bloom filter](docs/system-design.md#bloom-filter) | Explain Snowflake ID bits |
+| 10 | [Geohash](docs/system-design.md#geohash-and-quadtree-location-search), [Inverted index](docs/system-design.md#inverted-index-how-search-works), [Video streaming](docs/system-design.md#video-streaming-basics-hls-and-adaptive-bitrate) | Explain how search is fast |
+| 11 | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices), [Sync vs async](docs/microservices.md#sync-vs-async-communication), [API gateway](docs/microservices.md#api-gateway-and-bff) | Explain availability math for 5 services |
+| 12 | [Saga](docs/microservices.md#saga-pattern), [Outbox](docs/microservices.md#transactional-outbox-pattern), [Idempotency](docs/microservices.md#idempotency) | Draw order saga with compensation |
+| 13 | [Timeouts](docs/microservices.md#timeouts), [Retries](docs/microservices.md#retry-with-exponential-backoff-and-jitter), [Circuit breaker](docs/microservices.md#circuit-breaker), [Bulkhead](docs/microservices.md#bulkhead) | "Payment service is slow. What happens?" |
+| 14 | **Mock:** [Amazon order processing](docs/case-studies.md#amazon-order-processing) | Revise week 2 |
+| 15 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering) | How many partitions for 10k msg/s? |
+| 16 | [Delivery guarantees](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | Write an idempotent consumer |
+| 17 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | 10 SQL queries by hand |
+| 18 | [Case studies](#case-studies): news feed, WhatsApp | Design both, 30 min each |
+| 19 | [Case studies](#case-studies): YouTube, YouTube search | Design both, 30 min each |
+| 20 | [Case studies](#case-studies): BookMyShow, payments/banking | Design both, 30 min each |
+| 21 | **Mock:** Uber or Hotstar live | Revise week 3 |
+| 22 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data) | Thread-safe counter 3 ways, deadlock example |
+| 23 | [Java](#java) collections: HashMap, ConcurrentHashMap internals | Explain `put()` step by step |
+| 24 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [Virtual threads](docs/java.md#virtual-threads) | Modernize an old Java 8 class |
+| 25 | [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Explain 3 kinds of OutOfMemoryError |
+| 26 | [Spring](#spring) core: DI, bean lifecycle, auto-configuration, @Transactional | Explain self-invocation problem |
+| 27 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), security (OAuth2, JWT) | Explain JWT flow with a diagram |
+| 28 | **Mock:** Java + Spring deep dive (ask a friend or use AI as interviewer) | Revise week 4 |
+| 29 | [Behavioral questions](#behavioral-questions), [Next.js](#nextjs) / Node.js if your role needs it | 6 STAR stories out loud |
+| 30 | [Crash course](#crash-course-last-minute-preparation) + rest | Sleep well |
+
+### 2-month plan
+
+For: building strong depth while applying for jobs. About **3–4 hours a day**. This is also the **build plan for this guide**: each day, the answers for that topic are written or improved here and committed.
+
+**Week 1: System design basics**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 1 | [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question), [Capacity estimation](docs/system-design.md#capacity-estimation) | Review answers, add your own numbers |
+| 2 | [Scaling](docs/system-design.md#vertical-vs-horizontal-scaling), [Stateless services](docs/system-design.md#stateless-services), [Load balancing](docs/system-design.md#load-balancing) | Add your production story |
+| 3 | [Caching](docs/system-design.md#caching), [CDN](docs/system-design.md#cdn) | Add a cache incident you saw |
+| 4 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing) | Review answers |
+| 5 | [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql), [Indexes](docs/system-design.md#database-indexes) | Review answers |
+| 6 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Blob storage](docs/system-design.md#blob-storage-files-images-videos), [IDs](docs/system-design.md#unique-id-generation) | Review answers |
+| 7 | **Mock:** URL shortener. Revise the week. | Case study: URL shortener |
+
+**Week 2: Microservices, Kafka, databases**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 8 | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices), [Sync vs async](docs/microservices.md#sync-vs-async-communication), [API gateway](docs/microservices.md#api-gateway-and-bff) | Answer old [Microservices](#microservices) questions |
+| 9 | [Saga](docs/microservices.md#saga-pattern), [Outbox](docs/microservices.md#transactional-outbox-pattern), [Idempotency](docs/microservices.md#idempotency) | CQRS and event sourcing answers |
+| 10 | [Timeouts](docs/microservices.md#timeouts), [Retries](docs/microservices.md#retry-with-exponential-backoff-and-jitter), [Circuit breaker](docs/microservices.md#circuit-breaker), [Bulkhead](docs/microservices.md#bulkhead) | Load shedding, backpressure, graceful degradation |
+| 11 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering) | Answer old Kafka questions |
+| 12 | [Delivery guarantees](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | Kafka vs RabbitMQ answer |
+| 13 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | Answer old MySQL questions |
+| 14 | **Mock:** [Amazon order processing](docs/case-studies.md#amazon-order-processing). Revise. | Rate limiter case study |
+
+**Week 3: Case studies, part 1**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 15 | [Rate limiting](docs/system-design.md#rate-limiting-algorithms), [Bloom filter](docs/system-design.md#bloom-filter) | Case study: rate limiter |
+| 16 | News feed (Facebook / Instagram) | Case study: news feed |
+| 17 | WhatsApp (chat, groups, online status) | Case study: WhatsApp |
+| 18 | YouTube (upload and watch) | Case study: YouTube |
+| 19 | YouTube search and typeahead | Case study: search + typeahead |
+| 20 | BookMyShow (seat booking) | Case study: BookMyShow |
+| 21 | **Mock:** one of this week's systems. Revise. | Fix gaps found in the mock |
+
+**Week 4: Case studies, part 2**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 22 | Payment gateway and bank ledger | Case study: payments / banking |
+| 23 | Uber / Ola (location, matching) | Case study: Uber |
+| 24 | Hotstar live (millions join at once) | Case study: Hotstar live |
+| 25 | Notification service, distributed job scheduler | Case studies: notifications, scheduler |
+| 26 | Dropbox / Google Drive | Case study: Dropbox |
+| 27 | Flash sale, stock exchange | Case studies: flash sale, stock exchange |
+| 28 | **Mock:** random system. Revise. | Fix gaps |
+
+**Week 5: Java**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 29 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data) | Executors, CompletableFuture answers |
+| 30 | Collections: HashMap, ConcurrentHashMap internals | Update old collection answers |
+| 31 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed) | Update old [Java](#java) answers |
+| 32 | [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Memory leak and high GC debugging story |
+| 33 | [Virtual threads](docs/java.md#virtual-threads), streams | Streams and parallel streams answers |
+| 34 | OOP, SOLID, design patterns | Answer old [OOPS](#oops) and [Design Patterns](#design-patterns) questions |
+| 35 | **Mock:** Java deep dive. Revise. | Fix gaps |
+
+**Week 6: Spring and low-level design**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 36 | DI, bean lifecycle, auto-configuration | Answer old [Spring](#spring) core questions |
+| 37 | @Transactional, propagation, JPA N+1 problem | Answer old JPA / Hibernate questions |
+| 38 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), observability | Logs, metrics, traces answer |
+| 39 | Spring Security, OAuth2, JWT | Security answers |
+| 40 | [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), testing (JUnit 5, Mockito, Testcontainers) | Testing answers |
+| 41 | Low-level design: parking lot, BookMyShow classes | LLD case studies |
+| 42 | **Mock:** low-level design. Revise. | Fix gaps |
+
+**Week 7: Full stack and cloud**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 43 | Node.js event loop and scaling | Node.js answers |
+| 44 | [Next.js](#nextjs) | Next.js answers |
+| 45 | AWS services you must know | AWS answers |
+| 46 | [Docker](#docker), [Kubernetes](#kubernetes) | Update old Docker / Kubernetes answers |
+| 47 | [Redis](#redis) in depth | Update old Redis answers |
+| 48 | Observability, disaster recovery, multi-region | Answers |
+| 49 | **Mock:** full-stack system (Next.js + Spring + AWS). Revise. | Fix gaps |
+
+**Week 8: Harder systems, behavioral, final polish**
+
+| Day | Topic | Commit to this guide |
+|---|---|---|
+| 50 | Multi-tenant SaaS, multi-region | Case studies |
+| 51 | Leaderboard, top-K trending, ad click counting | Case studies |
+| 52 | Google Docs, Slack | Case studies |
+| 53 | [Behavioral questions](#behavioral-questions) | Write your 8 STAR stories (keep them private if you want) |
+| 54 | Weak areas from your mock notes | Fix gaps |
+| 55 | **Full mock loop:** coding + system design + behavioral | Fix gaps |
+| 56 | [Crash course](#crash-course-last-minute-preparation) + rest | Final commit |
+
+## Crash course (last-minute preparation)
+
+You don't have time to learn new things now. Your goal is to **remember** and **speak clearly**.
+
+### The day before (about 6 hours)
+
+| Time | Do this |
+|---|---|
+| 1 hour | Read the [Top 20 questions](#top-20-questions-to-master-first). Only the **In one line** and **Say this in the interview** parts. |
+| 1 hour | Read [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) and [Capacity estimation](docs/system-design.md#capacity-estimation). Do one estimate on paper. |
+| 1.5 hours | One full mock design out loud, with a timer: [Amazon order processing](docs/case-studies.md#amazon-order-processing) or the system the company is famous for. |
+| 1 hour | Java + Spring: [concurrency](docs/java.md#java-concurrency-and-shared-data), [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [virtual threads](docs/java.md#virtual-threads), [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed). |
+| 1 hour | 2 easy-medium coding problems. Only to warm up, not to learn. |
+| 30 min | Read your [STAR stories](#behavioral-questions). Practice "tell me about yourself". Read about the company. |
+| Night | Stop. Sleep 7–8 hours. A tired brain cannot design systems. |
+
+### The last hour
+
+- Read the one-page sheet below. Nothing else.
+- Keep water, paper and a pen ready. Open your drawing tool. Test camera and microphone.
+- Write 3 questions for the interviewer ([ideas here](#questions-to-ask-after-interview)).
+
+### One-page sheet
+
+**System design steps (60 minutes):**
+1. Clarify (5 min): who uses it, main features, scale, what is out of scope.
+2. Numbers (5 min): users, requests per second, storage. 1 day ≈ 100,000 seconds.
+3. APIs + data model (10 min).
+4. Simple design first (10 min): client → load balancer → services → database / cache / queue.
+5. Deep dive (15 min): the 2–3 hard parts.
+6. Failures + trade-offs (10 min): "What if X goes down?"
+7. Summary (5 min).
+
+**Numbers to remember:**
+
+| Thing | Number |
+|---|---|
+| Seconds in a day | 86,400 ≈ 100,000 |
+| 1 million per day | ≈ 12 per second (peak ≈ 2–3x) |
+| Read from memory (RAM) | ~100 nanoseconds |
+| Read from SSD | ~100 microseconds |
+| Network call in same data center | ~0.5 ms |
+| Network call across continents | ~150 ms |
+| One server (simple API) | ~1,000–5,000 requests/second |
+
+**Lines that always work:**
+- "Let me first clarify the requirements before I design."
+- "I will start simple, then scale the parts that need it."
+- "This is a trade-off. We get X, but we pay Y."
+- "What happens if this service goes down? Let me walk through it."
+- "For money, I choose strong consistency. For likes and views, eventual consistency is fine."
+- "I will make this operation idempotent, so retries are safe."
+
+**Useful sentences when you are stuck** (it is normal, and it is fine):
+- "Let me take a minute to think about this."
+- "Can I ask a question to understand this better?"
+- "Let me say what I understood, so we are on the same page."
+- "I have not used this directly, but here is how I would approach it."
+
+## Top 20 questions to master first
+
+If you only have little time, master these. Each link goes to the full answer.
+
+| # | Question | Area |
+|---|---|---|
+| 1 | [Design Amazon order processing](docs/case-studies.md#amazon-order-processing) | System design |
+| 2 | [Estimate capacity for 1 million orders per day](docs/system-design.md#capacity-estimation) | System design |
+| 3 | [How many service instances do you need, and why?](docs/system-design.md#capacity-estimation) | System design |
+| 4 | [Sync vs async communication between microservices](docs/microservices.md#sync-vs-async-communication) | Microservices |
+| 5 | [Saga pattern](docs/microservices.md#saga-pattern) | Microservices |
+| 6 | [Kafka partitions and consumer groups](docs/kafka.md#kafka-partitions-and-consumer-groups) | Kafka |
+| 7 | [How do you guarantee message ordering?](docs/kafka.md#kafka-message-ordering) | Kafka |
+| 8 | [How do you handle duplicate events?](docs/kafka.md#handling-duplicate-events) | Kafka |
+| 9 | [Database consistency: strong vs eventual](docs/system-design.md#database-consistency-strong-vs-eventual) | Databases |
+| 10 | [SQL joins and self join](docs/databases.md#sql-joins-and-self-join) | Databases |
+| 11 | [Optimistic vs pessimistic locking](docs/databases.md#optimistic-vs-pessimistic-locking) | Databases |
+| 12 | [Exponential backoff with jitter](docs/microservices.md#retry-with-exponential-backoff-and-jitter) | Resilience |
+| 13 | [Circuit breaker](docs/microservices.md#circuit-breaker) | Resilience |
+| 14 | [Java concurrency and shared data](docs/java.md#java-concurrency-and-shared-data) | Java |
+| 15 | [Java 8 → 17 → 21 → 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed) | Java |
+| 16 | [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Java |
+| 17 | [Virtual threads](docs/java.md#virtual-threads) | Java |
+| 18 | [Spring Boot 2 → 3 → 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed) | Spring |
+| 19 | [Spring MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux) | Spring |
+| 20 | [Next.js architecture and Server Components](docs/nextjs.md#nextjs-architecture-and-server-components) | Frontend |
+
+## Behavioral questions
+
+Senior interviews always have a behavioral round. Prepare **8 real stories** from your work. One story can answer many questions.
+
+**Use STAR to tell a story:**
+
+| Letter | Meaning | How long |
+|---|---|---|
+| **S**ituation | Where were you? What was the project? | 2 lines |
+| **T**ask | What was your job or the problem? | 1 line |
+| **A**ction | What did **you** do? Say "I", not "we". | Most of the story |
+| **R**esult | What changed? Use numbers: "latency went from 2 s to 300 ms". | 2 lines |
+
+**Stories to prepare:**
+1. A hard technical problem you solved (production issue, performance fix).
+2. A system you designed from scratch.
+3. A disagreement with a teammate or manager, and how you solved it.
+4. A mistake you made, and what you learned.
+5. A time you helped or mentored someone.
+6. A time you delivered under a tight deadline.
+7. A time you changed something without being asked (ownership).
+8. A time you had to say "no" or push back on a requirement.
+
+**Common questions:**
+- Tell me about yourself. (2 minutes: current role → biggest achievement → what you want next.)
+- Why are you looking for a change? / Tell me about your layoff.
+- Tell me about a project you are proud of.
+- Tell me about a time you failed.
+- How do you handle conflict in the team?
+- How do you make technical decisions?
+- How do you mentor juniors?
+- Why this company?
+
+**About a layoff: keep it short, honest and positive.** Layoffs are common and interviewers know it. Example:
+
+> "My company reduced the team size in a restructuring, and my role was affected along with many others. It was not about performance. I used the time to sharpen my system design and modern Java skills, and I am excited to bring my 10+ years of backend experience to a team like yours."
+
+Then stop. Do not over-explain.
+
+## System Design
+
+Answers: [docs/system-design.md](docs/system-design.md) (basics) and [docs/case-studies.md](docs/case-studies.md) (full designs).
+
+### How to approach it
+- [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) (steps, 60-minute plan, questions to ask)
+- [Capacity estimation](docs/system-design.md#capacity-estimation) (1 million orders a day, how many servers)
+
+### Building blocks
+Every design is built from these bricks. Learn them first.
+
+| Scaling and data | Communication and storage | Special tools |
+|---|---|---|
+| [Vertical vs horizontal scaling](docs/system-design.md#vertical-vs-horizontal-scaling) | [Message queues and pub/sub](docs/system-design.md#message-queues-and-pubsub) | [Rate limiting algorithms](docs/system-design.md#rate-limiting-algorithms) |
+| [Stateless services](docs/system-design.md#stateless-services) | [Long polling vs WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events) | [Bloom filter](docs/system-design.md#bloom-filter) |
+| [Load balancing](docs/system-design.md#load-balancing) | [Blob storage (files, images, videos)](docs/system-design.md#blob-storage-files-images-videos) | [Geohash and quadtree](docs/system-design.md#geohash-and-quadtree-location-search) |
+| [Caching](docs/system-design.md#caching) | [Unique ID generation](docs/system-design.md#unique-id-generation) | [Inverted index (how search works)](docs/system-design.md#inverted-index-how-search-works) |
+| [CDN](docs/system-design.md#cdn) | [Proxy vs reverse proxy](docs/system-design.md#proxy-vs-reverse-proxy) | [Video streaming (HLS)](docs/system-design.md#video-streaming-basics-hls-and-adaptive-bitrate) |
+| [Database replication](docs/system-design.md#database-replication-read-replicas) | | |
+| [Partitioning and sharding](docs/system-design.md#partitioning-and-sharding) | | |
+| [Consistent hashing](docs/system-design.md#consistent-hashing) | | |
+| [Strong vs eventual consistency](docs/system-design.md#database-consistency-strong-vs-eventual) | | |
+| [CAP theorem](docs/system-design.md#cap-theorem) | | |
+| [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql) | | |
+| [Database indexes](docs/system-design.md#database-indexes) | | |
+
+Coming next: replication with quorum, leader election (Raft), Count-Min sketch and HyperLogLog, CRDTs (for collaborative editing), CDC (change data capture).
+
+### Case studies
+
+There are about 60 "design X" questions, but most come down to about **12 kinds of problems**. Learn one system of each kind well (**bold**). The others are small changes on top of it.
+
+| Kind of problem | Learn this well | Then these are easy | The hard part interviewers ask about |
+|---|---|---|---|
+| Lots of reads + cache | **URL shortener** | Pastebin, product catalog | ID generation, cache, hot keys |
+| Search | **YouTube search, typeahead** | Twitter search, product search | Inverted index, ranking, staying under 100 ms |
+| Feeds | **News feed (Facebook, Instagram)** | Twitter timeline, LinkedIn feed | Push vs pull, celebrity users, ranking |
+| Real-time chat | **WhatsApp** | Slack, Messenger, live comments | WebSockets, delivered/read ticks, offline users, groups |
+| Video | **YouTube / Netflix** | Spotify, Reels | Upload → convert → small chunks → CDN |
+| Live events at huge scale | **Hotstar live (IPL)** | Twitch, live scores | Millions join in 1 minute, scale before the match |
+| Booking (limited seats) | **BookMyShow** | IRCTC Tatkal, hotels, flights, flash sale | Seat hold with timer, no double booking |
+| Money | **Payment gateway, bank ledger** | UPI, wallet, Splitwise | Never lose or double money, reconciliation |
+| Fast matching | **Stock exchange** | Auctions, ad bidding | In-memory order book, single writer |
+| Location | **Uber / Ola** | Swiggy, Zomato, nearby places | Geohash, driver location updates, matching |
+| Online shopping | **[Amazon order processing](docs/case-studies.md#amazon-order-processing)** ✅ | Cart, checkout, inventory | Saga, outbox, no overselling |
+| Files | **Dropbox / Google Drive** | S3-like storage, image hosting | Chunks, sync, conflicts |
+| Platform tools | **Rate limiter, notification service, job scheduler** | ID generator, cache, key-value store, web crawler, leaderboard, top-K trending | Algorithms, counting at huge scale |
+| Many customers / regions | **Multi-tenant SaaS** | Multi-region active-active | Tenant isolation, data location rules |
+
+✅ = full answer ready. The rest are added day by day, following the [2-month plan](#2-month-plan).
+
+**Older list of practice problems** (from 2019, still good practice): full-text search, elevator, coffee vending machine, parking system, Quartz scheduler, web crawler, Pastebin, push notifications, Instagram, Dropbox, Messenger, Twitter, Netflix, BookMyShow, typeahead, rate limiter, event management, Twitter search, news feed, Yelp / nearby friends, Uber, Quora, UberEats, Reddit, HackerRank.
+
+**Good reading:**
+[System design primer (GitHub)](https://github.com/donnemartin/system-design-primer) ·
+[High Scalability](http://highscalability.com/) ·
+[System design notes (gist)](https://gist.github.com/vasanthk/485d1c25737e8e72759f) ·
+[Video: system design basics](https://www.youtube.com/watch?v=ZgdS0EUmn70)
 
 ## General Topics
 ### DS Algo
@@ -184,54 +577,6 @@ Consolidated place to prepare for tech interviews(Currently adding all topic's n
 * Design Cricinfo
 * Design Facebook - a social network
 
-### System Design
-
-**Design Baics**
-* Concurrency
-* CAP Theorem
-* Load Balancing
-* Consistent Hashing
-* Caching
-* Indexes
-* Proxies
-* SQL vs. NoSQL
-* Data Partitioning
-* Data Replication
-* Horizontal vs Vertical Scaling
-* Map Reduce
-* Long-Polling vs WebSockets vs Server-Sent Events
-
-**Design Problems**
-* Design Full Text Search
-* Design Lift/Elevator
-* Design Coffee Vending machine
-* Design Parking System
-* Design a URL Shortening service like TinyURL
-* Design Quartz Scheduler
-* Design a Web Crawler
-* Design Pastebin
-* Design Push notification.
-* Design Instagram
-* Design Dropbox/Google drive
-* Design Facebook Messenger
-* Design Twitter
-* Design Youtube or Netflix
-* Design Movie ticket system(BookMyShow)
-* Design Typeahead Suggestion
-* Design an API Rate Limiter
-* Design Event Management System
-* Design Twitter Search
-* Design Facebook’s Newsfeed
-* Design Yelp or Nearby Friends
-* Design Uber backend
-* Other famous platforms like Quora, UberEats, Reddit, Hackerrank
-
-Read:  
-https://gist.github.com/vasanthk/485d1c25737e8e72759f  
-http://highscalability.com/  
-Video:  
-https://www.youtube.com/watch?v=ZgdS0EUmn70  
-
 ## Frontend  
 ### General
 
@@ -343,8 +688,25 @@ https://www.youtube.com/watch?v=ZgdS0EUmn70
 * What is CSS selector specificity and how does it work?
 
 
+### Next.js
+Answers: [docs/nextjs.md](docs/nextjs.md)
+- [Next.js architecture and Server Components](docs/nextjs.md#nextjs-architecture-and-server-components) (App Router, Server vs Client Components, SSR / SSG / ISR, caching, Next.js 15 → 16, calling a Spring Boot backend)
+- Coming next: Server Actions, Route Handlers, performance for large apps, React 19 basics.
+
 ## Backend
 ### Java
+
+Answers: [docs/java.md](docs/java.md)
+
+**Modern Java (answered in simple English):**
+- [Java concurrency and shared data](docs/java.md#java-concurrency-and-shared-data) (race condition, synchronized, volatile, atomic, ConcurrentHashMap, deadlock)
+- [Java 8 → 17 → 21 → 25: what changed](docs/java.md#java-8-to-17-to-21-to-25-what-changed) (records, sealed classes, pattern matching, and how to migrate)
+- [JVM memory basics](docs/java.md#jvm-memory-basics) (heap, stack, metaspace, OutOfMemoryError)
+- [G1 vs ZGC](docs/java.md#g1-vs-zgc)
+- [Virtual threads](docs/java.md#virtual-threads)
+
+**Core Java questions** ([2019 answers](docs/java.md#core-java-questions-2019-answers-being-updated), being updated to Java 21/25):
+
 * Object oriented programming basics
 * Advanced object oriented concepts
 * Java Platform
@@ -365,6 +727,12 @@ https://www.youtube.com/watch?v=ZgdS0EUmn70
 [Solid Principles in Java](https://www.baeldung.com/solid-principles)
 
 ### Spring
+
+Answers: [docs/spring.md](docs/spring.md)
+- [Spring Boot 2 → 3 → 4: what changed](docs/spring.md#spring-boot-2-to-3-to-4-what-changed)
+- [Spring MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux)
+- The questions below are answered following the [2-month plan](#2-month-plan) (week 6).
+
 #### Spring Core
 - What Is Spring Framework?
 - What Are the Benefits of Using Spring?
@@ -687,7 +1055,15 @@ https://www.journaldev.com/3633/hibernate-interview-questions-and-answers
 https://github.com/in28minutes/in28minutes-initiatives/blob/master/The-in28Minutes-CourseGuides/spring-interview-questions.md
 
 ## Databases
-### MongodDB
+
+### SQL, transactions and locking
+Answers: [docs/databases.md](docs/databases.md)
+- [SQL joins and self join](docs/databases.md#sql-joins-and-self-join) (with sample tables, second highest salary, find duplicates)
+- [Transactions and isolation levels](docs/databases.md#transactions-and-isolation-levels) (ACID, dirty / non-repeatable / phantom reads, MVCC)
+- [Optimistic vs pessimistic locking](docs/databases.md#optimistic-vs-pessimistic-locking) (the "last seat" story, `@Version`, `SELECT ... FOR UPDATE`, deadlocks)
+- Also see: [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql), [Database indexes](docs/system-design.md#database-indexes), [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding)
+
+### MongoDB
 * Does Mongodb Support Foreign Key Constraints?   	
 * Which are the most important features of MongoDB?   	
 * How many indexes does MongoDB create by default for a new collection?   	
@@ -833,6 +1209,29 @@ http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 
 ## Microservices
 
+Answers: [docs/microservices.md](docs/microservices.md)
+
+### Microservices patterns
+
+| Group | Patterns |
+|---|---|
+| Breaking the system into services | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices) · Split by business area (DDD) · Strangler fig (replace old system piece by piece) · Anti-corruption layer |
+| Data | Database per service · [Saga](docs/microservices.md#saga-pattern) · [Transactional outbox](docs/microservices.md#transactional-outbox-pattern) · CQRS · Event sourcing · CDC (Debezium) · API composition |
+| Talking between services | [Sync vs async](docs/microservices.md#sync-vs-async-communication) · [Idempotency](docs/microservices.md#idempotency) · Pub/sub · Dead-letter queue |
+| Front door | [API gateway and BFF](docs/microservices.md#api-gateway-and-bff) · Service discovery · Service mesh / sidecar |
+| Staying alive when things fail | [Timeouts](docs/microservices.md#timeouts) · [Retry with backoff and jitter](docs/microservices.md#retry-with-exponential-backoff-and-jitter) · [Circuit breaker](docs/microservices.md#circuit-breaker) · [Bulkhead](docs/microservices.md#bulkhead) · Rate limiting · Fallback · Load shedding |
+| Seeing what is happening | Logs · Metrics · Distributed tracing (OpenTelemetry) · Health checks · Correlation IDs |
+| Releasing safely | Blue-green · Canary · Rolling · Feature flags · 12-factor app |
+| Security | OAuth2 / OIDC · JWT · mTLS between services · Secrets management |
+| Testing | Contract testing (Pact, Spring Cloud Contract) · Testcontainers |
+| Mistakes to avoid | Distributed monolith · Shared database · Chatty services · Too-small services |
+
+Linked items have full answers. The rest are added following the [2-month plan](#2-month-plan).
+
+**Note on the old Netflix stack:** Zuul, Hystrix and Ribbon are retired. Today we use **Spring Cloud Gateway**, **Resilience4j** and **Spring Cloud LoadBalancer**. See [API gateway and BFF](docs/microservices.md#api-gateway-and-bff).
+
+### Microservices questions
+
 * Why Would You Opt For Microservices Architecture? 
 * List down the advantages of Microservices Architecture 
 * Define Microservice Architecture 
@@ -871,6 +1270,16 @@ http://www.globalguideline.com/interview_questions/Questions.php?sc=MongoDB
 [Good Reads](https://microservices.io/patterns/microservices.html)   
 
 ### Apache Kafka
+
+Answers: [docs/kafka.md](docs/kafka.md)
+- [Kafka basics in simple words](docs/kafka.md#kafka-basics-in-simple-words) (topic, partition, offset, broker, KRaft)
+- [Partitions and consumer groups](docs/kafka.md#kafka-partitions-and-consumer-groups) (how many partitions, rebalancing, consumer crash)
+- [Message ordering](docs/kafka.md#kafka-message-ordering)
+- [Delivery guarantees](docs/kafka.md#kafka-delivery-guarantees) (at-most-once, at-least-once, exactly-once)
+- [Handling duplicate events](docs/kafka.md#handling-duplicate-events) (idempotent consumer, retry topics, DLQ)
+
+**More questions to practice:**
+
 **Topics**  
 * Architecture
 * Workflow
