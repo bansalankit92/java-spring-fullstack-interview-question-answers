@@ -1,0 +1,10 @@
+{
+  "name": "Prep Cards",
+  "short_name": "Prep Cards",
+  "description": "Interview prep in simple English. Search, swipe one card at a time, follow a plan, revise fast.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#EDF1F7",
+  "theme_color": "#2350D8",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

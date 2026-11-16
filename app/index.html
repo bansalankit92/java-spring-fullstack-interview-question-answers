@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Prep Cards</title>
+  <meta name="description" content="Interview prep in simple English: system design, microservices, Java, Spring, Kafka. Search, swipe one card at a time, follow a plan, revise fast.">
+  <meta name="theme-color" content="#EDF1F7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1420" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" id="hl-light" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <link rel="stylesheet" id="hl-dark" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" disabled>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Prep Cards</span></a>
+      <button class="ghost" id="themeBtn" type="button">Dark mode</button>
+    </header>
+
+    <main id="main">
+      <p class="note" id="loading">Loading cards…</p>
+    </main>
+  </div>
+
+  <nav class="tabs" aria-label="Main">
+    <div class="tabs-in">
+      <a href="#/" data-tab="topics"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="13" height="15" rx="2"/><path d="M8 3h11a1 1 0 0 1 1 1v13"/></svg>Topics</a>
+      <a href="#/plan" data-tab="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14l2 2 4-4"/></svg>Plan</a>
+      <a href="#/revise" data-tab="revise"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></svg>Revise</a>
+    </div>
+  </nav>
+
+  <div class="reader" id="reader" hidden role="dialog" aria-modal="true" aria-label="Card reader">
+    <div class="r-head">
+      <button class="icon-btn" id="closeReader" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="r-title" id="rTitle"></div>
+      <button class="icon-btn" id="bmBtn" type="button" aria-label="Bookmark this card" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
+    </div>
+    <div class="progress"><i id="rProg"></i></div>
+    <div class="track" id="track"></div>
+    <div class="r-foot">
+      <button class="icon-btn" id="prevBtn" type="button" aria-label="Previous card"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="r-mid">
+        <button class="readbtn" id="readBtn" type="button" aria-pressed="false">Mark as read</button>
+        <span class="swipe-hint">Swipe left or right</span>
+      </div>
+      <button class="icon-btn" id="nextBtn" type="button" aria-label="Next card"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden role="status"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

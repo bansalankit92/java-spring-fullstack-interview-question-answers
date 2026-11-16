@@ -1,0 +1,6 @@
+# Used by Docker BuildKit for app/Dockerfile (build context = repo root).
+**/.git
+**/node_modules
+app/dist
+app/.vercel
+senior_engineering_interview_guide.md

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo no-install-needed",
+  "buildCommand": "node build.mjs",
+  "outputDirectory": "dist",
+  "headers": [
+    { "source": "/content/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] }
+  ]
+}

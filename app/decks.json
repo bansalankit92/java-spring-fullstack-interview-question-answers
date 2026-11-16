@@ -1,0 +1,100 @@
+{
+  "repoUrl": "https://github.com/bansalankit92/java-spring-fullstack-interview-question-answers/blob/master",
+  "readme": "README.md",
+  "linkAliases": {
+    "docs/system-design.md#case-studies": "#/d/cs",
+    "README.md#top-20-questions-to-master-first": "#/revise/top"
+  },
+  "decks": [
+    {
+      "id": "sd",
+      "title": "System design basics",
+      "blurb": "How interviewers ask, how to answer, capacity math, 22 building blocks",
+      "sources": [{ "path": "docs/system-design.md", "level": 3, "skip": ["Case studies"] }]
+    },
+    {
+      "id": "cs",
+      "title": "System design case studies",
+      "blurb": "TinyURL, WhatsApp, YouTube, Hotstar, BookMyShow, payments, Uber…",
+      "sources": [
+        { "path": "docs/system-design/url-shortener.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/rate-limiter.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/news-feed.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/whatsapp.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/youtube-video-streaming.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/youtube-search-typeahead.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/hotstar-live-streaming.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/bookmyshow-ticket-booking.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/amazon-order-processing.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/flash-sale.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/payment-gateway.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/bank-ledger-wallet.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/uber-ride-hailing.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/dropbox-file-storage.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/notification-service.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/job-scheduler.md", "level": 2, "chapterFromFile": true },
+        { "path": "docs/system-design/stock-exchange.md", "level": 2, "chapterFromFile": true }
+      ]
+    },
+    {
+      "id": "ms",
+      "title": "Microservices patterns",
+      "blurb": "Saga, outbox, idempotency, retries, circuit breaker, gateway",
+      "sources": [{ "path": "docs/microservices.md", "level": 2 }]
+    },
+    {
+      "id": "kf",
+      "title": "Kafka",
+      "blurb": "Partitions, consumer groups, ordering, delivery, duplicates",
+      "sources": [{ "path": "docs/kafka.md", "level": 2 }]
+    },
+    {
+      "id": "db",
+      "title": "Databases",
+      "blurb": "Joins, transactions, isolation levels, locking",
+      "sources": [{ "path": "docs/databases.md", "level": 3 }]
+    },
+    {
+      "id": "jc",
+      "title": "Java concurrency",
+      "blurb": "From threads to virtual threads, in 7 eras",
+      "sources": [{ "path": "docs/java-concurrency.md", "level": 3 }]
+    },
+    {
+      "id": "st",
+      "title": "Java streams",
+      "blurb": "Collectors, map-reduce, gatherers and 65 coding problems",
+      "sources": [{ "path": "docs/java-streams.md", "level": 3, "splitBold": ["Stream coding problems (with answers)"] }]
+    },
+    {
+      "id": "jv",
+      "title": "Java",
+      "blurb": "Java 8 → 25, JVM memory, G1 vs ZGC, plus the 2019 Q&A",
+      "sources": [{ "path": "docs/java.md", "level": 3 }]
+    },
+    {
+      "id": "sp",
+      "title": "Spring and Spring Boot",
+      "blurb": "Boot 2 → 4, MVC vs WebFlux, Spring Reactive in depth",
+      "sources": [{ "path": "docs/spring.md", "level": 3 }]
+    },
+    {
+      "id": "se",
+      "title": "Spring ecosystem",
+      "blurb": "Security, Data JPA, Cloud, observability, Batch, Spring AI",
+      "sources": [{ "path": "docs/spring-ecosystem.md", "level": 3 }]
+    },
+    {
+      "id": "nx",
+      "title": "Next.js",
+      "blurb": "App Router, Server Components, rendering, BFF",
+      "sources": [{ "path": "docs/nextjs.md", "level": 2 }]
+    },
+    {
+      "id": "iv",
+      "title": "Interview day",
+      "blurb": "Crash course, one-page sheet, behavioral round",
+      "sources": [{ "path": "README.md", "level": 3, "only": ["Crash course (last-minute preparation)", "Behavioral questions"] }]
+    }
+  ]
+}
