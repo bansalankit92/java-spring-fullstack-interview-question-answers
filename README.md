@@ -41,6 +41,7 @@ Answers are written in **simple English**, with a real-life story first, a small
   - [Spring](#spring)
   - [Database Connectivity - JDBC, Spring JDBC & JPA, Hibernate](#database-connectivity---jdbc-spring-jdbc--jpa-hibernate)
   - [Unit Testing](#unit-testing)
+  - [Node.js](#nodejs)
 - [Web Services](#web-services)
   - [SOAP Web Services](#soap-web-services)
   - [RESTful Web Services](#restful-web-services)
@@ -56,6 +57,8 @@ Answers are written in **simple English**, with a real-life story first, a small
   - [Kubernetes](#kubernetes)
   - [Redis](#redis)
   - [Akka](#akka)
+- [AI and LLMs](#ai-and-llms)
+- [Production-ready apps](#production-ready-apps)
 - [Questions to Ask after interview](#questions-to-ask-after-interview)
 - [Open source contributions](#open-source-contributions)
 
@@ -240,12 +243,12 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 
 | Day | Topic | Commit to this guide |
 |---|---|---|
-| 43 | Node.js event loop and scaling | Node.js answers |
-| 44 | [Next.js](#nextjs) | Next.js answers |
+| 43 | [Node.js](docs/nodejs.md) event loop and scaling | Review answers |
+| 44 | [React](docs/react.md), [Next.js](#nextjs) | Review answers |
 | 45 | AWS services you must know | AWS answers |
 | 46 | [Docker](#docker), [Kubernetes](#kubernetes) | Update old Docker / Kubernetes answers |
 | 47 | [Redis](#redis) in depth | Update old Redis answers |
-| 48 | Observability, disaster recovery, multi-region | Answers |
+| 48 | [Production-ready apps](docs/production-ready.md): observability, incidents, disaster recovery | Review answers |
 | 49 | **Mock:** full-stack system (Next.js + Spring + AWS). Revise. | Fix gaps |
 
 **Week 8: Harder systems, behavioral, final polish**
@@ -254,7 +257,7 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 |---|---|---|
 | 50 | Multi-tenant SaaS, multi-region | Case studies |
 | 51 | Leaderboard, top-K trending, ad click counting | Case studies |
-| 52 | Google Docs, Slack | Case studies |
+| 52 | [AI and LLMs](#ai-and-llms): LLM basics and RAG | Build a small RAG demo |
 | 53 | [Behavioral questions](#behavioral-questions) | Write your 8 STAR stories (keep them private if you want) |
 | 54 | Weak areas from your mock notes | Fix gaps |
 | 55 | **Full mock loop:** coding + system design + behavioral | Fix gaps |
@@ -539,7 +542,23 @@ Then stop. Do not over-explain.
 * Design Facebook - a social network
 
 ## Frontend  
+
+**Answers (simple English, with diagrams and code):**
+
+| Topic | What's inside |
+|---|---|
+| [React](docs/react.md) | How React renders, hooks (stale closures, when not to use `useEffect`), performance, React 19, architecture for big apps, design systems, state, data fetching, testing, the "500k-line app in 90 days" question |
+| [JavaScript](docs/javascript.md) | Event loop, closures, `this`, prototypes, promises, modern JS (ES2015–ES2026), 30 coding problems (debounce, `Promise.all`, LRU…) |
+| [TypeScript](docs/typescript.md) | Narrowing, generics, utility and mapped types, `satisfies`, tsconfig, TS 6 → 7, 16 coding tasks |
+| [CSS and Tailwind](docs/css-tailwind.md) | Box model, specificity, flexbox, grid, responsive, modern CSS, Tailwind v4, 14 coding tasks |
+| [Frontend UI and web](docs/frontend-ui.md) | What happens when you type a URL, browser rendering, accessibility, Core Web Vitals, frontend security, frontend system design |
+| [Next.js](docs/nextjs.md) | App Router, Server Components, rendering, BFF |
+
+The older question lists below are answered in these files.
+
 ### General
+Answers: [frontend-ui.md](docs/frontend-ui.md#older-questions-2019-list)
+
 
 * What did you learn yesterday/this week?
 * What excites or interests you about coding?
@@ -558,6 +577,8 @@ Then stop. Do not over-explain.
 * Explain your current project with data flow architecture, file structure,...?
 
 ### Js
+Answers: [javascript.md](docs/javascript.md#older-questions-2019-list)
+
 **Basics**
 * JavaScript Fundamentals
 * Code quality
@@ -592,6 +613,8 @@ Then stop. Do not over-explain.
 
 [JavaScript Concepts JavaScript Professionals Must Know Well](http://javascriptissexy.com/16-javascript-concepts-you-must-know-well/)  
 ### HTML
+Answers: [frontend-ui.md](docs/frontend-ui.md#older-questions-2019-list)
+
 * What were some of the key goals and motivations for the HTML5 specification?
 * What are some of the key new features in HTML5?
 * What are “web workers”?
@@ -613,6 +636,8 @@ Then stop. Do not over-explain.
 * Why Meta tags are used in HTML?
 
 ### CSS
+Answers: [css-tailwind.md](docs/css-tailwind.md#older-questions-2019-list)
+
 * CSS Selectors
 * CSS Box Model
 * CSS Layout
@@ -694,6 +719,7 @@ Answers: [docs/java.md](docs/java.md)
 Answers: [docs/spring.md](docs/spring.md)
 - [Spring Boot 2 → 3 → 4: what changed](docs/spring.md#spring-boot-2-to-3-to-4-what-changed)
 - [Spring MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux)
+- ⭐ [Debugging Spring Boot from the inside](docs/spring-debugging.md): startup errors, missing beans, where a property came from, breakpoints inside Spring, `@Transactional` and JPA, slow apps, a one-page checklist
 - [Spring Reactive (WebFlux) in depth](docs/spring.md#spring-reactive-webflux-in-depth): reactive programming, Mono and Flux, operators, backpressure, schedulers, WebClient, R2DBC, testing, debugging, and [31 interview questions](docs/spring.md#spring-reactive-interview-questions)
 - ⭐ [Spring ecosystem: the libraries companies use](docs/spring-ecosystem.md): Security (JWT, OAuth2), Data JPA (N+1, @Transactional), validation, caching, scheduling, testing (Testcontainers), Spring Cloud (Gateway, Config, OpenFeign), observability, Kafka / RabbitMQ, Batch, Modulith, Spring AI, GraphQL, native images, and 60 interview questions
 - The older questions below are answered across these files.
@@ -956,6 +982,10 @@ https://www.journaldev.com/3633/hibernate-interview-questions-and-answers
 - What is @SpringBootTest?
 - What is @LocalServerPort?
 - What is TestRestTemplate?
+
+### Node.js
+Answers: [docs/nodejs.md](docs/nodejs.md)
+- Event loop phases, `process.nextTick` vs `setImmediate`, what blocks the loop, worker threads vs cluster, streams and backpressure, Express / Fastify / NestJS, scaling, memory leaks, graceful shutdown, Node 22–26, Node vs Java/Spring
 
 ## Web Services
 
@@ -1590,6 +1620,25 @@ Akka is a open-source library or a toolkit written in Scala to create concurrent
 * Co-ordination  
 
 https://doc.akka.io/docs/akka/current/general/index.html
+
+## AI and LLMs
+
+Senior backend interviews now often ask how you would build with LLMs. Start with the basics, then RAG.
+
+| Topic | What's inside |
+|---|---|
+| [AI and LLM basics](docs/ai-llm-basics.md) | How LLMs work, prompting, structured output, tool calling, agents, MCP, guardrails, evals, cost and latency, an LLM gateway design, Spring AI |
+| [RAG](docs/ai-rag.md) | Chunking, embeddings, vector databases, hybrid search, reranking, citations, evaluation, "design a chatbot over company docs" |
+| [Inference, fine-tuning and local models](docs/ai-inference-training.md) | Prompt vs RAG vs fine-tune, GPU memory math, quantization, Ollama / llama.cpp / vLLM, LoRA on your own docs, running it locally |
+| [AI projects end to end](docs/ai-projects.md) | OCR (English + Hindi), an astrology chart explainer, a granth assistant that answers only from one scripture |
+| [Coding with AI assistants](docs/ai-coding-assistants.md) | The workflow that works, giving context, reviewing AI code, security, how to talk about AI in interviews |
+
+## Production-ready apps
+
+| Topic | What's inside |
+|---|---|
+| [Production-ready apps (backend + frontend)](docs/production-ready.md) | Logs, metrics, traces, OpenTelemetry, ELK / Loki / Grafana, APM (New Relic, Datadog…), frontend monitoring, analytics, SLOs and alerts, 7 incident debugging walkthroughs, safe deploys, a go-live checklist |
+| [Debugging Spring Boot from the inside](docs/spring-debugging.md) | Reading startup errors, conditions report, Actuator, breakpoints inside Spring, debugging security, transactions and slow apps |
 
 ## Questions to Ask after interview
 Please always do ask atleast one question when interview ask you "If you have any questions for us?"  
