@@ -6,6 +6,48 @@ Microservices are small apps that talk over the network. The network can be slow
 These patterns are the standard answers to "what happens when it fails?".
 We use one running example: an online shop with **Order**, **Payment**, **Inventory** and **Shipping** services.
 
+## The big picture: where each pattern lives
+
+**The big picture:** Follow one order from the app on the left to the services on the right; each pattern below has a place in this picture.
+
+```mermaid
+flowchart LR
+    C["Web and mobile apps"] --> GW["API gateway + BFF (auth, rate limit)"]
+    GW --> ORD
+    subgraph orderBox["Order Service"]
+        ORD["Order API"]
+        SAGA["Saga orchestrator"]
+        PC["Payment client (own bulkhead pool): timeout, retry, circuit breaker"]
+        REL["Outbox relay"]
+    end
+    ORD -->|"one transaction"| ODB["Order DB (orders + outbox table)"]
+    ORD --> SAGA
+    SAGA --> PC
+    PC -->|"sync REST + Idempotency-Key"| PAY["Payment Service"]
+    PAY --> PDB["Payment DB (+ idempotency keys)"]
+    ODB --> REL
+    REL -->|"publish events"| K["Kafka"]
+    K --> INV["Inventory Service"]
+    K --> SHP["Shipping Service"]
+    K --> NOT["Notification Service"]
+    INV --> IDB["Inventory DB"]
+    SHP --> SDB["Shipping DB"]
+    NOT --> NDB["Notification DB"]
+```
+
+| Pattern | Where it sits in the picture | Problem it solves | Read more |
+|---|---|---|---|
+| Microservices | The services on the right, each with its own DB | Each team can deploy and scale its part on its own | [Monolith vs microservices](#monolith-vs-microservices) |
+| Sync vs async | Order → Payment is sync (REST). Kafka → Inventory, Shipping, Notification is async | The user waits only for the work that must happen now | [Sync vs async](#sync-vs-async-communication) |
+| Saga | "Saga orchestrator" inside Order Service | One order changes 4 databases. If a step fails, undo the earlier steps | [Saga](#saga-pattern) |
+| Transactional outbox | "Order DB (orders + outbox table)" and "Outbox relay" | Save the order and send the event, and never lose one of them | [Outbox](#transactional-outbox-pattern) |
+| Idempotency | Idempotency-Key on the Payment call, keys saved in Payment DB | A retry or a duplicate event does not charge the card twice | [Idempotency](#idempotency) |
+| Retry with backoff and jitter | Payment client inside Order Service | Short network blips do not reach the user | [Retry](#retry-with-exponential-backoff-and-jitter) |
+| Timeouts | Payment client (and every arrow in the picture) | A slow service cannot hold our threads forever | [Timeouts](#timeouts) |
+| Circuit breaker | Payment client | Stop calling a sick Payment Service and fail fast | [Circuit breaker](#circuit-breaker) |
+| Bulkhead | "own bulkhead pool" in the Payment client | A slow dependency fills only its own pool, not all threads | [Bulkhead](#bulkhead) |
+| API gateway and BFF | "API gateway + BFF", the front door | One place for login check, rate limit and routing; the right data for each app | [API gateway and BFF](#api-gateway-and-bff) |
+
 ## Monolith vs microservices
 
 **In one line:** A monolith is one app that you deploy as one unit. Microservices are many small apps, and each one is deployed on its own.
@@ -30,6 +72,33 @@ flowchart LR
 ```
 
 Most teams should move left to right **only when they feel real pain**.
+
+
+**Architecture:** Look at the databases: one DB for both monolith styles, one DB per service for microservices.
+
+```mermaid
+flowchart TD
+    subgraph micro["Microservices"]
+        direction TB
+        S1["Order Service"] -->|"REST"| S2["Payment Service"]
+        S1 -->|"Kafka event"| S3["Inventory Service"]
+        S1 --> D1["Order DB"]
+        S2 --> D2["Payment DB"]
+        S3 --> D3["Inventory DB"]
+    end
+    subgraph modmono["Modular monolith"]
+        direction TB
+        MM1["Order module"] -->|"public API"| MM2["Payment module"]
+        MM1 -->|"event"| MM3["Inventory module"]
+        MM1 --> MMDB["One DB: each module owns its own tables"]
+        MM2 --> MMDB
+        MM3 --> MMDB
+    end
+    subgraph mono["Monolith"]
+        direction TB
+        M1["Shop app (one JAR): all code mixed"] --> MDB["One DB: all tables"]
+    end
+```
 
 **Example:** Our shop with 8 developers and 10,000 orders a day.
 - 10,000 orders a day is less than 1 order per second. One Spring Boot app handles this easily.
@@ -100,6 +169,29 @@ flowchart LR
 - Slow calls hurt more. Say each service is slower than 100 ms in 1% of calls. If one request calls 10 services, about **10% of requests** hit at least one slow call (1 - 0.99^10 = 9.6%).
 
 With async, the email service can be down for 1 hour. Orders still work. Emails go out when it comes back.
+
+
+**Architecture:** Compare what the user waits for: all 5 services in a sync chain, only Order Service with events.
+
+```mermaid
+flowchart LR
+    subgraph asyncBox["Event-driven: the user waits only for Order"]
+        direction LR
+        B1["Order (99.9%, 50 ms)"] -->|"publish OrderPlaced"| BK["Kafka"]
+        BK --> B2["Inventory"]
+        BK --> B3["Shipping"]
+        BK --> B4["Email"]
+        B1 -.->|"user gets answer"| R2["Total: 50 ms; Email down = email late, order still OK"]
+    end
+    subgraph syncBox["Sync chain: the user waits for all 5"]
+        direction LR
+        A1["Gateway (99.9%, 50 ms)"] --> A2["Order (99.9%, 50 ms)"]
+        A2 --> A3["Payment (99.9%, 50 ms)"]
+        A3 --> A4["Inventory (99.9%, 50 ms)"]
+        A4 --> A5["Shipping (99.9%, 50 ms)"]
+        A5 -.->|"adds up"| R1["Total: 250 ms and about 99.5% up"]
+    end
+```
 
 **Good and bad:**
 | | Good | Bad |
@@ -183,6 +275,31 @@ sequenceDiagram
 
 Like the wedding planner: one person knows the full plan and the current step.
 
+
+**Architecture:** The orchestrator sends commands on Kafka topics, and each service replies on `saga-replies`.
+
+```mermaid
+flowchart TD
+    subgraph orderBox["Order Service"]
+        ORC["Saga orchestrator"] --> ODB["Order DB (orders + saga_state + outbox)"]
+    end
+    ORC -->|"command"| T1["Topic: payment-commands"]
+    ORC -->|"command"| T2["Topic: inventory-commands"]
+    ORC -->|"command"| T3["Topic: shipping-commands"]
+    T1 --> PAY["Payment Service"]
+    T2 --> INV["Inventory Service"]
+    T3 --> SHP["Shipping Service"]
+    PAY --> PDB["Payment DB"]
+    INV --> IDB["Inventory DB"]
+    SHP --> SDB["Shipping DB"]
+    PAY -.->|"reply"| T4["Topic: saga-replies"]
+    INV -.->|"reply"| T4
+    SHP -.->|"reply"| T4
+    T4 -.->|"next step or undo"| ORC
+```
+
+Each service changes only its own DB. The orchestrator saves its current step in `saga_state`, so a crash does not lose progress.
+
 **Example:** Orchestrator state is saved in a table, so a crash does not lose progress.
 
 ```java
@@ -249,6 +366,21 @@ public void onInventoryResult(UUID orderId, boolean reserved) {
 
 There is no shared transaction between Postgres and Kafka.
 
+
+**Failure path:** Without an outbox, the crash can happen after the DB commit and before the Kafka publish.
+
+```mermaid
+sequenceDiagram
+    participant Order
+    participant DB
+    participant Kafka
+    participant Payment
+    Order->>DB: INSERT order, COMMIT
+    DB-->>Order: OK, order saved
+    Order-xKafka: publish OrderCreated (app crashes here)
+    Note over Kafka,Payment: No event. Payment never hears about the order.
+```
+
 *The fix:*
 1. In one DB transaction: insert the order **and** insert a row in the `outbox` table.
 2. A relay process reads new outbox rows and publishes them to Kafka.
@@ -266,6 +398,29 @@ flowchart LR
     DB --> R["Relay (poller or Debezium)"]
     R -->|"publish"| K["Kafka"]
     K --> P["Payment Service"]
+```
+
+
+**Architecture:** Both rows go in one transaction; Debezium reads the new outbox rows from the database log and sends them to Kafka.
+
+```mermaid
+flowchart LR
+    subgraph orderBox["Order Service"]
+        APP["placeOrder()"]
+    end
+    subgraph dbBox["Order DB (Postgres)"]
+        T1["orders table"]
+        T2["outbox table"]
+        WAL["WAL (change log)"]
+    end
+    APP -->|"same transaction"| T1
+    APP -->|"same transaction"| T2
+    T2 --> WAL
+    WAL -->|"CDC reads new outbox rows"| DBZ["Debezium (or a poller)"]
+    DBZ -->|"publish, key = order id"| K["Kafka: order-events"]
+    K --> PAY["Payment Service"]
+    K --> INV["Inventory Service"]
+    K --> NOT["Notification Service"]
 ```
 
 **Example:**
@@ -344,6 +499,28 @@ sequenceDiagram
     C->>P: POST /payments (Key: A12) retry
     P->>DB: insert A12 fails (duplicate)
     P-->>C: 200 OK, same saved receipt
+```
+
+
+**Architecture:** Idempotency lives in two places: the Payment API (key from the client) and the Kafka consumer (event id).
+
+```mermaid
+flowchart LR
+    APP["Mobile app (makes key A12 once)"] -->|"POST /payments, Idempotency-Key: A12"| PAY["Payment Service"]
+    subgraph payDb["Payment DB (one transaction)"]
+        KEYS["idempotency_keys (unique key)"]
+        PAYT["payments table"]
+    end
+    PAY --> KEYS
+    PAY --> PAYT
+    PAY -->|"same key A12"| BANK["Bank / card gateway"]
+    K["Kafka: order-events"] -->|"may deliver twice"| CON["Inventory Service consumer"]
+    subgraph invDb["Inventory DB (one transaction)"]
+        PE["processed_events (unique eventId)"]
+        STOCK["stock table"]
+    end
+    CON --> PE
+    CON --> STOCK
 ```
 
 **Example:**
@@ -432,7 +609,48 @@ flowchart LR
     F -->|"no"| D
 ```
 
+
+**Timeline:** Each wait is longer than the one before, and has a random part.
+
+```mermaid
+sequenceDiagram
+    participant Order
+    participant Inventory
+    Order->>Inventory: Attempt 1
+    Inventory-->>Order: 503 Service Unavailable
+    Note over Order: Wait random 0 to 200 ms
+    Order->>Inventory: Attempt 2
+    Inventory-->>Order: Timeout
+    Note over Order: Wait random 0 to 400 ms
+    Order->>Inventory: Attempt 3 (last one)
+    alt Inventory is back
+        Inventory-->>Order: 200 OK
+    else Still failing
+        Inventory-->>Order: 503 again
+        Note over Order: Stop. Use fallback or return error.
+    end
+```
+
 **Example:** Why retries multiply. Gateway, Order and Inventory each retry 3 times. One user click can become 3 x 3 x 3 = **27 calls** to Inventory. A small outage becomes a big one. **Retry at one layer only**, usually the one closest to the failing service.
+
+
+**Architecture:** Retries live in one place only: the client closest to the failing service, with a retry budget.
+
+```mermaid
+flowchart LR
+    subgraph good["Good: one layer retries"]
+        direction LR
+        G2["Gateway: no retry"] --> O2["Order: Inventory client retries, max 3, budget 10%"]
+        O2 -->|"at most 3 calls"| I2["Inventory: no retry"]
+        I2 --> D2["Inventory DB"]
+    end
+    subgraph bad["Bad: every layer retries"]
+        direction LR
+        G1["Gateway: 3 tries"] --> O1["Order: 3 tries"]
+        O1 --> I1["Inventory: 3 tries"]
+        I1 -->|"up to 27 calls"| D1["Inventory DB"]
+    end
+```
 
 Resilience4j 2.x with Spring Boot (`resilience4j-spring-boot3` starter):
 
@@ -515,6 +733,24 @@ flowchart LR
 - Now even `/health` and "view my orders" fail. One slow service took down another. This is a **cascading failure**.
 
 With an 800 ms read timeout, each thread is free again after 800 ms. Users get a quick error or a fallback.
+
+
+**Failure path:** Payment hangs, but the 800 ms timeout frees the thread, and the user gets an answer inside the 2 s budget.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Gateway
+    participant Order
+    participant Payment
+    User->>Gateway: Place order (waits max 2 s)
+    Gateway->>Order: Forward (timeout 1.8 s)
+    Order->>Payment: Charge (timeout 800 ms)
+    Note over Payment: Hangs, no answer
+    Note over Order: 800 ms passed. Give up. Thread is free again.
+    Order-->>Gateway: Order saved, payment PENDING (fallback)
+    Gateway-->>User: Answer in about 1 s, not stuck
+```
 
 *Budget mistake:* Order has a 1 second timeout. But it calls Payment with a 3 second timeout. Order gives up at 1 second, but Payment keeps working for 2 more seconds. That is wasted work.
 
@@ -622,6 +858,23 @@ public class PaymentClient {
 
 **Good fallbacks:** cached data, a default value ("no recommendations"), "accept now, process later", or a clear error message. **Bad fallback:** pretending the payment succeeded.
 
+
+**Architecture:** The breaker sits inside Order Service, in front of the Payment client; when it is open, calls go to the fallback.
+
+```mermaid
+flowchart LR
+    subgraph orderBox["Order Service"]
+        CODE["Checkout code"] --> CB{"Circuit breaker for Payment"}
+        CB -->|"closed or half-open"| PC["Payment client (timeout 800 ms)"]
+        CB -->|"open: fail fast"| FB["Fallback: order PAYMENT_PENDING"]
+        JOB["Charge-later job"]
+    end
+    PC --> PAY["Payment Service"]
+    FB --> ODB["Order DB"]
+    JOB -->|"read PENDING orders"| ODB
+    JOB -->|"charge when breaker is closed again"| CB
+```
+
 **Good and bad:**
 | Good | Bad |
 |---|---|
@@ -677,6 +930,28 @@ flowchart LR
 - Traffic: 50 requests per second.
 - Without a bulkhead, 200 threads are full in 4 seconds. Checkout stops. The shop loses money because of a "nice-to-have" feature.
 - With a bulkhead of 20, only 20 slots are stuck. The product page shows "no recommendations". Checkout works.
+
+
+**Architecture:** Recommendations is slow, so only its own pool is full; the Payment and Inventory pools still have free slots.
+
+```mermaid
+flowchart LR
+    REQ["Incoming requests"] --> T
+    subgraph orderBox["Order Service"]
+        T["Request threads (200)"]
+        P1["Payment pool: 12 of 50 busy"]
+        P2["Inventory pool: 8 of 50 busy"]
+        P3["Recommendations pool: 20 of 20 busy, FULL"]
+        FB["Fallback: empty list"]
+        T --> P1
+        T --> P2
+        T --> P3
+        P3 -->|"extra calls rejected fast"| FB
+    end
+    P1 --> PAY["Payment Service (OK)"]
+    P2 --> INV["Inventory Service (OK)"]
+    P3 --> REC["Recommendation Service (10 s per call)"]
+```
 
 ```yaml
 resilience4j:
@@ -757,6 +1032,27 @@ flowchart LR
 ```
 
 (Many teams put the gateway first and the BFFs behind it. Both layouts are fine. Pick one and keep it simple.)
+
+
+**Architecture:** This is the other layout: the gateway checks login and rate limit first, then sends each app to its own BFF.
+
+```mermaid
+flowchart LR
+    W["Web app"] --> G1
+    M["Mobile app"] --> G1
+    subgraph gw["API gateway"]
+        G1["Step 1: check JWT"] --> G2["Step 2: rate limit, 100 per minute"]
+        G2 --> G3["Step 3: route by path"]
+    end
+    G2 --> R["Redis (rate limit counters)"]
+    G3 -->|"/web/**"| WB["Web BFF (20 fields)"]
+    G3 -->|"/mobile/**"| MB["Mobile BFF (5 fields)"]
+    WB --> O["Order Service"]
+    WB --> P["Payment Service"]
+    WB --> S["Shipping Service"]
+    MB --> O
+    MB --> S
+```
 
 **Example:** Spring Cloud Gateway (2025.0 or newer uses the `server.webflux` prefix):
 

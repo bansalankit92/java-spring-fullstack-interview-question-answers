@@ -21,9 +21,6 @@ Answers are written in **simple English**, with a real-life story first, a small
 - [Top 20 questions to master first](#top-20-questions-to-master-first)
 - [Behavioral questions](#behavioral-questions)
 - [System Design](#system-design)
-  - [How to approach it](#how-to-approach-it)
-  - [Building blocks](#building-blocks)
-  - [Case studies](#case-studies)
 - [General Topics](#general-topics)
   - [DS Algo](#ds-algo)
   - [OOPS](#oops)
@@ -112,16 +109,16 @@ For: interviews already scheduled. About **6–8 hours a day**. Focus only on wh
 | 1 | [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question), [Capacity estimation](docs/system-design.md#capacity-estimation) | Estimate numbers for 3 systems (orders, chat, video) | do the "1M orders per day" math without notes |
 | 2 | [Scaling](docs/system-design.md#vertical-vs-horizontal-scaling), [Stateless services](docs/system-design.md#stateless-services), [Load balancing](docs/system-design.md#load-balancing), [Caching](docs/system-design.md#caching), [CDN](docs/system-design.md#cdn) | Draw a 3-tier app with cache and CDN | explain cache-aside and 2 cache problems |
 | 3 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing), [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [Indexes](docs/system-design.md#database-indexes) | Pick a shard key for orders, chat, and users | say when you need strong vs eventual consistency |
-| 4 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Unique IDs](docs/system-design.md#unique-id-generation), [Rate limiting](docs/system-design.md#rate-limiting-algorithms) | Design a rate limiter (30 min) | draw token bucket and explain it |
+| 4 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Unique IDs](docs/system-design.md#unique-id-generation), [Rate limiting](docs/system-design.md#rate-limiting-algorithms) | Design a [rate limiter](docs/system-design/rate-limiter.md) (30 min) | draw token bucket and explain it |
 | 5 | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices), [Sync vs async](docs/microservices.md#sync-vs-async-communication), [Saga](docs/microservices.md#saga-pattern), [Outbox](docs/microservices.md#transactional-outbox-pattern), [Idempotency](docs/microservices.md#idempotency) | Draw the order saga with compensations | explain the "dual write" problem |
 | 6 | [Timeouts](docs/microservices.md#timeouts), [Retries + jitter](docs/microservices.md#retry-with-exponential-backoff-and-jitter), [Circuit breaker](docs/microservices.md#circuit-breaker), [Bulkhead](docs/microservices.md#bulkhead), [API gateway](docs/microservices.md#api-gateway-and-bff) | Explain what happens when payment service is slow | describe circuit breaker states |
-| 7 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering), [Delivery](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | **Mock 1:** [Amazon order processing](docs/case-studies.md#amazon-order-processing) (45 min) | guarantee order per customer and handle duplicates |
+| 7 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering), [Delivery](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | **Mock 1:** [Amazon order processing](docs/system-design/amazon-order-processing.md) (45 min) | guarantee order per customer and handle duplicates |
 | 8 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | Write 5 SQL queries by hand (joins, 2nd highest salary) | explain optimistic vs pessimistic with the "last seat" story |
-| 9 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data), [Virtual threads](docs/java.md#virtual-threads) | Write a thread-safe counter 3 ways | explain race condition, volatile, deadlock |
+| 9 | [Java concurrency story](docs/java-concurrency.md), [Virtual threads](docs/java.md#virtual-threads) | Write a thread-safe counter 3 ways | explain race condition, volatile, deadlock |
 | 10 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Rewrite one old Java 8 class with records, switch, sealed | list 3 changes per LTS version |
-| 11 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), [Spring](#spring) core questions (DI, @Transactional) | Explain why `@Transactional` fails on self-call | explain auto-configuration and bean lifecycle |
-| 12 | [Case studies](#case-studies): news feed + WhatsApp | **Mock 2:** design WhatsApp (45 min) | handle offline users and message order |
-| 13 | [Case studies](#case-studies): BookMyShow + YouTube | **Mock 3:** design BookMyShow (45 min) | stop double booking of the same seat |
+| 11 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), [Spring](#spring) core questions (DI, [@Transactional](docs/spring-ecosystem.md#transactional-deep-dive)) | Explain why `@Transactional` fails on self-call | explain auto-configuration and bean lifecycle |
+| 12 | [Case studies](docs/system-design.md#case-studies): [news feed](docs/system-design/news-feed.md) + [WhatsApp](docs/system-design/whatsapp.md) | **Mock 2:** design WhatsApp (45 min) | handle offline users and message order |
+| 13 | [Case studies](docs/system-design.md#case-studies): [BookMyShow](docs/system-design/bookmyshow-ticket-booking.md) + [YouTube](docs/system-design/youtube-video-streaming.md) | **Mock 3:** design BookMyShow (45 min) | stop double booking of the same seat |
 | 14 | [Behavioral questions](#behavioral-questions), [Crash course](#crash-course-last-minute-preparation) | Say 6 STAR stories out loud | answer "tell me about yourself" in 2 minutes |
 
 ### 1-month plan
@@ -136,27 +133,27 @@ For: you have a few weeks before interviews start. About **4–5 hours a day**. 
 | 4 | [Caching](docs/system-design.md#caching), [CDN](docs/system-design.md#cdn) | List cache problems and fixes |
 | 5 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing) | Pick shard keys for 3 systems |
 | 6 | [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql), [Indexes](docs/system-design.md#database-indexes) | Choose a database for 5 use cases |
-| 7 | **Mock:** URL shortener + rate limiter | Revise week 1 |
+| 7 | **Mock:** [URL shortener](docs/system-design/url-shortener.md) + [rate limiter](docs/system-design/rate-limiter.md) | Revise week 1 |
 | 8 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Blob storage](docs/system-design.md#blob-storage-files-images-videos) | Draw file upload with pre-signed URL |
 | 9 | [Unique IDs](docs/system-design.md#unique-id-generation), [Rate limiting](docs/system-design.md#rate-limiting-algorithms), [Bloom filter](docs/system-design.md#bloom-filter) | Explain Snowflake ID bits |
 | 10 | [Geohash](docs/system-design.md#geohash-and-quadtree-location-search), [Inverted index](docs/system-design.md#inverted-index-how-search-works), [Video streaming](docs/system-design.md#video-streaming-basics-hls-and-adaptive-bitrate) | Explain how search is fast |
 | 11 | [Monolith vs microservices](docs/microservices.md#monolith-vs-microservices), [Sync vs async](docs/microservices.md#sync-vs-async-communication), [API gateway](docs/microservices.md#api-gateway-and-bff) | Explain availability math for 5 services |
 | 12 | [Saga](docs/microservices.md#saga-pattern), [Outbox](docs/microservices.md#transactional-outbox-pattern), [Idempotency](docs/microservices.md#idempotency) | Draw order saga with compensation |
 | 13 | [Timeouts](docs/microservices.md#timeouts), [Retries](docs/microservices.md#retry-with-exponential-backoff-and-jitter), [Circuit breaker](docs/microservices.md#circuit-breaker), [Bulkhead](docs/microservices.md#bulkhead) | "Payment service is slow. What happens?" |
-| 14 | **Mock:** [Amazon order processing](docs/case-studies.md#amazon-order-processing) | Revise week 2 |
+| 14 | **Mock:** [Amazon order processing](docs/system-design/amazon-order-processing.md) | Revise week 2 |
 | 15 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering) | How many partitions for 10k msg/s? |
 | 16 | [Delivery guarantees](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | Write an idempotent consumer |
 | 17 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | 10 SQL queries by hand |
-| 18 | [Case studies](#case-studies): news feed, WhatsApp | Design both, 30 min each |
-| 19 | [Case studies](#case-studies): YouTube, YouTube search | Design both, 30 min each |
-| 20 | [Case studies](#case-studies): BookMyShow, payments/banking | Design both, 30 min each |
-| 21 | **Mock:** Uber or Hotstar live | Revise week 3 |
-| 22 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data) | Thread-safe counter 3 ways, deadlock example |
+| 18 | [Case studies](docs/system-design.md#case-studies): [news feed](docs/system-design/news-feed.md), [WhatsApp](docs/system-design/whatsapp.md) | Design both, 30 min each |
+| 19 | [Case studies](docs/system-design.md#case-studies): [YouTube](docs/system-design/youtube-video-streaming.md), [YouTube search](docs/system-design/youtube-search-typeahead.md) | Design both, 30 min each |
+| 20 | [Case studies](docs/system-design.md#case-studies): [BookMyShow](docs/system-design/bookmyshow-ticket-booking.md), [payments](docs/system-design/payment-gateway.md) / [banking](docs/system-design/bank-ledger-wallet.md) | Design both, 30 min each |
+| 21 | **Mock:** [Uber](docs/system-design/uber-ride-hailing.md) or [Hotstar live](docs/system-design/hotstar-live-streaming.md) | Revise week 3 |
+| 22 | [Java concurrency story](docs/java-concurrency.md) (eras 1–4) | Thread-safe counter 3 ways, deadlock example |
 | 23 | [Java](#java) collections: HashMap, ConcurrentHashMap internals | Explain `put()` step by step |
-| 24 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [Virtual threads](docs/java.md#virtual-threads) | Modernize an old Java 8 class |
+| 24 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [Virtual threads](docs/java.md#virtual-threads), [Streams](docs/java-streams.md) | 10 [stream coding problems](docs/java-streams.md#stream-coding-problems-with-answers) |
 | 25 | [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Explain 3 kinds of OutOfMemoryError |
-| 26 | [Spring](#spring) core: DI, bean lifecycle, auto-configuration, @Transactional | Explain self-invocation problem |
-| 27 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), security (OAuth2, JWT) | Explain JWT flow with a diagram |
+| 26 | [Spring](#spring) core: DI, bean lifecycle, auto-configuration, [@Transactional](docs/spring-ecosystem.md#transactional-deep-dive) | Explain self-invocation problem |
+| 27 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), [security (OAuth2, JWT)](docs/spring-ecosystem.md#jwt-and-oauth2-resource-server) | Explain JWT flow with a diagram |
 | 28 | **Mock:** Java + Spring deep dive (ask a friend or use AI as interviewer) | Revise week 4 |
 | 29 | [Behavioral questions](#behavioral-questions), [Next.js](#nextjs) / Node.js if your role needs it | 6 STAR stories out loud |
 | 30 | [Crash course](#crash-course-last-minute-preparation) + rest | Sleep well |
@@ -175,7 +172,7 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 | 4 | [Replication](docs/system-design.md#database-replication-read-replicas), [Sharding](docs/system-design.md#partitioning-and-sharding), [Consistent hashing](docs/system-design.md#consistent-hashing) | Review answers |
 | 5 | [Consistency](docs/system-design.md#database-consistency-strong-vs-eventual), [CAP](docs/system-design.md#cap-theorem), [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql), [Indexes](docs/system-design.md#database-indexes) | Review answers |
 | 6 | [Message queues](docs/system-design.md#message-queues-and-pubsub), [WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events), [Blob storage](docs/system-design.md#blob-storage-files-images-videos), [IDs](docs/system-design.md#unique-id-generation) | Review answers |
-| 7 | **Mock:** URL shortener. Revise the week. | Case study: URL shortener |
+| 7 | **Mock:** [URL shortener](docs/system-design/url-shortener.md). Revise the week. | Review answers |
 
 **Week 2: Microservices, Kafka, databases**
 
@@ -187,41 +184,41 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 | 11 | [Kafka basics](docs/kafka.md#kafka-basics-in-simple-words), [Partitions](docs/kafka.md#kafka-partitions-and-consumer-groups), [Ordering](docs/kafka.md#kafka-message-ordering) | Answer old Kafka questions |
 | 12 | [Delivery guarantees](docs/kafka.md#kafka-delivery-guarantees), [Duplicates](docs/kafka.md#handling-duplicate-events) | Kafka vs RabbitMQ answer |
 | 13 | [SQL joins](docs/databases.md#sql-joins-and-self-join), [Transactions](docs/databases.md#transactions-and-isolation-levels), [Locking](docs/databases.md#optimistic-vs-pessimistic-locking) | Answer old MySQL questions |
-| 14 | **Mock:** [Amazon order processing](docs/case-studies.md#amazon-order-processing). Revise. | Rate limiter case study |
+| 14 | **Mock:** [Amazon order processing](docs/system-design/amazon-order-processing.md). Revise. | Rate limiter case study |
 
 **Week 3: Case studies, part 1**
 
 | Day | Topic | Commit to this guide |
 |---|---|---|
-| 15 | [Rate limiting](docs/system-design.md#rate-limiting-algorithms), [Bloom filter](docs/system-design.md#bloom-filter) | Case study: rate limiter |
-| 16 | News feed (Facebook / Instagram) | Case study: news feed |
-| 17 | WhatsApp (chat, groups, online status) | Case study: WhatsApp |
-| 18 | YouTube (upload and watch) | Case study: YouTube |
-| 19 | YouTube search and typeahead | Case study: search + typeahead |
-| 20 | BookMyShow (seat booking) | Case study: BookMyShow |
+| 15 | [Rate limiting](docs/system-design.md#rate-limiting-algorithms), [Bloom filter](docs/system-design.md#bloom-filter) | Review [rate limiter](docs/system-design/rate-limiter.md) |
+| 16 | [News feed (Facebook / Instagram)](docs/system-design/news-feed.md) | Case study: news feed |
+| 17 | [WhatsApp](docs/system-design/whatsapp.md) (chat, groups, online status) | Case study: WhatsApp |
+| 18 | [YouTube](docs/system-design/youtube-video-streaming.md) (upload and watch) | Case study: YouTube |
+| 19 | [YouTube search and typeahead](docs/system-design/youtube-search-typeahead.md) | Case study: search + typeahead |
+| 20 | [BookMyShow](docs/system-design/bookmyshow-ticket-booking.md) (seat booking) | Case study: BookMyShow |
 | 21 | **Mock:** one of this week's systems. Revise. | Fix gaps found in the mock |
 
 **Week 4: Case studies, part 2**
 
 | Day | Topic | Commit to this guide |
 |---|---|---|
-| 22 | Payment gateway and bank ledger | Case study: payments / banking |
-| 23 | Uber / Ola (location, matching) | Case study: Uber |
-| 24 | Hotstar live (millions join at once) | Case study: Hotstar live |
-| 25 | Notification service, distributed job scheduler | Case studies: notifications, scheduler |
-| 26 | Dropbox / Google Drive | Case study: Dropbox |
-| 27 | Flash sale, stock exchange | Case studies: flash sale, stock exchange |
+| 22 | [Payment gateway](docs/system-design/payment-gateway.md) and [bank ledger](docs/system-design/bank-ledger-wallet.md) | Case study: payments / banking |
+| 23 | [Uber / Ola](docs/system-design/uber-ride-hailing.md) (location, matching) | Case study: Uber |
+| 24 | [Hotstar live](docs/system-design/hotstar-live-streaming.md) (millions join at once) | Case study: Hotstar live |
+| 25 | [Notification service](docs/system-design/notification-service.md), [distributed job scheduler](docs/system-design/job-scheduler.md) | Case studies: notifications, scheduler |
+| 26 | [Dropbox / Google Drive](docs/system-design/dropbox-file-storage.md) | Case study: Dropbox |
+| 27 | [Flash sale](docs/system-design/flash-sale.md), [stock exchange](docs/system-design/stock-exchange.md) | Case studies: flash sale, stock exchange |
 | 28 | **Mock:** random system. Revise. | Fix gaps |
 
 **Week 5: Java**
 
 | Day | Topic | Commit to this guide |
 |---|---|---|
-| 29 | [Java concurrency](docs/java.md#java-concurrency-and-shared-data) | Executors, CompletableFuture answers |
+| 29 | [Java concurrency story](docs/java-concurrency.md) | Executors, CompletableFuture answers |
 | 30 | Collections: HashMap, ConcurrentHashMap internals | Update old collection answers |
 | 31 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed) | Update old [Java](#java) answers |
 | 32 | [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Memory leak and high GC debugging story |
-| 33 | [Virtual threads](docs/java.md#virtual-threads), streams | Streams and parallel streams answers |
+| 33 | [Virtual threads](docs/java.md#virtual-threads), [streams](docs/java-streams.md) | Solve 15 [stream problems](docs/java-streams.md#stream-coding-problems-with-answers) |
 | 34 | OOP, SOLID, design patterns | Answer old [OOPS](#oops) and [Design Patterns](#design-patterns) questions |
 | 35 | **Mock:** Java deep dive. Revise. | Fix gaps |
 
@@ -230,10 +227,10 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 | Day | Topic | Commit to this guide |
 |---|---|---|
 | 36 | DI, bean lifecycle, auto-configuration | Answer old [Spring](#spring) core questions |
-| 37 | @Transactional, propagation, JPA N+1 problem | Answer old JPA / Hibernate questions |
-| 38 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), observability | Logs, metrics, traces answer |
-| 39 | Spring Security, OAuth2, JWT | Security answers |
-| 40 | [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), testing (JUnit 5, Mockito, Testcontainers) | Testing answers |
+| 37 | [@Transactional](docs/spring-ecosystem.md#transactional-deep-dive), propagation, [JPA N+1 problem](docs/spring-ecosystem.md#the-n1-problem-and-how-to-fix-it) | Answer old JPA / Hibernate questions |
+| 38 | [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed), [observability](docs/spring-ecosystem.md#observability-with-actuator-micrometer-and-opentelemetry) | Review answers |
+| 39 | [Spring Security](docs/spring-ecosystem.md#spring-security), [OAuth2](docs/spring-ecosystem.md#oauth2-login-oidc-and-spring-authorization-server), [JWT](docs/spring-ecosystem.md#jwt-and-oauth2-resource-server) | Review answers |
+| 40 | [MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux), [testing](docs/spring-ecosystem.md#testing-spring-boot-apps) (JUnit 5, Mockito, Testcontainers) | Review answers |
 | 41 | Low-level design: parking lot, BookMyShow classes | LLD case studies |
 | 42 | **Mock:** low-level design. Revise. | Fix gaps |
 
@@ -271,7 +268,7 @@ You don't have time to learn new things now. Your goal is to **remember** and **
 |---|---|
 | 1 hour | Read the [Top 20 questions](#top-20-questions-to-master-first). Only the **In one line** and **Say this in the interview** parts. |
 | 1 hour | Read [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) and [Capacity estimation](docs/system-design.md#capacity-estimation). Do one estimate on paper. |
-| 1.5 hours | One full mock design out loud, with a timer: [Amazon order processing](docs/case-studies.md#amazon-order-processing) or the system the company is famous for. |
+| 1.5 hours | One full mock design out loud, with a timer: [Amazon order processing](docs/system-design/amazon-order-processing.md) or the system the company is famous for. |
 | 1 hour | Java + Spring: [concurrency](docs/java.md#java-concurrency-and-shared-data), [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [virtual threads](docs/java.md#virtual-threads), [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed). |
 | 1 hour | 2 easy-medium coding problems. Only to warm up, not to learn. |
 | 30 min | Read your [STAR stories](#behavioral-questions). Practice "tell me about yourself". Read about the company. |
@@ -326,7 +323,7 @@ If you only have little time, master these. Each link goes to the full answer.
 
 | # | Question | Area |
 |---|---|---|
-| 1 | [Design Amazon order processing](docs/case-studies.md#amazon-order-processing) | System design |
+| 1 | [Design Amazon order processing](docs/system-design/amazon-order-processing.md) | System design |
 | 2 | [Estimate capacity for 1 million orders per day](docs/system-design.md#capacity-estimation) | System design |
 | 3 | [How many service instances do you need, and why?](docs/system-design.md#capacity-estimation) | System design |
 | 4 | [Sync vs async communication between microservices](docs/microservices.md#sync-vs-async-communication) | Microservices |
@@ -388,62 +385,24 @@ Then stop. Do not over-explain.
 
 ## System Design
 
-Answers: [docs/system-design.md](docs/system-design.md) (basics) and [docs/case-studies.md](docs/case-studies.md) (full designs).
+**Basics, all in one file: [docs/system-design.md](docs/system-design.md)**
 
-### How to approach it
+- [How interviewers run the system design round](docs/system-design.md#how-interviewers-run-the-system-design-round) (what they score, how they push you, red flags, a sample opening)
 - [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) (steps, 60-minute plan, questions to ask)
 - [Capacity estimation](docs/system-design.md#capacity-estimation) (1 million orders a day, how many servers)
+- [Building blocks](docs/system-design.md#building-blocks): scaling, load balancing, caching, CDN, replication, sharding, consistent hashing, consistency, CAP, SQL vs NoSQL, indexes, queues, WebSockets, blob storage, IDs, rate limiting, Bloom filter, geohash, search, video streaming
 
-### Building blocks
-Every design is built from these bricks. Learn them first.
+**Case studies, one file each** ([full list and status](docs/system-design.md#case-studies)):
 
-| Scaling and data | Communication and storage | Special tools |
-|---|---|---|
-| [Vertical vs horizontal scaling](docs/system-design.md#vertical-vs-horizontal-scaling) | [Message queues and pub/sub](docs/system-design.md#message-queues-and-pubsub) | [Rate limiting algorithms](docs/system-design.md#rate-limiting-algorithms) |
-| [Stateless services](docs/system-design.md#stateless-services) | [Long polling vs WebSockets vs SSE](docs/system-design.md#long-polling-vs-websockets-vs-server-sent-events) | [Bloom filter](docs/system-design.md#bloom-filter) |
-| [Load balancing](docs/system-design.md#load-balancing) | [Blob storage (files, images, videos)](docs/system-design.md#blob-storage-files-images-videos) | [Geohash and quadtree](docs/system-design.md#geohash-and-quadtree-location-search) |
-| [Caching](docs/system-design.md#caching) | [Unique ID generation](docs/system-design.md#unique-id-generation) | [Inverted index (how search works)](docs/system-design.md#inverted-index-how-search-works) |
-| [CDN](docs/system-design.md#cdn) | [Proxy vs reverse proxy](docs/system-design.md#proxy-vs-reverse-proxy) | [Video streaming (HLS)](docs/system-design.md#video-streaming-basics-hls-and-adaptive-bitrate) |
-| [Database replication](docs/system-design.md#database-replication-read-replicas) | | |
-| [Partitioning and sharding](docs/system-design.md#partitioning-and-sharding) | | |
-| [Consistent hashing](docs/system-design.md#consistent-hashing) | | |
-| [Strong vs eventual consistency](docs/system-design.md#database-consistency-strong-vs-eventual) | | |
-| [CAP theorem](docs/system-design.md#cap-theorem) | | |
-| [SQL vs NoSQL](docs/system-design.md#sql-vs-nosql) | | |
-| [Database indexes](docs/system-design.md#database-indexes) | | |
+- **Reads and protection:** [URL shortener (TinyURL)](docs/system-design/url-shortener.md) · [Rate limiter](docs/system-design/rate-limiter.md)
+- **Social and real time:** [News feed (Facebook, Instagram)](docs/system-design/news-feed.md) · [WhatsApp](docs/system-design/whatsapp.md)
+- **Video and search:** [YouTube / Netflix](docs/system-design/youtube-video-streaming.md) · [YouTube search and typeahead](docs/system-design/youtube-search-typeahead.md) · [Hotstar live (IPL)](docs/system-design/hotstar-live-streaming.md)
+- **Booking and shopping:** [BookMyShow](docs/system-design/bookmyshow-ticket-booking.md) · [Flash sale](docs/system-design/flash-sale.md) · [Amazon order processing](docs/system-design/amazon-order-processing.md)
+- **Money:** [Payment gateway](docs/system-design/payment-gateway.md) · [Bank ledger and wallet](docs/system-design/bank-ledger-wallet.md) · [Stock exchange](docs/system-design/stock-exchange.md)
+- **Location, files, platform:** [Uber / Ola](docs/system-design/uber-ride-hailing.md) · [Dropbox / Google Drive](docs/system-design/dropbox-file-storage.md) · [Notification service](docs/system-design/notification-service.md) · [Distributed job scheduler](docs/system-design/job-scheduler.md)
+- Coming next: web crawler, key-value store, distributed cache, leaderboard, top-K trending, ad click counting, Google Docs, multi-tenant SaaS, metrics and logging.
 
-Coming next: replication with quorum, leader election (Raft), Count-Min sketch and HyperLogLog, CRDTs (for collaborative editing), CDC (change data capture).
-
-### Case studies
-
-There are about 60 "design X" questions, but most come down to about **12 kinds of problems**. Learn one system of each kind well (**bold**). The others are small changes on top of it.
-
-| Kind of problem | Learn this well | Then these are easy | The hard part interviewers ask about |
-|---|---|---|---|
-| Lots of reads + cache | **URL shortener** | Pastebin, product catalog | ID generation, cache, hot keys |
-| Search | **YouTube search, typeahead** | Twitter search, product search | Inverted index, ranking, staying under 100 ms |
-| Feeds | **News feed (Facebook, Instagram)** | Twitter timeline, LinkedIn feed | Push vs pull, celebrity users, ranking |
-| Real-time chat | **WhatsApp** | Slack, Messenger, live comments | WebSockets, delivered/read ticks, offline users, groups |
-| Video | **YouTube / Netflix** | Spotify, Reels | Upload → convert → small chunks → CDN |
-| Live events at huge scale | **Hotstar live (IPL)** | Twitch, live scores | Millions join in 1 minute, scale before the match |
-| Booking (limited seats) | **BookMyShow** | IRCTC Tatkal, hotels, flights, flash sale | Seat hold with timer, no double booking |
-| Money | **Payment gateway, bank ledger** | UPI, wallet, Splitwise | Never lose or double money, reconciliation |
-| Fast matching | **Stock exchange** | Auctions, ad bidding | In-memory order book, single writer |
-| Location | **Uber / Ola** | Swiggy, Zomato, nearby places | Geohash, driver location updates, matching |
-| Online shopping | **[Amazon order processing](docs/case-studies.md#amazon-order-processing)** ✅ | Cart, checkout, inventory | Saga, outbox, no overselling |
-| Files | **Dropbox / Google Drive** | S3-like storage, image hosting | Chunks, sync, conflicts |
-| Platform tools | **Rate limiter, notification service, job scheduler** | ID generator, cache, key-value store, web crawler, leaderboard, top-K trending | Algorithms, counting at huge scale |
-| Many customers / regions | **Multi-tenant SaaS** | Multi-region active-active | Tenant isolation, data location rules |
-
-✅ = full answer ready. The rest are added day by day, following the [2-month plan](#2-month-plan).
-
-**Older list of practice problems** (from 2019, still good practice): full-text search, elevator, coffee vending machine, parking system, Quartz scheduler, web crawler, Pastebin, push notifications, Instagram, Dropbox, Messenger, Twitter, Netflix, BookMyShow, typeahead, rate limiter, event management, Twitter search, news feed, Yelp / nearby friends, Uber, Quora, UberEats, Reddit, HackerRank.
-
-**Good reading:**
-[System design primer (GitHub)](https://github.com/donnemartin/system-design-primer) ·
-[High Scalability](http://highscalability.com/) ·
-[System design notes (gist)](https://gist.github.com/vasanthk/485d1c25737e8e72759f) ·
-[Video: system design basics](https://www.youtube.com/watch?v=ZgdS0EUmn70)
+**Older practice list** (from 2019, still good): full-text search, elevator, coffee vending machine, parking system, Quartz scheduler, web crawler, Pastebin, push notifications, Instagram, Dropbox, Messenger, Twitter, Netflix, BookMyShow, typeahead, rate limiter, event management, Twitter search, news feed, Yelp / nearby friends, Uber, Quora, UberEats, Reddit, HackerRank.
 
 ## General Topics
 ### DS Algo
@@ -699,6 +658,8 @@ Answers: [docs/nextjs.md](docs/nextjs.md)
 Answers: [docs/java.md](docs/java.md)
 
 **Modern Java (answered in simple English):**
+- ⭐ [Java streams and functional programming](docs/java-streams.md): pipeline diagrams, collectors, map-reduce, gatherers, and **65 coding problems** (top 5, group by, sort a map by value, second highest, frequency count, anagrams...)
+- ⭐ [Java concurrency: from threads to virtual threads](docs/java-concurrency.md): the full story in 7 eras (Thread → ExecutorService → Fork/Join → CompletableFuture → Flow → virtual threads → structured concurrency), with architecture diagrams and 44 interview questions
 - [Java concurrency and shared data](docs/java.md#java-concurrency-and-shared-data) (race condition, synchronized, volatile, atomic, ConcurrentHashMap, deadlock)
 - [Java 8 → 17 → 21 → 25: what changed](docs/java.md#java-8-to-17-to-21-to-25-what-changed) (records, sealed classes, pattern matching, and how to migrate)
 - [JVM memory basics](docs/java.md#jvm-memory-basics) (heap, stack, metaspace, OutOfMemoryError)
@@ -731,7 +692,9 @@ Answers: [docs/java.md](docs/java.md)
 Answers: [docs/spring.md](docs/spring.md)
 - [Spring Boot 2 → 3 → 4: what changed](docs/spring.md#spring-boot-2-to-3-to-4-what-changed)
 - [Spring MVC vs WebFlux](docs/spring.md#spring-mvc-vs-webflux)
-- The questions below are answered following the [2-month plan](#2-month-plan) (week 6).
+- [Spring Reactive (WebFlux) in depth](docs/spring.md#spring-reactive-webflux-in-depth): reactive programming, Mono and Flux, operators, backpressure, schedulers, WebClient, R2DBC, testing, debugging, and [31 interview questions](docs/spring.md#spring-reactive-interview-questions)
+- ⭐ [Spring ecosystem: the libraries companies use](docs/spring-ecosystem.md): Security (JWT, OAuth2), Data JPA (N+1, @Transactional), validation, caching, scheduling, testing (Testcontainers), Spring Cloud (Gateway, Config, OpenFeign), observability, Kafka / RabbitMQ, Batch, Modulith, Spring AI, GraphQL, native images, and 60 interview questions
+- The older questions below are answered across these files.
 
 #### Spring Core
 - What Is Spring Framework?
@@ -884,6 +847,7 @@ Answers: [docs/spring.md](docs/spring.md)
 - Compare Spring AOP vs AspectJ?
  
 #### Spring 5
+Answered in [Spring Reactive interview questions](docs/spring.md#spring-reactive-interview-questions).
 * What Is Reactive Programming?
 * What Is Spring Webflux?
 * What Are the Mono and Flux Types?

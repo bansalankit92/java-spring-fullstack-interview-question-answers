@@ -2,8 +2,437 @@
 
 [← Back to README](../README.md)
 
-How to answer a system design question, how to estimate numbers, and the building blocks every design uses.
-Full designs (Amazon, WhatsApp, YouTube...) are in [case-studies.md](case-studies.md).
+Everything basic for the system design round is in this one file. Each full design (TinyURL, YouTube, WhatsApp...) has **its own file**, linked in [Case studies](#case-studies) below.
+
+**Contents**
+
+- [The big picture](#the-big-picture)
+- [Case studies](#case-studies)
+- [How interviewers run the system design round](#how-interviewers-run-the-system-design-round)
+- [How to answer a system design question](#how-to-answer-a-system-design-question)
+- [Capacity estimation](#capacity-estimation)
+- [Building blocks](#building-blocks)
+  - Scaling and data: [Vertical vs horizontal scaling](#vertical-vs-horizontal-scaling) · [Stateless services](#stateless-services) · [Load balancing](#load-balancing) · [Caching](#caching) · [CDN](#cdn) · [Replication](#database-replication-read-replicas) · [Sharding](#partitioning-and-sharding) · [Consistent hashing](#consistent-hashing) · [Strong vs eventual consistency](#database-consistency-strong-vs-eventual) · [CAP theorem](#cap-theorem) · [SQL vs NoSQL](#sql-vs-nosql) · [Indexes](#database-indexes)
+  - Communication and storage: [Message queues](#message-queues-and-pubsub) · [Long polling vs WebSockets vs SSE](#long-polling-vs-websockets-vs-server-sent-events) · [Blob storage](#blob-storage-files-images-videos) · [Unique IDs](#unique-id-generation) · [Proxy vs reverse proxy](#proxy-vs-reverse-proxy)
+  - Special tools: [Rate limiting](#rate-limiting-algorithms) · [Bloom filter](#bloom-filter) · [Geohash and quadtree](#geohash-and-quadtree-location-search) · [Inverted index](#inverted-index-how-search-works) · [Video streaming (HLS)](#video-streaming-basics-hls-and-adaptive-bitrate)
+
+Microservice patterns (saga, outbox, idempotency, circuit breaker...) are in [microservices.md](microservices.md). Kafka is in [kafka.md](kafka.md).
+
+## The big picture
+
+Most large web systems (Amazon, Swiggy, YouTube) are built from the same boxes.
+Learn where each box sits. Then every design question becomes "which boxes do I need, and why?"
+The picture is in two parts: how a request **comes in**, and where the **data goes**.
+
+**The big picture, part 1 (the request path):** follow one user request from the phone to the app servers.
+
+```mermaid
+flowchart LR
+    C["Client: browser or mobile app"] -->|"Step 1: find the IP"| DNS["DNS"]
+    C -->|"Step 2: images, JS, CSS"| CDN["CDN edge near the user"]
+    CDN -.->|"miss only"| BLOB["Blob storage: S3"]
+    C -->|"Step 3: API calls"| LB["Load balancer"]
+    LB --> GW["API gateway"]
+    GW <-->|"check limit"| RL["Rate limiter: counters in Redis"]
+    GW -->|"allowed"| APP["Stateless app servers"]
+    GW -.->|"over limit: HTTP 429"| C
+```
+
+**The big picture, part 2 (the data path):** the app servers read and write data, and send slow work to a queue.
+
+```mermaid
+flowchart LR
+    APP["Stateless app servers"] -->|"Step 1: check cache"| CACHE["Cache: Redis"]
+    APP -->|"Step 2: on miss, and all writes"| DB
+    subgraph DB["Database, split into shards"]
+        P1["Shard 1: primary"] -->|"copy"| R1["Shard 1: read replicas"]
+        P2["Shard 2: primary"] -->|"copy"| R2["Shard 2: read replicas"]
+    end
+    APP -->|"slow work: email, resize, index"| MQ["Message queue"]
+    MQ --> WK["Background workers"]
+    WK -->|"save files"| BLOB["Blob storage: S3"]
+    WK -->|"update"| SI["Search index: Elasticsearch"]
+    APP -->|"search queries"| SI
+```
+
+Inside the database box: writes go to the primary of the right shard. Reads can also go to that shard's read replicas.
+
+**What each box does:**
+
+| Box | What it does | Read more |
+|---|---|---|
+| Client | The user's browser or mobile app | - |
+| DNS | Turns a name like `shop.com` into an IP address. Can send users to the nearest CDN edge. | [CDN](#cdn) |
+| CDN | Keeps copies of images, videos and JS files close to users | [CDN](#cdn) |
+| Load balancer | Shares requests between healthy servers | [Load balancing](#load-balancing) |
+| API gateway | One entry point: login check, routing, rate limits | [Proxy vs reverse proxy](#proxy-vs-reverse-proxy) |
+| Rate limiter | Stops one user or bot from sending too many requests | [Rate limiting](#rate-limiting-algorithms) |
+| Stateless app servers | Run the business code. Any server can serve any request, so we can add more. | [Stateless services](#stateless-services), [Scaling](#vertical-vs-horizontal-scaling) |
+| Cache | Keeps hot data in memory for fast reads | [Caching](#caching) |
+| Primary DB and read replicas | Primary takes writes. Replicas copy it and serve reads. | [Replication](#database-replication-read-replicas), [Consistency](#database-consistency-strong-vs-eventual) |
+| Shards | Split data across machines when one database is too small | [Sharding](#partitioning-and-sharding), [Consistent hashing](#consistent-hashing) |
+| Message queue | Holds slow work so the user does not wait | [Message queues](#message-queues-and-pubsub) |
+| Background workers | Read from the queue and do the slow work | [Message queues](#message-queues-and-pubsub) |
+| Blob storage | Stores big files: photos, videos, PDFs | [Blob storage](#blob-storage-files-images-videos) |
+| Search index | Finds documents by words, fast | [Inverted index](#inverted-index-how-search-works) |
+
+Small systems do not need every box. Start with client → load balancer → app → one database. Add a box only when the numbers ask for it.
+
+## Case studies
+
+Each case study is a separate file. They all follow the same steps, in the same order as a real interview:
+
+1. **How the interviewer asks it** and what they are really testing
+2. **Questions to ask**, with the answer we assume for each
+3. **Assumptions**, written down
+4. **Requirements**, then **numbers** step by step
+5. **APIs** and **data model**
+6. **Architecture**: a simple version first, then the scaled version
+7. **Step-by-step flows**, then **deep dives** on the 2–3 hard parts
+8. **Follow-up questions interviewers ask**, with answers
+9. **What can go wrong**, **trade-offs**, a **1-minute summary**, and what a senior or staff answer adds
+
+Most "design X" questions come down to about **12 kinds of problems**. Learn the **bold** one of each kind well. The others are small changes on top of it.
+
+| Kind of problem | Case study | Also covers | Status |
+|---|---|---|---|
+| Lots of reads + cache | **[URL shortener (TinyURL)](system-design/url-shortener.md)** | Pastebin, product catalog | ✅ |
+| Protecting a system | **[Rate limiter](system-design/rate-limiter.md)** | API quotas | ✅ |
+| Feeds | **[News feed (Facebook, Instagram)](system-design/news-feed.md)** | Twitter timeline, LinkedIn feed | ✅ |
+| Real-time chat | **[WhatsApp](system-design/whatsapp.md)** | Slack, Messenger, live comments | ✅ |
+| Video | **[YouTube / Netflix](system-design/youtube-video-streaming.md)** | Spotify, Reels | ✅ |
+| Search | **[YouTube search and typeahead](system-design/youtube-search-typeahead.md)** | Product search, Twitter search | ✅ |
+| Live events at huge scale | **[Hotstar live (IPL)](system-design/hotstar-live-streaming.md)** | Twitch, live scores | ✅ |
+| Booking (limited seats) | **[BookMyShow](system-design/bookmyshow-ticket-booking.md)** | IRCTC Tatkal, hotels, flights | ✅ |
+| Online shopping | **[Amazon order processing](system-design/amazon-order-processing.md)** | Cart, checkout, inventory | ✅ |
+| Flash sale | **[Flash sale](system-design/flash-sale.md)** | Big Billion Day, limited drops | ✅ |
+| Money | **[Payment gateway](system-design/payment-gateway.md)** | Razorpay, Stripe | ✅ |
+| Money | **[Bank ledger and wallet](system-design/bank-ledger-wallet.md)** | UPI, Paytm, Splitwise | ✅ |
+| Location | **[Uber / Ola](system-design/uber-ride-hailing.md)** | Swiggy, Zomato, nearby places | ✅ |
+| Files | **[Dropbox / Google Drive](system-design/dropbox-file-storage.md)** | S3-like storage | ✅ |
+| Platform tools | **[Notification service](system-design/notification-service.md)** | Email, SMS, push at scale | ✅ |
+| Platform tools | **[Distributed job scheduler](system-design/job-scheduler.md)** | Cron at scale, delayed jobs | ✅ |
+| Fast matching | **[Stock exchange](system-design/stock-exchange.md)** | Auctions, ad bidding | ✅ |
+| More practice | Web crawler, key-value store, distributed cache, leaderboard, top-K trending, ad click counting, Google Docs, multi-tenant SaaS, metrics and logging | | coming |
+
+**Good reading:**
+[System design primer](https://github.com/donnemartin/system-design-primer) ·
+[High Scalability](http://highscalability.com/) ·
+[System design notes (gist)](https://gist.github.com/vasanthk/485d1c25737e8e72759f)
+
+## How interviewers run the system design round
+
+This page is not about one design.
+It is about the round itself: how it starts, what the interviewer wants, and how they score you.
+Read it once before you study any case study.
+
+**Story:** Think of a driving test.
+The examiner does not care if you know the car's engine by heart.
+They watch how you drive: do you check mirrors, do you slow down at a turn, do you stay calm when a dog runs on the road.
+A system design round is the same.
+The interviewer watches *how* you think, not only *what* you draw.
+
+---
+
+### What the round looks like
+
+#### Length and shape
+
+- Most rounds are **45 to 60 minutes**.
+- Amazon's own prep page says the loop has **four 55-minute interviews**, and at least one has a design question.
+- Atlassian's official guide lists a **60-minute** system design round.
+- Meta rounds are about 45 minutes. After hello and questions at the end, you get about **35 minutes** of real design time. Hello Interview tells people to practice with a 35-minute timer.
+- Google: about 45 minutes to 1 hour for L5 (senior) and above. At L3/L4, design ideas are often tested inside a coding round instead.
+- Netflix and Uber: 45 to 60 minutes, very conversational.
+
+A common time plan (from Hello Interview's framework):
+
+| Step | Time |
+|---|---|
+| Requirements (what it must do, how big) | about 5 min |
+| Core entities (main nouns: User, Order, Seat) | about 2 min |
+| APIs | about 5 min |
+| High-level design (boxes and arrows) | 10 to 15 min |
+| Deep dives (the hard parts) | about 10 min |
+
+```mermaid
+flowchart LR
+    A["Requirements 5 min"] --> B["Entities 2 min"]
+    B --> C["APIs 5 min"]
+    C --> D["High-level design 10-15 min"]
+    D --> E["Deep dives 10 min"]
+```
+
+#### Tools
+
+- Most rounds are online now. You draw on a shared board.
+- **Excalidraw** is the tool most often reported by candidates (Meta, many startups).
+- Google candidates report a **plain Google Doc** or a simple drawing tool, with no ready-made shapes.
+- Some companies let you pick your own tool (Atlassian says this).
+- Some Netflix candidates report **no shared drawing tool at all**. They just talk.
+- **Tip:** Ask the recruiter which tool. Practice drawing boxes fast in it.
+
+#### Who drives the talk
+
+- At **mid level**, the interviewer leads more. They guide you to the parts they want.
+- At **senior level and above**, *you* are expected to drive. Long silences hurt you.
+- A good split for a senior: you talk about 70–80% of the time. The interviewer asks short questions and pushes on one or two areas.
+- interviewing.io says it well: a mid-level candidate can follow the interviewer's lead, but a senior who waits to be led loses points.
+
+#### Company differences (only what sources report)
+
+**Amazon**
+- Each interviewer also checks 2–3 **Leadership Principles** (LPs), even in the design round.
+- So expect a story question like "Tell me about a time you had to simplify a design" inside the same hour.
+- Some reports say they may ask you to redesign a system you built, for 10x more scale.
+- Typical prompts reported: inventory system, Dropbox-like storage, order processing.
+
+**Google**
+- The prompt is very short and vague on purpose.
+- If you say "I will use a managed queue", they may ask: "How does that queue work inside? Can you build a simple one?"
+- So do not hide behind product names. Be ready to explain the idea underneath.
+
+**Meta**
+- Meta has two kinds of design round. The recruiter tells you which one you get.
+- **System Design** (nicknamed the "Pirate" round, per candidate reports): for infrastructure/backend roles. More about scale, storage, and data flow. Example prompts: ad click aggregator, top-K, live comments.
+- **Product Architecture** (nicknamed "Pirate X"): for product roles. More about APIs, data model, and how the client talks to the server. Example prompts: Ticketmaster, Uber, a news feed API with infinite scroll.
+- The same question can come in both rounds. The focus is different.
+
+**Microsoft**
+- The format depends on the team. Some teams want high-level design. Some want class design (low-level design).
+- Ask at the start: "Do you want high-level architecture or class design?"
+
+**Atlassian**
+- One 60-minute design round, plus a separate values round.
+- Prompts are often close to their products: a tagging system across Jira and Confluence, a permission model, a web crawler, a rate limiter.
+- Candidates report the interviewer may change one constraint mid-way to see how you adapt.
+
+**Netflix and Uber**
+- Very conversational.
+- Some rounds are a **deep dive into a system you built** before. Uber candidates report a "solved problem" round on their own past system.
+
+**Indian product companies (Flipkart, Swiggy, Razorpay, PhonePe)**
+- Many loops have a **machine coding round** first: 90 minutes to write working code for a small system (parking lot, task scheduler, food ordering), then explain it.
+- The design round often **mixes LLD and HLD** (low-level class design and high-level architecture) in one hour.
+- Reported prompts: BookMyShow, train ticket booking with waitlist, notification system, event-driven order flow for Swiggy, design Zepto, a code versioning system.
+- They push hard on **concurrency** (two users booking one seat), failure cases, and trade-offs.
+
+---
+
+### How the question is asked
+
+#### Vague on purpose
+
+The first question is short. Usually one line.
+The interviewer leaves out details on purpose.
+They want to see if you ask before you build.
+
+Typical wordings:
+- "Design a URL shortener."
+- "Design WhatsApp."
+- "How would you build a ticket booking system for a big concert?"
+- "Design a rate limiter for our public API."
+- "Design a system that shows the top 10 trending videos in the last hour."
+- "We have 10 million users. Design the notification service."
+
+#### "Here is our system. What would you change?"
+
+This style is growing.
+The interviewer shows a system that already exists, or asks about yours.
+
+- "Here is our current design. Checkout is slow during sales. What would you look at first?"
+- "Traffic just went up 10x. What breaks first?"
+- "Draw a system you built. Why did you choose this database?"
+- Amazon may ask you to scale a past system to much bigger traffic.
+- Uber and Netflix candidates report deep dives into their own past projects.
+
+**How to answer this style:**
+1. Ask for numbers first: "What is the traffic now? What is slow: p99 latency or errors?"
+2. Find the bottleneck (the slowest part) before you fix anything.
+3. Say what you would measure: "I would check the DB connection pool and slow query log first."
+4. Fix one thing at a time. Say what each fix costs.
+
+**For your own past system:** Draw it before the interview if allowed. Explain in this order: requirements, then the trade-offs you made, then the final design. One Uber candidate said this order answered most questions before they were asked.
+
+#### LLD vs HLD rounds
+
+| | Low-level design (LLD) | High-level design (HLD) |
+|---|---|---|
+| Question | "Design a parking lot." "Design a splitwise." | "Design Uber." "Design a payment gateway." |
+| You draw | Classes, interfaces, methods | Services, databases, queues, caches |
+| They check | OOP, SOLID, design patterns, thread safety | Scale, data flow, failure, trade-offs |
+| Common at | Flipkart, Swiggy, Razorpay, Microsoft teams | Every big tech company |
+
+If you are not sure which one they want, ask.
+
+---
+
+### What interviewers score
+
+Different companies use different words.
+But almost every rubric checks these four things (Hello Interview's list, and Meta uses the same four):
+
+1. **Problem navigation** – Can you turn a vague question into clear requirements? Do you focus on the hard part?
+2. **Solution design** – Does your design work end to end? Is it simple and clean?
+3. **Technical excellence** – Do you know how the parts really work? Do you pick the right tool for the job?
+4. **Communication** – Can the interviewer follow you? Do you take feedback well?
+
+On top of these, two things show up in every guide:
+- **Trade-offs:** Every choice has a cost. Say it out loud.
+- **Failure thinking:** What happens when a box dies?
+
+#### Numbers (back-of-envelope math)
+
+- Older guides say: always do full math at the start (QPS, storage, bandwidth).
+- Many interviewers now say long math at the start wastes time.
+- Hello Interview's advice: tell the interviewer you will skip heavy math up front, and do math **only when it changes a decision**.
+- Example: "10 million drivers send location every 5 seconds. That is 2 million writes per second. One normal database cannot take that. So I need an in-memory store or sharding."
+- This is the kind of math that scores points: short, rounded, and tied to a choice.
+- Wrong numbers hurt more than no numbers. Know the basics: 1 day ≈ 100,000 seconds, 1 million per day ≈ 12 per second.
+
+#### What changes by level
+
+| | Mid level (SDE-2, E4, L4) | Senior (SDE-3, E5, L5) | Staff (E6+, L6+) |
+|---|---|---|---|
+| Breadth vs depth | About 80% breadth, 20% depth | About 60% breadth, 40% depth | About 40% breadth, 60% depth |
+| Who drives | Interviewer guides the later parts | You drive most of it | You drive almost all of it |
+| Depth | Know what each box does | Go deep in about 2 areas, with real details (for example, the partition key in DynamoDB) | Go deep in 3 or more areas, and teach the interviewer something |
+| Problems | Solve when asked | Find problems in your own design before they ask | Predict problems at large scale, talk about cost, operations, rollout |
+
+The big idea: **the more senior you are, the less the interviewer should need to push you.**
+
+---
+
+### How interviewers push you
+
+The first design is just the start.
+Most points are won or lost in the follow-ups.
+
+#### Common follow-ups
+
+| They ask | What they test | Short good answer |
+|---|---|---|
+| "What if traffic grows 10x?" | Do you know your bottleneck? | "The DB writes break first. I would shard by userId and add a queue in front." |
+| "What if this server dies?" | Failure thinking | "It is stateless. The load balancer sends traffic to others. State is in Redis with a replica." |
+| "What if Redis goes down?" | Dependencies | "Fall back to the DB, with a rate limit, so the DB does not fall over too." |
+| "How do you stop double booking / double charge?" | Consistency | "A lock or a unique constraint, plus an idempotency key on the request." |
+| "Why this database?" | Real reasons | "Access is by one key, writes are high, no joins. So a key-value store fits." |
+| "What would you monitor?" | Real-world sense | "p99 latency, error rate, queue lag, and one business number like orders per minute." |
+| "How much will this cost?" | Senior thinking | "Storage is the big cost. Move old data to cheaper cold storage after 30 days." |
+| "Have you thought about X instead?" | Openness | "Good point. X is simpler but loses Y. For our numbers, I still prefer..." |
+
+#### Curveballs
+
+- **They change the requirement.** "Now it must work across 3 regions." Or "Now reads are rare and writes are heavy."
+- **They remove a tool.** "You cannot use Kafka. Now what?"
+- **They pick a box and zoom in.** "Explain exactly how this cache gets updated."
+- **They test if you will hold your ground.** Sometimes they push back on a good choice. If you have a reason, keep it politely. If they show a real problem, change it.
+
+How to handle a curveball:
+1. Repeat it: "So now we need 3 regions. Let me see what breaks."
+2. Find what breaks in your current design.
+3. Change only that part.
+
+---
+
+### Red flags that fail candidates
+
+1. **Jumping to the solution.** Drawing Kafka and Redis in minute one, before asking anything.
+2. **Buzzword soup.** Naming many tools but not saying what problem each one solves.
+3. **No numbers, or wrong numbers.** "It is a lot of traffic" is weak. 1 million per second when it is really 1,000 is worse.
+4. **Over-engineering.** Microservices, multi-region, and three databases for a system with 1,000 users.
+5. **Only the happy path.** Never asking "what if this fails?"
+6. **No trade-offs.** Saying "this is the best way" with no cost.
+7. **Listing options without choosing.** "We could use SQL or NoSQL" and then moving on.
+8. **Ignoring hints.** The interviewer asks about a hot key twice and you keep talking about something else.
+9. **Getting defensive.** Arguing when the interviewer shows a real gap.
+10. **Long silence.** Thinking quietly for minutes. Say what you are thinking, even if it is not finished.
+11. **Stuck at one level.** Talking about bytes in a header for 15 minutes and never finishing the big picture.
+12. **Bluffing.** Naming a tool you cannot explain. Interviewers will ask how it works.
+
+---
+
+### Green flags that pass
+
+1. **Drive the conversation.** Have a plan. Say it: "First requirements, then APIs, then a simple design, then the hard parts."
+2. **State your assumptions.** "I will assume 10 million daily users and a 100:1 read to write ratio. Is that OK?"
+3. **Simple first, then scale.** Draw a design that works for normal load. Then fix the bottleneck that the numbers show.
+4. **Name the hard part early.** "The hard part here is not storing tickets. It is 1 million people clicking the same seat at 10 AM."
+5. **Say trade-offs out loud.** "I choose availability here. A user may see a like count that is 2 seconds old. That is fine."
+6. **Talk about failure without being asked.** Retries, timeouts, dead-letter queues, what happens on a crash.
+7. **Check in.** "Do you want me to go deeper on the matching or on payments?"
+8. **Be honest.** "I have not used Cassandra in production. But I know it is good for heavy writes by partition key."
+9. **Manage time.** Finish a full working design by minute 25–30. Then go deep.
+10. **Mention monitoring.** Name 2–3 metrics you would watch.
+
+---
+
+### A sample opening dialogue
+
+The question: "Design a ticket booking system like BookMyShow."
+
+> **Interviewer:** Let's design a ticket booking system like BookMyShow.
+>
+> **You:** Sure. Before I draw anything, can I ask a few questions to set the scope?
+>
+> **Interviewer:** Go ahead.
+>
+> **You:** What should users be able to do? I am thinking: search shows, see the seat map, pick seats, and pay. Should I also cover cancellations and refunds?
+>
+> **Interviewer:** Skip refunds. Focus on search and booking.
+>
+> **You:** OK. How big is it? Should I plan for normal movie traffic, or also big events like a Coldplay concert where a million people come at the same time?
+>
+> **Interviewer:** Plan for the big events too.
+>
+> **You:** Good, then the hard part is many users fighting for the same seats. Two people must never get the same seat. Is that the most important rule?
+>
+> **Interviewer:** Yes.
+>
+> **You:** Then I will keep booking strongly consistent, and let search be eventually consistent. A show list that is a few seconds old is fine. How long should we hold a seat while the user pays?
+>
+> **Interviewer:** What would you suggest?
+>
+> **You:** About 10 minutes, like most sites. After that the seat goes back. I will assume 10 million daily users, mostly reading. Bookings are maybe 1 in 100 requests. I will not do heavy math now. I will do it when it changes a choice. Can I start with the APIs?
+>
+> **Interviewer:** Sounds good.
+
+**Why this works:**
+- You asked about features, scale, and the key rule (no double booking).
+- You found the hard part in the first 3 minutes.
+- You stated assumptions and asked if they are OK.
+- You said your plan for the numbers.
+- You moved on quickly. The whole opening took about 4 minutes.
+
+---
+
+### Further reading
+
+Interviewer guides and rubrics:
+- Hello Interview – System Design in a Hurry (rubric and types of round): https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction
+- Hello Interview – Delivery framework (time plan, when to skip math): https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery
+- Hello Interview – What is expected at each level: https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level
+- Hello Interview – Meta system design vs product architecture: https://www.hellointerview.com/blog/meta-system-vs-product-design
+- Hello Interview – What your interviewer is really judging: https://hellointerview.substack.com/p/what-your-system-design-interviewer
+- interviewing.io – A senior engineer's guide to the system design interview: https://interviewing.io/guides/system-design-interview
+- Common mistakes seen as an interviewer: https://engineeringenablement.substack.com/p/common-mistakes-in-system-design
+- Practice routine after 100+ interviews (changed constraints, follow-ups): https://engineeringenablement.substack.com/p/the-system-design-interview-practice
+
+Official company pages:
+- Amazon SDE II interview prep: https://amazon.jobs/content/en/how-we-hire/sde-ii-interview-prep
+- Amazon SDE III / system design prep: https://amazon.jobs/content/en/how-we-hire/sde-iii-interview-prep
+- Atlassian Fullstack interview guide (round lengths): https://www.atlassian.com/dam/jcr%3A8209d168-ae8c-48bd-9d46-6136fbcbb23c/Fullstack.pdf
+
+Company-specific reports (third party, treat as examples):
+- Google system design interview (Exponent): https://www.aced.io/blog/google-system-design-interview
+- Microsoft system design interview (Exponent): https://www.tryexponent.com/blog/microsoft-system-design-interview
+- Meta product architecture interview (IGotAnOffer): https://igotanoffer.com/en/advice/meta-product-architecture-interview
+- Uber "solved problem" round with a pre-drawn diagram: https://prachub.com/interview-experiences/uber-senior-software-engineer-interview-experience-recruiter-outreach-and-a-pre-drawn-architecture-diagram
+- Atlassian interview guide (techinterview.org): https://www.techinterview.org/companies/atlassian/
+- Flipkart SDE-2 interview experience (LeetCode Discuss): https://leetcode.com/discuss/post/7560534/flipkart-sde-2-interview-experience-by-a-tzl5/
+- Swiggy SDE-2 interview experience (LeetCode Discuss): https://leetcode.com/discuss/interview-experience/7197132
+- Razorpay senior engineer interview experience (LeetCode Discuss): https://leetcode.com/discuss/interview-experience/6651036
+- Whiteboard tools for design rounds (Formation): https://formation.dev/blog/common-tools-for-diagramming-system-design-interviews-and-how-to-use-them
 
 ## How to answer a system design question
 
@@ -107,6 +536,18 @@ Capacity estimation is the same. We want the right size, not the exact number.
 2. **Peak = 2–3 times the average.** For sale days or big events, 10 times or more.
 3. **Storage = items per day × size of one item × days.** Then add extra for indexes and copies.
 4. **Bandwidth = requests per second × size of one response.**
+
+**Diagram:** the math always goes in the same order. The top row finds the servers. The bottom row finds the storage. The numbers are from the worked example below.
+
+```mermaid
+flowchart LR
+    U["Requests per day: 1 million orders"] -->|"divide by 100,000"| AVG["Average per second: about 12"]
+    AVG -->|"x 10 for a sale day"| PK["Peak writes: about 120 per second"]
+    PK -->|"add reads: 10 per write"| TOT["Total peak: about 1,300 per second"]
+    TOT -->|"divide by 280 per server"| SRV["Servers: 5, then 9 for 3 zones"]
+    U -->|"x 2 KB per order"| SD["Storage per day: 2 GB"]
+    SD -->|"x 365, plus indexes and 3 copies"| SY["Storage per year: about 3.3 TB"]
+```
 
 **Quick conversions:**
 
@@ -482,6 +923,19 @@ flowchart LR
     A -->|"SET with TTL 5 min"| C
 ```
 
+**Where it fits:** the cache sits between the app servers and the database. A hit stops at Redis. Only a miss goes on to the database.
+
+```mermaid
+flowchart LR
+    U["Users"] --> LB["Load balancer"]
+    LB --> A1["App instance 1 with small local cache"]
+    LB --> A2["App instance 2 with small local cache"]
+    A1 -->|"Step 1: check Redis. Hit: done"| R["Redis cache, shared by all instances"]
+    A2 -->|"Step 1: check Redis. Hit: done"| R
+    A1 -->|"Step 2: only on a miss"| DB["Database"]
+    A2 -->|"Step 2: only on a miss"| DB
+```
+
 **Example:** Cache-aside with Spring Cache (works with Redis).
 
 ```java
@@ -563,6 +1017,18 @@ flowchart LR
     E2 -->|"miss only"| O
 ```
 
+**Where it fits:** DNS sends the browser to the nearest edge. Files come from the CDN. API calls skip the CDN and go to the load balancer.
+
+```mermaid
+flowchart LR
+    B["Browser"] -->|"Step 1: where is cdn.shop.com?"| DNS["DNS"]
+    DNS -->|"Step 2: IP of the nearest edge"| B
+    B -->|"Step 3: images, JS, CSS"| E["Nearest CDN edge"]
+    E -->|"miss only"| S3["Origin: S3 bucket"]
+    B -->|"API calls, personal data"| LB["Load balancer"]
+    LB --> APP["App servers"]
+```
+
 **Example:**
 - Without CDN: user in London loads a 500 KB image from a server in Mumbai. Round trip ~120 ms, plus slow transfer.
 - With CDN: the London edge is ~10 ms away. The image loads much faster.
@@ -622,6 +1088,20 @@ flowchart LR
     APP -->|"reads"| F1
     APP -->|"reads"| F2
 ```
+
+**Where it fits:** in a real setup, each copy lives in a different zone (data center). Copies arrive a little late. That delay is the lag. Heavy reports run on a follower, so they never slow down the leader.
+
+```mermaid
+flowchart LR
+    APP["App servers"] -->|"all writes"| L["Leader, zone A"]
+    L -->|"async copy, lag: ms to seconds"| F1["Follower, zone B"]
+    L -->|"async copy, lag: ms to seconds"| F2["Follower, zone C"]
+    APP -->|"normal reads"| F1
+    APP -->|"normal reads"| F2
+    REP["Reports and analytics"] -->|"heavy queries"| F2
+```
+
+If zone A goes down, the follower in zone B is promoted to be the new leader.
 
 **Example:** 1,200 reads and 120 writes per second.
 - One leader handles all 120 writes.
@@ -691,6 +1171,18 @@ flowchart LR
     R --> S1["Shard 1"]
     R --> S2["Shard 2"]
     R --> S3["Shard 3"]
+```
+
+**Where it fits:** in a real system, we use many small logical shards placed on a few machines. Each machine also has its own replica, like any normal database.
+
+```mermaid
+flowchart LR
+    APP["Order service"] --> R["Router: customer_id to logical shard 0 to 1023"]
+    R --> M1["Machine 1: logical shards 0 to 511"]
+    R --> M2["Machine 2: logical shards 512 to 1023"]
+    M1 -->|"copy"| M1R["Machine 1 replica"]
+    M2 -->|"copy"| M2R["Machine 2 replica"]
+    M2 -.->|"later: move shards 768 to 1023"| M3["New machine 3"]
 ```
 
 **How to pick a shard key:**
@@ -778,6 +1270,17 @@ flowchart LR
     K2["key: user77"] -->|"clockwise"| C
 ```
 
+**Where it fits:** the ring usually lives inside the client library on each app server. It picks the cache node for each key. Say node D joins just before C on the ring. D takes only part of C's keys. Keys on A and B do not move.
+
+```mermaid
+flowchart LR
+    APP["App server"] --> RING["Hash ring inside the client library"]
+    RING -->|"user42"| NA["Cache node A"]
+    RING -->|"user77"| NB["Cache node B"]
+    RING -->|"order9"| NC["Cache node C"]
+    ND["New cache node D"] -.->|"takes only some keys of C"| NC
+```
+
 **Example:** A small ring in Java with virtual nodes.
 
 ```java
@@ -844,6 +1347,25 @@ For a cricket score, 5 seconds late is fine. For your bank balance, it is not.
 3. **In between (useful ones):**
    - **Read-your-own-writes:** you always see your own changes. Others may see them late.
    - **Monotonic reads:** you never see time go backwards (new value, then old value again).
+
+**Diagram:** a user changes her city from Delhi to Pune. Look at what the replica returns before and after the copy arrives.
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant Primary
+    participant Replica
+    App->>Primary: UPDATE city = Pune
+    Primary-->>App: OK, saved
+    App->>Replica: Read city (copy not arrived yet)
+    Replica-->>App: Delhi (old value)
+    Note over App,Replica: Eventual consistency - old value for a short time
+    Primary->>Replica: Copy the change (about 100 ms later)
+    App->>Replica: Read city again
+    Replica-->>App: Pune (new value)
+    App->>Primary: Read city (strong consistency)
+    Primary-->>App: Pune, always the latest
+```
 
 **Example:** In a shopping app:
 
@@ -961,6 +1483,21 @@ Your personal diary has no fixed format. One day a list, one day a drawing, one 
 | Wide-column | Rows with many columns, split by a partition key | Cassandra, HBase | Huge write volume, time-series, logs |
 | Graph | Nodes and links | Neo4j | Friends of friends, fraud links |
 
+**Diagram:** ask these questions in order. If no answer is a clear "yes", stay with SQL.
+
+```mermaid
+flowchart TD
+    Q1{"Money, orders, or data with many links between tables?"}
+    Q1 -->|"Yes"| SQL["SQL: PostgreSQL or MySQL"]
+    Q1 -->|"No"| Q2{"Huge write volume and simple lookups by key?"}
+    Q2 -->|"Yes"| WC["Wide-column: Cassandra"]
+    Q2 -->|"No"| Q3{"Only get and set by key, and very fast?"}
+    Q3 -->|"Yes"| KV["Key-value: Redis or DynamoDB"]
+    Q3 -->|"No"| Q4{"Each item has different fields?"}
+    Q4 -->|"Yes"| DOC["Document: MongoDB or PostgreSQL JSONB"]
+    Q4 -->|"No"| DEF["SQL: the safe default"]
+```
+
 **Example:** An e-commerce company may use:
 - **PostgreSQL** for orders and payments (needs transactions).
 - **MongoDB** or PostgreSQL `JSONB` for the product catalog (each product has different fields: shirts have size, phones have RAM).
@@ -969,6 +1506,17 @@ Your personal diary has no fixed format. One day a list, one day a drawing, one 
 - **Elasticsearch** for search.
 
 Using the right store for each job is called **polyglot persistence**.
+
+**Where it fits:** one shop backend, five stores. Each store does the job it is best at.
+
+```mermaid
+flowchart LR
+    SH["Shop backend"] -->|"orders, payments"| PG["PostgreSQL"]
+    SH -->|"product catalog"| MG["MongoDB or PostgreSQL JSONB"]
+    SH -->|"cache, sessions"| RD["Redis"]
+    SH -->|"click and view events"| CS["Cassandra"]
+    SH -->|"product search"| ES["Elasticsearch"]
+```
 
 **Good and bad:**
 
@@ -1128,6 +1676,23 @@ flowchart LR
     T --> A["Analytics Service"]
 ```
 
+**Where it fits:** the API saves the order and replies fast. The slow email work goes to a queue. A group of workers shares the messages: each message goes to only one worker. A message that keeps failing goes to a side queue.
+
+```mermaid
+flowchart LR
+    API["Order API"] -->|"Step 1: save order, reply to user"| DB["Orders DB"]
+    API -->|"Step 2: send job"| Q["Queue: email-jobs"]
+    subgraph G["Consumer group: one message goes to one worker"]
+        W1["Email worker 1"]
+        W2["Email worker 2"]
+        W3["Email worker 3"]
+    end
+    Q --> W1
+    Q --> W2
+    Q --> W3
+    Q -.->|"failed 5 times"| DLQ["Dead letter queue"]
+```
+
 **Kafka vs RabbitMQ vs SQS (short version):**
 
 | | Kafka | RabbitMQ | AWS SQS |
@@ -1261,6 +1826,20 @@ sequenceDiagram
     App->>DB: save key, size, owner
 ```
 
+**Where it fits:** after the upload, S3 tells a queue about the new file. Workers make thumbnails. Viewers download through the CDN, not from our servers.
+
+```mermaid
+flowchart LR
+    C["Mobile app"] -->|"upload with pre-signed URL"| S3["S3 bucket"]
+    C -->|"API calls"| APP["App servers"]
+    APP --> DB["Database: file key, owner, size"]
+    S3 -->|"new file event"| Q["Queue"]
+    Q --> W["Thumbnail workers"]
+    W -->|"save small sizes"| S3
+    V["Viewers"] -->|"download"| CDN["CDN"]
+    CDN -->|"miss only"| S3
+```
+
 **Example (create a pre-signed upload URL, AWS SDK v2):**
 
 ```java
@@ -1340,6 +1919,27 @@ return signed.url().toString();   // give this to the browser
 - **10 bits of machine ID** = 1,024 machines.
 - **12 bits of sequence** = 4,096 IDs per millisecond per machine. That is about 4 million IDs per second per machine.
 
+**Diagram:** three small numbers are packed side by side into one 64-bit number.
+
+```mermaid
+flowchart LR
+    T["Time: ms since our start date, 41 bits"] --> ID["One 64-bit ID, fits in a Java long"]
+    M["Machine ID: 0 to 1023, 10 bits"] --> ID
+    S["Counter: 0 to 4095 in each ms, 12 bits"] --> ID
+```
+
+**Where it fits:** the ID generator is not a separate server. It is a small class inside each service instance, so making an ID needs no network call. Each instance gets a unique machine ID once, when it starts.
+
+```mermaid
+flowchart LR
+    LB["Load balancer"] --> A1["Order service 1: ID generator inside, machine ID 1"]
+    LB --> A2["Order service 2: ID generator inside, machine ID 2"]
+    ZK["ZooKeeper, DB or pod number"] -.->|"machine ID, once at startup"| A1
+    ZK -.->|"machine ID, once at startup"| A2
+    A1 -->|"insert order with new ID"| DB["Database shards"]
+    A2 -->|"insert order with new ID"| DB
+```
+
 **Example (simple Snowflake in Java):**
 
 ```java
@@ -1406,6 +2006,17 @@ public final class Snowflake {
 | **Sliding window log** | Save the time of every request. Count those in the last 60 seconds. | Exact | Uses lots of memory |
 | **Sliding window counter** | Mix this window's count with part of the last window's count | Close to exact, small memory | A small guess, not exact |
 
+**Diagram (token bucket):** tokens drip into the bucket at a fixed speed. Each request needs one token.
+
+```mermaid
+flowchart LR
+    RF["Refill: 1 token per second"] --> B["Bucket: holds up to 10 tokens"]
+    REQ["New request"] --> CHK{"Is there a token in the bucket?"}
+    B -.->|"take 1 token"| CHK
+    CHK -->|"Yes"| OK["Allow: send to the service"]
+    CHK -->|"No, bucket is empty"| NO["Reject: HTTP 429"]
+```
+
 **Fixed window edge problem:**
 - Limit: 100 per minute.
 - A user sends 100 requests at 10:00:59 and 100 more at 10:01:00.
@@ -1425,6 +2036,20 @@ public final class Snowflake {
 - With 10 gateway servers, each one cannot keep its own counter. A user would get 10 × the limit.
 - Keep the counter in Redis, which all servers share.
 - Use `INCR` plus `EXPIRE`, or a Lua script (runs as one step in Redis, so no race).
+
+**Where it fits:** every gateway server checks the same counter in Redis. Allowed requests go on to the service. Extra requests get HTTP 429 and never reach the service.
+
+```mermaid
+flowchart LR
+    C["Client"] --> LB["Load balancer"]
+    LB --> G1["Gateway 1 with rate limiter"]
+    LB --> G2["Gateway 2 with rate limiter"]
+    G1 -->|"INCR counter for this user"| R["Redis: shared counters"]
+    G2 -->|"INCR counter for this user"| R
+    G1 -->|"under the limit"| S["Order service"]
+    G2 -->|"under the limit"| S
+    G1 -.->|"over the limit: HTTP 429"| C
+```
 
 **Example (fixed window in Redis, Spring Boot):**
 
@@ -1488,6 +2113,17 @@ check "rahul" -> positions 1, 3, 5   (position 5 is 0 -> definitely NOT present)
 - **Cache penetration:** attackers ask for IDs that do not exist. Every request misses the cache and hits the database. Fix: keep all real IDs in a Bloom filter, and reject unknown IDs early.
 - **Web crawler:** "Have I already visited this URL?" Billions of URLs, small memory.
 - **Databases:** Cassandra and HBase use Bloom filters to skip data files that cannot have the key.
+
+**Where it fits:** the Bloom filter sits in front of the database. A "definitely no" skips the database. Only a "maybe" goes on to the database.
+
+```mermaid
+flowchart LR
+    U["Sign-up: is username rahul free?"] --> BF{"Bloom filter check in memory"}
+    BF -->|"definitely no"| FREE["Free. No database call"]
+    BF -->|"maybe yes"| DB["Check the database"]
+    DB -->|"found"| TAKEN["Taken. Pick another name"]
+    DB -->|"not found: it was a false positive"| FREE2["Free"]
+```
 
 **Example (Guava in Java):**
 
@@ -1583,6 +2219,16 @@ flowchart TD
 - 1 million active drivers. Each sends its location every 4 seconds.
 - That is **250,000 writes per second**. Keep this in memory (Redis), not in the main SQL database.
 
+**Where it fits (ride app):** drivers write their location to Redis GEO all the time. A rider's search reads from the same place.
+
+```mermaid
+flowchart LR
+    D["Driver apps"] -->|"location every 4 seconds"| LS["Location service"]
+    LS -->|"GEOADD"| R["Redis GEO: geohash inside"]
+    RA["Rider app"] -->|"find drivers near me"| MS["Matching service"]
+    MS -->|"GEOSEARCH within 2 km"| R
+```
+
 **Say this in the interview:**
 > I turn each location into a geohash, so nearby places share a prefix. To find drivers near a user, I search the user's cell and its 8 neighbors, then filter by real distance. For fast-moving drivers I use Redis GEO. For fixed places with uneven density, a quadtree also works well.
 
@@ -1662,6 +2308,18 @@ flowchart LR
 | Easy to scale reads with replicas | Needs memory and care: shard count is hard to change later |
 
 **Keeping it in sync:** write to the main database first. Send a change event (for example with Kafka or CDC, change data capture). A worker updates Elasticsearch.
+
+**Where it fits:** writes go to the database first. Elasticsearch gets the change a little later. Search requests read only from Elasticsearch.
+
+```mermaid
+flowchart LR
+    APP["Product service"] -->|"Step 1: save product"| DB["Main database"]
+    DB -->|"Step 2: change event, CDC"| K["Kafka"]
+    K --> IW["Indexer worker"]
+    IW -->|"Step 3: update index"| ES["Elasticsearch"]
+    U["User search box"] --> SS["Search service"]
+    SS -->|"query"| ES
+```
 
 **Say this in the interview:**
 > Search uses an inverted index: each word points to the documents that contain it. Text is split into words, lowercased and stemmed, and results are ranked with BM25. I keep the real data in the database and sync it to Elasticsearch through events. For typeahead I keep the top suggestions per prefix in memory.

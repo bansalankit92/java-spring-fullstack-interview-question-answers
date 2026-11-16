@@ -3,7 +3,11 @@
 This guide is for people like us: working engineers, many of us with English as a second language.
 We want answers that are **easy to understand** and **easy to say out loud in an interview**.
 
-Everything lives in one file: [README.md](README.md).
+Where things live:
+
+- [README.md](README.md): the questions, study plans and links. No long answers here.
+- `docs/<topic>.md`: answers (java, java-concurrency, spring, spring-ecosystem, microservices, kafka, databases, nextjs).
+- `docs/system-design/`: one file per building block (`building-blocks/`) and one file per case study (`case-studies/`).
 
 ## Writing rules
 
@@ -51,17 +55,24 @@ Use this for every topic. Skip a part if it does not help.
 
 ## System design case study template
 
-1. **Clarify the question** (questions to ask the interviewer)
-2. **Requirements** (functional and non-functional)
-3. **Numbers** (users, requests per second, storage, bandwidth, servers)
-4. **APIs**
-5. **Data model** (tables / documents, and which database and why)
-6. **Simple architecture** (Mermaid diagram)
-7. **Deep dive on the 2–3 hard parts**
-8. **What can go wrong** (failure cases and how we handle them)
-9. **Trade-offs** (what we chose and what we gave up)
-10. **Say this in the interview** (a 1-minute summary)
-11. **They may ask next**
+One file per system in `docs/system-design/case-studies/`. Follow the order of a real interview:
+
+1. **How the interviewer asks it**: 2–3 common ways the question is worded, and what they are really testing.
+2. **Questions to ask (with assumed answers)**: a table with the columns *Question*, *Why it matters* and *What we assume*.
+3. **Assumptions**: a short list you would write on the board.
+4. **Requirements**: functional (what it does) and non-functional (how well: scale, latency, availability, consistency).
+5. **Numbers**: step by step (users → requests per second → storage → bandwidth → servers).
+6. **APIs**: small request and response examples.
+7. **Data model**: tables or documents, which database, and why.
+8. **Architecture, version 1 (simple)**: a Mermaid diagram that works for a small scale.
+9. **Architecture, version 2 (at scale)**: what we add and why (cache, queue, shards, CDN...).
+10. **Step-by-step flows**: sequence diagrams for the 1–2 main flows.
+11. **Deep dives**: the 2–3 hard parts, explained simply.
+12. **Follow-up questions interviewers ask**: question → short answer.
+13. **What can go wrong**: failures and how we handle them.
+14. **Trade-offs**: what we chose and what we gave up.
+15. **Say this in the interview**: a 1-minute summary.
+16. **Mid vs senior vs staff**: what extra a senior or staff answer covers.
 
 ## Diagram rules
 

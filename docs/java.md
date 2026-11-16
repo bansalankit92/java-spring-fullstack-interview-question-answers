@@ -6,6 +6,8 @@
 
 ### Java concurrency and shared data
 
+> Want the full story from old threads to virtual threads, with architecture diagrams? Read [Java concurrency: from threads to virtual threads](java-concurrency.md).
+
 **In one line:** When many threads change the same data at once, updates get lost. So protect shared data, or stop sharing it.
 
 **Story:** A shop has one cash register book and two cashiers.
@@ -497,6 +499,8 @@ java -XX:+UseZGC -Xmx16g -Xlog:gc*:file=gc.log -jar app.jar
 - **Does `System.gc()` help?** No. It is only a hint. Don't call it in app code.
 
 ### Virtual threads
+
+> Want the full story from old threads to virtual threads, with architecture diagrams? Read [Java concurrency: from threads to virtual threads](java-concurrency.md).
 
 **In one line:** Virtual threads are very cheap JVM threads, so you can keep one thread per request even with 100,000 waiting requests.
 
@@ -2244,6 +2248,9 @@ Good reads
 [http\://tutorials.jenkov.com/java-concurrency/index.html](http://tutorials.jenkov.com/java-concurrency/index.html)
 
 ### **Functional Programming \- Lamdba expressions and Streams**
+
+> Modern answers with diagrams and 65 coding problems: [Java streams and functional programming](java-streams.md).
+
 
 * 208 . What is functional programming?  
   * Functional programming (also called FP) is a way of thinking about software construction by **creating pure functions.** It avoid concepts of shared state, mutable data observed in Object Oriented Programming.  
