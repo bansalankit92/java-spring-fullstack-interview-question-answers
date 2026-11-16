@@ -7,13 +7,13 @@
   },
   "decks": [
     {
-      "id": "sd",
+      "id": "sd", "group": "System design",
       "title": "System design basics",
       "blurb": "How interviewers ask, how to answer, capacity math, 22 building blocks",
       "sources": [{ "path": "docs/system-design.md", "level": 3, "skip": ["Case studies"] }]
     },
     {
-      "id": "cs",
+      "id": "cs", "group": "System design",
       "title": "System design case studies",
       "blurb": "TinyURL, WhatsApp, YouTube, Hotstar, BookMyShow, payments, Uber…",
       "sources": [
@@ -37,61 +37,139 @@
       ]
     },
     {
-      "id": "ms",
+      "id": "ms", "group": "System design",
       "title": "Microservices patterns",
       "blurb": "Saga, outbox, idempotency, retries, circuit breaker, gateway",
       "sources": [{ "path": "docs/microservices.md", "level": 2 }]
     },
     {
-      "id": "kf",
+      "id": "kf", "group": "Backend",
       "title": "Kafka",
       "blurb": "Partitions, consumer groups, ordering, delivery, duplicates",
       "sources": [{ "path": "docs/kafka.md", "level": 2 }]
     },
     {
-      "id": "db",
+      "id": "db", "group": "Backend",
       "title": "Databases",
       "blurb": "Joins, transactions, isolation levels, locking",
       "sources": [{ "path": "docs/databases.md", "level": 3 }]
     },
     {
-      "id": "jc",
+      "id": "jc", "group": "Backend",
       "title": "Java concurrency",
       "blurb": "From threads to virtual threads, in 7 eras",
       "sources": [{ "path": "docs/java-concurrency.md", "level": 3 }]
     },
     {
-      "id": "st",
+      "id": "st", "group": "Backend",
       "title": "Java streams",
       "blurb": "Collectors, map-reduce, gatherers and 65 coding problems",
       "sources": [{ "path": "docs/java-streams.md", "level": 3, "splitBold": ["Stream coding problems (with answers)"] }]
     },
     {
-      "id": "jv",
+      "id": "jv", "group": "Backend",
       "title": "Java",
       "blurb": "Java 8 → 25, JVM memory, G1 vs ZGC, plus the 2019 Q&A",
       "sources": [{ "path": "docs/java.md", "level": 3 }]
     },
     {
-      "id": "sp",
+      "id": "sp", "group": "Backend",
       "title": "Spring and Spring Boot",
       "blurb": "Boot 2 → 4, MVC vs WebFlux, Spring Reactive in depth",
       "sources": [{ "path": "docs/spring.md", "level": 3 }]
     },
     {
-      "id": "se",
+      "id": "se", "group": "Backend",
       "title": "Spring ecosystem",
       "blurb": "Security, Data JPA, Cloud, observability, Batch, Spring AI",
       "sources": [{ "path": "docs/spring-ecosystem.md", "level": 3 }]
     },
     {
-      "id": "nx",
+      "id": "nd", "group": "Backend",
+      "title": "Node.js",
+      "blurb": "Event loop phases, streams, workers, scaling, memory leaks",
+      "sources": [{ "path": "docs/nodejs.md", "level": 3 }]
+    },
+    {
+      "id": "re", "group": "Frontend",
+      "title": "React",
+      "blurb": "Rendering, hooks, performance, architecture, state, testing",
+      "sources": [{ "path": "docs/react.md", "level": 3 }]
+    },
+    {
+      "id": "js", "group": "Frontend",
+      "title": "JavaScript",
+      "blurb": "Event loop, closures, promises, modern JS, 30 coding problems",
+      "sources": [{ "path": "docs/javascript.md", "level": 3 }]
+    },
+    {
+      "id": "ts", "group": "Frontend",
+      "title": "TypeScript",
+      "blurb": "Narrowing, generics, utility types, tsconfig, TS 7",
+      "sources": [{ "path": "docs/typescript.md", "level": 3 }]
+    },
+    {
+      "id": "cx", "group": "Frontend",
+      "title": "CSS and Tailwind",
+      "blurb": "Box model, flexbox, grid, modern CSS, Tailwind v4",
+      "sources": [{ "path": "docs/css-tailwind.md", "level": 3 }]
+    },
+    {
+      "id": "ui", "group": "Frontend",
+      "title": "Frontend UI and web",
+      "blurb": "Browser rendering, accessibility, Core Web Vitals, security, frontend system design",
+      "sources": [{ "path": "docs/frontend-ui.md", "level": 3 }]
+    },
+    {
+      "id": "nx", "group": "Frontend",
       "title": "Next.js",
       "blurb": "App Router, Server Components, rendering, BFF",
       "sources": [{ "path": "docs/nextjs.md", "level": 2 }]
     },
     {
-      "id": "iv",
+      "id": "ai", "group": "AI and LLMs",
+      "title": "AI and LLM basics",
+      "blurb": "How LLMs work, prompting, tool calling, agents, MCP, evals, cost",
+      "sources": [{ "path": "docs/ai-llm-basics.md", "level": 3 }]
+    },
+    {
+      "id": "rg", "group": "AI and LLMs",
+      "title": "RAG",
+      "blurb": "Chunking, embeddings, vector DBs, hybrid search, evaluation",
+      "sources": [{ "path": "docs/ai-rag.md", "level": 2 }]
+    },
+    {
+      "id": "it", "group": "AI and LLMs",
+      "title": "Inference, fine-tuning, local models",
+      "blurb": "GPU math, quantization, Ollama, vLLM, LoRA on your own docs",
+      "sources": [{ "path": "docs/ai-inference-training.md", "level": 3 }]
+    },
+    {
+      "id": "ap", "group": "AI and LLMs",
+      "title": "AI projects",
+      "blurb": "OCR, astrology assistant and a granth assistant, end to end",
+      "sources": [{ "path": "docs/ai-projects.md", "level": 3 }]
+    },
+    {
+      "id": "ac", "group": "AI and LLMs",
+      "title": "Coding with AI assistants",
+      "blurb": "The workflow that works, context, reviewing AI code, interviews",
+      "sources": [{ "path": "docs/ai-coding-assistants.md", "level": 3 }]
+    },
+    {
+      "id": "pr", "group": "Production",
+      "title": "Production-ready apps",
+      "blurb": "Logs, metrics, traces, APM, Grafana, ELK, incidents step by step",
+      "sources": [{ "path": "docs/production-ready.md", "level": 3 }]
+    },
+    {
+      "id": "sb", "group": "Production",
+      "title": "Debugging Spring Boot",
+      "blurb": "Startup errors, missing beans, breakpoints inside Spring, slow apps",
+      "sources": [{ "path": "docs/spring-debugging.md", "level": 2 }]
+    },
+    {
+      "id": "iv", "group": "Interview day",
       "title": "Interview day",
       "blurb": "Crash course, one-page sheet, behavioral round",
       "sources": [{ "path": "README.md", "level": 3, "only": ["Crash course (last-minute preparation)", "Behavioral questions"] }]

@@ -76,9 +76,53 @@
     $$("pre code", el).forEach(function (b) { if (window.hljs && !b.dataset.hl) { b.dataset.hl = "1"; try { hljs.highlightElement(b); } catch (e) { /* ignore */ } } });
     $$("table", el).forEach(function (t) { if (!t.parentElement.classList.contains("tw")) { var w = document.createElement("div"); w.className = "tw"; t.replaceWith(w); w.appendChild(t); } });
     $$("a[href^='http']", el).forEach(function (a) { a.target = "_blank"; a.rel = "noopener"; });
+    $$("pre > code", el).forEach(function (code) { addCodeTools(code.parentElement); });
     var ms = $$("pre.mermaid:not([data-processed])", el);
-    if (ms.length && window.mermaid) { try { mermaid.run({ nodes: ms, suppressErrors: true }).catch(function () {}); } catch (e) { /* ignore */ } }
+    if (ms.length && window.mermaid) {
+      try { mermaid.run({ nodes: ms, suppressErrors: true }).catch(function () {}); } catch (e) { /* ignore */ }
+    }
   }
+  // Diagrams fit the card (so swiping always moves cards). Tap one to see it full screen at its real size.
+  var zoom = $("#zoom"), zoomBody = $("#zoomBody");
+  function openZoom(svg) {
+    var natural = parseFloat(svg.style.maxWidth) || (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) || 0;
+    zoomBody.innerHTML = svg.outerHTML;
+    var big = zoomBody.querySelector("svg");
+    big.removeAttribute("width"); big.style.maxWidth = "none";
+    // 80% of natural size keeps text readable (~13px) while showing more; never smaller than the screen.
+    var screenW = document.documentElement.clientWidth - 32;
+    if (natural) big.style.width = Math.max(Math.round(natural * 0.8), screenW) + "px";
+    zoom.hidden = false; $("#zoomClose").focus();
+  }
+  function closeZoom() { zoom.hidden = true; zoomBody.innerHTML = ""; }
+  $("#zoomClose").addEventListener("click", closeZoom);
+  // Each code block gets "Wrap" and "Copy" buttons. Wrap is one setting for all code, remembered.
+  function addCodeTools(pre) {
+    if (!pre || pre.parentElement.classList.contains("code-wrap")) return;
+    var box = document.createElement("div"); box.className = "code-wrap";
+    pre.replaceWith(box); box.appendChild(pre);
+    var tools = document.createElement("div"); tools.className = "code-tools";
+    tools.innerHTML = '<button type="button" data-act="wrap" aria-pressed="' + !!st.wrap + '">Wrap</button><button type="button" data-act="copy">Copy</button>';
+    box.appendChild(tools);
+  }
+  document.addEventListener("click", function (e) {
+    var dia = e.target.closest("pre.mermaid");
+    if (dia && dia.querySelector("svg") && !e.target.closest("#zoom")) { openZoom(dia.querySelector("svg")); return; }
+    var b = e.target.closest(".code-tools button"); if (!b) return;
+    if (b.dataset.act === "wrap") {
+      st.wrap = !st.wrap; save(); applyWrap();
+    } else {
+      var text = b.closest(".code-wrap").querySelector("code").textContent;
+      var done = function () { b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { toast("Copy is blocked here. Long-press to select the code."); });
+      else toast("Copy is not supported here. Long-press to select the code.");
+    }
+  });
+  function applyWrap() {
+    document.body.classList.toggle("wrap-code", !!st.wrap);
+    $$(".code-tools [data-act='wrap']").forEach(function (b) { b.setAttribute("aria-pressed", String(!!st.wrap)); });
+  }
+  applyWrap();
 
   // ---------- theme ----------
   var darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
@@ -87,7 +131,11 @@
     if (st.theme) document.documentElement.setAttribute("data-theme", st.theme); else document.documentElement.removeAttribute("data-theme");
     var dark = isDark();
     $("#hl-light").disabled = dark; $("#hl-dark").disabled = !dark;
-    $("#themeBtn").textContent = dark ? "Light mode" : "Dark mode";
+    var tb = $("#themeBtn"), label = dark ? "Switch to light mode" : "Switch to dark mode";
+    tb.setAttribute("aria-label", label); tb.title = label;
+    tb.innerHTML = dark
+      ? '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+      : '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
     if (window.mermaid) mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default", securityLevel: "strict", fontFamily: "Plus Jakarta Sans, system-ui, sans-serif" });
   }
   function rerenderDiagrams() {
@@ -138,8 +186,8 @@
     var lc = CARDS[last], today = planToday();
     var totalRead = Object.keys(st.read).filter(function (id) { return CARDS[id]; }).length;
     main.innerHTML =
-      '<div class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' +
-      '<input id="q" type="search" placeholder="Search: saga, top 5, caching, virtual threads…" autocomplete="off" aria-label="Search all cards"></div>' +
+      '<div class="search"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' +
+      '<input id="q" type="search" placeholder="Search: saga, caching, top 5…" autocomplete="off" aria-label="Search all cards"></div>' +
       '<div id="results" class="results" hidden></div>' +
       '<div id="homeBody" style="display:grid;gap:22px">' +
         '<div><p class="label">Pick up where you stopped</p><div class="pair">' +
@@ -150,11 +198,8 @@
           '<a class="tile" href="#/revise"><span class="k">Crash revision</span><span class="v">' + DATA.crash.length + ' flashcards</span><span class="s">Say it out loud, then flip</span></a>' +
           '<a class="tile" href="#/bm"><span class="k">Bookmarks</span><span class="v">' + st.bm.length + ' saved</span><span class="s">' + (st.bm.length ? "Read them in one go" : "Tap the bookmark icon while reading") + "</span></a>" +
         "</div>" +
-        '<div><p class="label">Topics · ' + totalRead + " of " + Object.keys(CARDS).length + " cards read</p><div class=\"decks\">" +
-        DECKS.map(function (d) {
-          var ids = ORDER[d.id], r = readCount(ids);
-          return '<a class="deck" href="#/d/' + d.id + '"><b>' + esc(d.title) + '</b><span class="count">' + r + "/" + ids.length + '</span><span class="meta">' + esc(d.blurb) + '</span><span class="bar"><i style="width:' + (ids.length ? Math.round(100 * r / ids.length) : 0) + '%"></i></span></a>';
-        }).join("") + "</div></div>" +
+        '<div><p class="label">Topics · ' + totalRead + " of " + Object.keys(CARDS).length + " cards read</p>" +
+        groupsHTML() + "</div>" +
         '<div><p class="label">Your progress</p><p class="note" style="margin-bottom:10px">Progress is saved only in this browser. Export it to move to another phone or laptop.</p>' +
         '<div class="tools"><button class="chip" type="button" id="exportBtn">Export progress</button>' +
         '<button class="chip" type="button" id="importBtn">Import progress</button><input class="hidden-file" type="file" id="importFile" accept="application/json,.json">' +
@@ -169,8 +214,25 @@
     var armed = false;
     $("#resetBtn").addEventListener("click", function () {
       if (!armed) { armed = true; this.textContent = "Tap again to reset everything"; return; }
-      st = { read: {}, bm: [], last: null, plan: { type: st.plan.type, done: {} }, crash: {}, theme: st.theme }; save(); toast("Progress reset"); renderHome();
+      // Reset clears progress but keeps settings (theme, code wrap).
+      st = { read: {}, bm: [], last: null, plan: { type: st.plan.type, done: {} }, crash: {}, theme: st.theme, wrap: st.wrap }; save(); applyWrap(); toast("Progress reset"); renderHome();
     });
+  }
+
+  // Topic lists grouped by area (System design, Backend, Frontend, AI…), in the order of decks.json.
+  function groupsHTML() {
+    var groups = [], byName = {};
+    DECKS.forEach(function (d) {
+      var g = d.group || "Topics";
+      if (!byName[g]) { byName[g] = { name: g, decks: [] }; groups.push(byName[g]); }
+      byName[g].decks.push(d);
+    });
+    return groups.map(function (g) {
+      return '<section class="group"><h2 class="group-title">' + esc(g.name) + '</h2><div class="decks">' + g.decks.map(function (d) {
+        var ids = ORDER[d.id], r = readCount(ids);
+        return '<a class="deck" href="#/d/' + d.id + '"><b>' + esc(d.title) + '</b><span class="count">' + r + "/" + ids.length + '</span><span class="meta">' + esc(d.blurb) + '</span><span class="bar"><i style="width:' + (ids.length ? Math.round(100 * r / ids.length) : 0) + '%"></i></span></a>';
+      }).join("") + "</div></section>";
+    }).join("");
   }
 
   // ---------- search ----------
@@ -222,6 +284,10 @@
       '<div class="deck-head"><h1>' + esc(d.title) + '</h1><p style="margin:0;color:var(--muted)">' + esc(d.blurb) + "</p></div>" +
       '<a class="tile primary" href="#/c/' + encodeURIComponent(firstUnread) + '"><span class="k">' + (r ? "Continue" : "Start reading") + '</span><span class="v">' + r + " of " + ids.length + ' cards read</span><span class="s">Swipe through one card at a time</span></a>' +
       '<div style="display:grid;gap:8px">' + d.chapters.map(function (ch) {
+        if (ch.ids.length === 1 && d.chapters.length > 1) { // a one-card chapter is just a row, no fold-out
+          var only = ch.ids[0]; n++;
+          return '<div class="chapter"><a class="card-row solo" href="#/c/' + encodeURIComponent(only) + '"><span class="n">' + n + '</span><span class="t">' + esc(CARDS[only].t) + '</span><span class="tick' + (st.read[only] ? " on" : "") + '" aria-label="' + (st.read[only] ? "Read" : "Not read") + '">✓</span></a></div>';
+        }
         var cr = readCount(ch.ids), open = d.chapters.length === 1 || ch.ids.indexOf(firstUnread) >= 0;
         return '<details class="chapter"' + (open ? " open" : "") + '><summary><span class="ct">' + esc(ch.t) + '</span><span class="cc">' + cr + "/" + ch.ids.length + '</span></summary><div class="card-list">' +
           ch.ids.map(function (cid) {
@@ -245,7 +311,9 @@
     }
     var i = Math.max(0, Math.min(ids.length - 1, start));
     if (!R.open) { $("#reader").hidden = false; document.body.style.overflow = "hidden"; R.open = true; }
-    requestAnimationFrame(function () { track.scrollLeft = i * track.clientWidth; setIndex(i); });
+    // Render now (don't wait for an animation frame, which browsers pause in background tabs), then re-align once layout settles.
+    track.scrollLeft = i * track.clientWidth; setIndex(i);
+    requestAnimationFrame(function () { if (R.open && R.i === i) track.scrollLeft = i * track.clientWidth; });
   }
   function closeReader() {
     if (!R.open) return;
@@ -307,6 +375,7 @@
     save(); setIndex(R.i); toast(k >= 0 ? "Removed from bookmarks" : "Bookmarked");
   });
   document.addEventListener("keydown", function (e) {
+    if (!zoom.hidden) { if (e.key === "Escape") closeZoom(); return; }
     if (!R.open || /input|textarea|select/i.test((e.target.tagName || ""))) return;
     if (e.key === "ArrowRight") step(1); else if (e.key === "ArrowLeft") step(-1); else if (e.key === "Escape") go(R.back);
   });
@@ -392,8 +461,10 @@
     var f = $("#flash");
     if (f) {
       var flip = function () { V.flipped = !V.flipped; renderRevise(true); var n = $("#flash"); if (n) n.focus(); };
-      f.addEventListener("click", function (e) { if (!e.target.closest("a")) flip(); });
-      f.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) { e.preventDefault(); flip(); } });
+      // Taps on links, Wrap/Copy buttons or diagrams inside the card must not flip it.
+      var inner = function (t) { return t.closest("a, button, pre.mermaid"); };
+      f.addEventListener("click", function (e) { if (!inner(e.target)) flip(); });
+      f.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && !inner(e.target)) { e.preventDefault(); flip(); } });
     }
     if (x) {
       $("#gotBtn").addEventListener("click", function () { rate("known"); });

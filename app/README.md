@@ -86,3 +86,6 @@ Edit `decks.json`:
 | `serve.mjs` | Tiny local server for `dist/` |
 | `vercel.json` | Build settings for Vercel |
 | `Dockerfile`, `nginx.conf`, `Dockerfile.dockerignore` | Docker image for Dokploy or any Docker host |
+| `og-image.svg` → `og-image.png` | Link-preview image (1200×630). Edit the SVG, then re-export the PNG |
+
+SEO: `index.html` has the meta description, canonical URL, Open Graph / Twitter tags and JSON-LD (WebSite, WebApplication, LearningResource, SoftwareSourceCode, Person). `build.mjs` fills in the build date and card count, writes a crawlable topic list into the page, and generates `robots.txt` and `sitemap.xml`.

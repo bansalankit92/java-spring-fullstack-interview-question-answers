@@ -3,8 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Prep Cards</title>
-  <meta name="description" content="Interview prep in simple English: system design, microservices, Java, Spring, Kafka. Search, swipe one card at a time, follow a plan, revise fast.">
+  <title>Prep Cards · Java, Spring Boot, System Design &amp; AI Interview Prep</title>
+  <meta name="description" content="Free interview prep in simple English: system design case studies, microservices, Java 8–25, Spring Boot, Kafka, React and AI/LLMs. Search any topic, swipe one card at a time, follow a 2-week to 2-month plan and revise with flashcards.">
+  <meta name="author" content="Ankit Bansal">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="__SITE__">
+
+  <!-- Link previews (WhatsApp, LinkedIn, X, Slack) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prep Cards">
+  <meta property="og:title" content="Prep Cards · Interview prep, one card at a time">
+  <meta property="og:description" content="System design, microservices, Java, Spring Boot, Kafka, React and AI/LLMs in simple English. Swipe cards, study plans and flashcards. Free and open source.">
+  <meta property="og:url" content="__SITE__">
+  <meta property="og:image" content="__SITE__og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Prep Cards: interview prep, one card at a time">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Prep Cards · Interview prep, one card at a time">
+  <meta name="twitter:description" content="System design, microservices, Java, Spring Boot, Kafka, React and AI/LLMs in simple English. Free and open source.">
+  <meta name="twitter:image" content="__SITE__og-image.png">
+
+  <!-- Structured data. __BUILD_DATE__ and __CARD_COUNT__ are filled in by build.mjs -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "__SITE__#website",
+        "url": "__SITE__",
+        "name": "Prep Cards",
+        "alternateName": "Interview Prep by Ankit Bansal",
+        "description": "Free interview prep in simple English for backend and full-stack engineers.",
+        "inLanguage": "en",
+        "publisher": { "@id": "https://ankitbansal.dev/#person" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "__SITE__#app",
+        "name": "Prep Cards",
+        "url": "__SITE__",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": ["Search all topics", "Swipe one card at a time", "2-week, 1-month and 2-month study plans", "Crash revision flashcards", "Bookmarks and progress saved in the browser", "Dark mode"],
+        "screenshot": "__SITE__og-image.png",
+        "dateModified": "__BUILD_DATE__",
+        "author": { "@id": "https://ankitbansal.dev/#person" },
+        "isBasedOn": { "@id": "__SITE__#guide" }
+      },
+      {
+        "@type": "LearningResource",
+        "@id": "__SITE__#guide",
+        "name": "Java, Spring, Microservices & System Design Interview Guide",
+        "description": "__CARD_COUNT__ study cards with simple answers, real-life stories, diagrams and ready-to-say interview answers.",
+        "learningResourceType": ["Study guide", "Flashcards"],
+        "educationalLevel": "Intermediate to advanced",
+        "audience": { "@type": "Audience", "audienceType": "Software engineers preparing for senior interviews" },
+        "teaches": ["System design", "Microservices patterns", "Java concurrency", "Java streams", "Spring Boot", "Apache Kafka", "Databases and SQL", "React", "JavaScript", "TypeScript", "AI and LLMs", "RAG"],
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "author": { "@id": "https://ankitbansal.dev/#person" },
+        "url": "https://github.com/bansalankit92/java-spring-fullstack-interview-question-answers"
+      },
+      {
+        "@type": "SoftwareSourceCode",
+        "@id": "__SITE__#source",
+        "name": "java-spring-fullstack-interview-question-answers",
+        "codeRepository": "https://github.com/bansalankit92/java-spring-fullstack-interview-question-answers",
+        "license": "https://opensource.org/licenses/MIT",
+        "author": { "@id": "https://ankitbansal.dev/#person" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://ankitbansal.dev/#person",
+        "name": "Ankit Bansal",
+        "url": "https://ankitbansal.dev/",
+        "sameAs": ["https://github.com/bansalankit92"]
+      }
+    ]
+  }
+  </script>
   <meta name="theme-color" content="#EDF1F7" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0E1420" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
@@ -21,43 +105,50 @@
     <header class="top">
       <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Prep Cards</span></a>
       <div class="top-actions">
-        <a class="ghost gh" href="https://github.com/bansalankit92/java-spring-fullstack-interview-question-answers" target="_blank" rel="noopener" aria-label="Source on GitHub">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          <span>GitHub</span>
+        <a class="icon-btn fill" href="https://github.com/bansalankit92/java-spring-fullstack-interview-question-answers" target="_blank" rel="noopener" aria-label="Source code on GitHub" title="Source code on GitHub">
+          <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         </a>
-        <button class="ghost" id="themeBtn" type="button">Dark mode</button>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
       </div>
     </header>
 
     <main id="main">
-      <p class="note" id="loading">Loading cards…</p>
+      <!--BUILD:STATIC-HOME-->
     </main>
   </div>
 
   <nav class="tabs" aria-label="Main">
     <div class="tabs-in">
-      <a href="#/" data-tab="topics"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="13" height="15" rx="2"/><path d="M8 3h11a1 1 0 0 1 1 1v13"/></svg>Topics</a>
-      <a href="#/plan" data-tab="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14l2 2 4-4"/></svg>Plan</a>
-      <a href="#/revise" data-tab="revise"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></svg>Revise</a>
+      <a href="#/" data-tab="topics"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="13" height="15" rx="2"/><path d="M8 3h11a1 1 0 0 1 1 1v13"/></svg>Topics</a>
+      <a href="#/plan" data-tab="plan"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14l2 2 4-4"/></svg>Plan</a>
+      <a href="#/revise" data-tab="revise"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></svg>Revise</a>
     </div>
   </nav>
 
   <div class="reader" id="reader" hidden role="dialog" aria-modal="true" aria-label="Card reader">
     <div class="r-head">
-      <button class="icon-btn" id="closeReader" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="icon-btn" id="closeReader" type="button" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="r-title" id="rTitle"></div>
-      <button class="icon-btn" id="bmBtn" type="button" aria-label="Bookmark this card" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
+      <button class="icon-btn" id="bmBtn" type="button" aria-label="Bookmark this card" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
     </div>
     <div class="progress"><i id="rProg"></i></div>
     <div class="track" id="track"></div>
     <div class="r-foot">
-      <button class="icon-btn" id="prevBtn" type="button" aria-label="Previous card"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="icon-btn" id="prevBtn" type="button" aria-label="Previous card"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="r-mid">
         <button class="readbtn" id="readBtn" type="button" aria-pressed="false">Mark as read</button>
         <span class="swipe-hint">Swipe left or right</span>
       </div>
-      <button class="icon-btn" id="nextBtn" type="button" aria-label="Next card"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="icon-btn" id="nextBtn" type="button" aria-label="Next card"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
+  </div>
+
+  <div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="Diagram, full size">
+    <div class="zoom-head">
+      <span>Diagram · scroll to see all of it</span>
+      <button class="icon-btn" id="zoomClose" type="button" aria-label="Close diagram"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="zoom-body" id="zoomBody"></div>
   </div>
 
   <div class="toast" id="toast" hidden role="status"></div>

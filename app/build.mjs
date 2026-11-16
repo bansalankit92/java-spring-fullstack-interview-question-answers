@@ -4,6 +4,7 @@
 // Reads ../README.md and ../docs/**.md (configured in decks.json), splits them into cards,
 // rewrites links so they open cards inside the app, and writes dist/content/data.json.
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,7 +12,8 @@ const APP = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(APP, "..");
 const DIST = path.join(APP, "dist");
 const cfg = JSON.parse(fs.readFileSync(path.join(APP, "decks.json"), "utf8"));
-const STATIC = ["index.html", "app.js", "styles.css", "icon.svg", "manifest.webmanifest"];
+const STATIC = ["app.js", "styles.css", "icon.svg", "manifest.webmanifest", "og-image.png"]; // index.html is templated below
+const SITE = "https://interviewprep.ankitbansal.dev/";
 const TINY = 160; // a section with less text than this is merged into the next card
 
 // ---------- helpers ----------
@@ -151,7 +153,7 @@ for (const deck of cfg.decks) {
     if (!ch || ch.t !== c.chapter) { ch = { t: c.chapter, ids: [] }; chapters.push(ch); }
     ch.ids.push(c.id);
   }
-  decksOut.push({ id: deck.id, title: deck.title, blurb: deck.blurb, count: cards.length, chapters });
+  decksOut.push({ id: deck.id, group: deck.group || "", title: deck.title, blurb: deck.blurb, count: cards.length, chapters });
 }
 
 // anchor map: "docs/kafka.md#kafka-message-ordering" -> card id
@@ -261,6 +263,33 @@ const cardsOut = {};
 for (const c of allCards) cardsOut[c.id] = { d: c.deck, c: c.chapter, t: c.title, md: rewrite(c.rel, c.md), src: `${c.rel}${c.srcKey === "overview" ? "" : "#" + c.srcKey.replace(/-p\d+$/, "")}` };
 const data = { v: Date.now(), repo: cfg.repoUrl, decks: decksOut, cards: cardsOut, crash, plans, top20 };
 fs.writeFileSync(path.join(DIST, "content", "data.json"), JSON.stringify(data));
+
+// index.html: fill in SEO placeholders and a crawlable topic list (the app replaces it once cards load).
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const today = new Date().toISOString().slice(0, 10);
+const repoHome = cfg.repoUrl.replace(/\/blob\/.*$/, "");
+const staticHome = `<section class="static-home">
+        <h1>Interview prep, one card at a time</h1>
+        <p>${allCards.length} cards in simple English: system design, microservices, Java, Spring Boot, Kafka, frontend and AI. Each answer has a real-life story, a diagram where it helps and a line you can say in the interview.</p>
+${[...new Set(decksOut.map((d) => d.group || "Topics"))].map((g) => `        <section class="group"><h2 class="group-title">${esc(g)}</h2><div class="decks">
+${decksOut.filter((d) => (d.group || "Topics") === g).map((d) => `          <a class="deck" href="#/d/${d.id}"><b>${esc(d.title)}</b><span class="count">${d.count}</span><span class="meta">${esc(d.blurb)}</span></a>`).join("\n")}
+        </div></section>`).join("\n")}
+        <p class="note" id="loading">Loading cards…</p>
+        <noscript><p class="note">This app needs JavaScript. You can read every answer on <a href="${esc(repoHome)}">GitHub</a>.</p></noscript>
+      </section>`;
+// Cache-busting: a new deploy always loads the matching CSS and JS, never an old cached copy.
+const hashOf = (f) => crypto.createHash("sha256").update(fs.readFileSync(path.join(APP, f))).digest("hex").slice(0, 10);
+const html = fs.readFileSync(path.join(APP, "index.html"), "utf8")
+  .replace('href="styles.css"', `href="styles.css?v=${hashOf("styles.css")}"`)
+  .replace('src="app.js"', `src="app.js?v=${hashOf("app.js")}"`)
+  .replace("<!--BUILD:STATIC-HOME-->", () => staticHome) // function form: "$" in content is never a pattern
+  .replaceAll("__SITE__", SITE)
+  .replaceAll("__BUILD_DATE__", today)
+  .replaceAll("__CARD_COUNT__", String(allCards.length));
+fs.writeFileSync(path.join(DIST, "index.html"), html);
+fs.writeFileSync(path.join(DIST, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}sitemap.xml\n`);
+fs.writeFileSync(path.join(DIST, "sitemap.xml"),
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${SITE}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n</urlset>\n`);
 
 const kb = Math.round(fs.statSync(path.join(DIST, "content", "data.json")).size / 1024);
 console.log(`Built ${allCards.length} cards in ${decksOut.length} decks (${kb} KB).`);
