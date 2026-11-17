@@ -20,7 +20,7 @@ It ends with coding tasks and short questions you can practise before the interv
 - [CSS architecture at scale](#css-architecture-at-scale)
 - [Tailwind CSS](#tailwind-css)
 - [CSS coding tasks (with answers)](#css-coding-tasks-with-answers)
-- [Older questions (2019 list)](#older-questions-2019-list)
+- [Questions from the README list](#questions-from-the-readme-list)
 - [CSS and Tailwind questions](#css-and-tailwind-questions)
 
 Browser support facts on this page come from MDN and the Baseline data (web-features 3.46.0), checked in November 2026.
@@ -1150,101 +1150,411 @@ Tailwind: `user-invalid:border-red-600`.
 
 ---
 
-## Older questions (2019 list)
+## Questions from the README list
 
-Short answers to the original README list. Wording kept.
+Short answers to the older question list in the README. Each links to the deeper section above when there is one.
+The first 14 are topic words, so each is answered as "What should you know about this topic?".
 
-**Topic list:**
+### CSS Selectors
 
-| Topic | Short answer |
-|---|---|
-| CSS Selectors | Type `p`, class `.a`, ID `#a`, attribute `[href^="https"]`, descendant `a b`, child `a > b`, sibling `a + b` / `a ~ b`, pseudo-classes `:hover`, `:has()`. See [specificity](#specificity-and-the-cascade). |
-| CSS Box Model | See [The box model](#the-box-model). |
-| CSS Layout | Normal flow, flexbox, grid, positioning. See [Flexbox](#flexbox) and [CSS Grid](#css-grid). |
-| Styling Text with CSS | `font-family`, `font-size` (use rem), `line-height` (unitless, about 1.5), `text-wrap: balance` for headings, `@font-face` with `font-display: swap`. |
-| Styling Boxes with CSS | Backgrounds, borders, `border-radius`, `box-shadow`, `outline` (does not take space; keep it for focus). |
-| CSS Units | Absolute: `px`. Relative: `rem` (root font size), `em` (parent font size), `%` (parent), `vw/vh`, `dvh/svh/lvh`, `ch` (character width), `fr` (grid). Use rem for type, px for borders. |
-| CSS Colors and Gradients | `#hex`, `rgb()`, `hsl()`, and `oklch()` (even steps for the eye, wide colours). `linear-gradient()`, `radial-gradient()`, `conic-gradient()`. `color-mix()` for shades. |
-| CSS Transitions and Animations | See [Animations and performance](#animations-and-performance). |
-| CSS Transforms | `translate`, `scale`, `rotate`, `skew`. Visual only; layout does not move. Cheap to animate. Individual properties exist: `translate: 10px 0;`. |
-| CSS Pseudo-classes and Pseudo-elements | Pseudo-class = a state, one colon: `:hover`, `:focus-visible`, `:nth-child()`. Pseudo-element = a virtual part, two colons: `::before`, `::after`, `::placeholder`, `::backdrop`. |
-| CSS At-Rules (e.g. Media Queries) | Rules starting with `@`: `@media`, `@container`, `@supports`, `@layer`, `@font-face`, `@keyframes`, `@import`, `@scope`. |
-| CSS Specificity | See [Specificity and the cascade](#specificity-and-the-cascade). |
-| CSS Preprocessors | Sass, Less, Stylus: variables, nesting, mixins, compiled to CSS. Mostly replaced by native CSS today. |
-| CSS Naming Systems and Architecture | BEM, OOCSS, SMACSS, utility-first. See [CSS architecture at scale](#css-architecture-at-scale). |
+A selector picks which elements a rule styles. Know the main kinds and their cost in specificity.
+- **Basic:** type `p`, class `.card`, ID `#main`, universal `*`, attribute `[href^="https"]`.
+- **Combinators:** descendant `nav a`, child `ul > li`, next sibling `h2 + p`, any later sibling `h2 ~ p`.
+- **Pseudo-classes:** `:hover`, `:focus-visible`, `:nth-child(2n)`, `:not()`, `:is()`, `:where()` (zero specificity).
+- **`:has()`:** the "parent selector", in all major browsers since 2023. `.card:has(img)` styles cards that contain an image.
+- Prefer one class per rule. Avoid IDs and long chains; they are hard to override.
 
-**If you have 5 different stylesheets, how would you best integrate them into the site?**
-Let the bundler (Vite, Next.js) combine and minify them into one or a few files.
-Give the files hashed names so the CDN can cache them for a long time.
-Use `@layer` to fix their order. Load critical CSS first. Avoid many `@import` lines inside CSS, because each one waits for the previous file.
+```css
+form:has(input:user-invalid) .submit { opacity: .5; } /* style a parent by its child */
+```
 
-**Describe Floats and how they work.**
-`float: left` pushes a box to the side and lets text wrap around it, like a picture in a newspaper.
-The parent does not count floated children in its height, so it "collapses". Fix it with `display: flow-root` on the parent (old fix: a "clearfix").
-Today use floats only for text wrapping around images. Use flex or grid for layout.
+More: [Specificity and the cascade](#specificity-and-the-cascade), [Modern CSS you should know](#modern-css-you-should-know)
 
-**Describe z-index and how stacking context is formed.**
-See [z-index and stacking contexts](#z-index-and-stacking-contexts).
+### CSS Box Model
 
-**Describe BFC (Block Formatting Context) and how it works.**
-A BFC is an independent layout area. Inside it, floats are contained and margins do not collapse with the outside.
-It is created by `display: flow-root`, `overflow` other than `visible`, flex and grid items, `position: absolute/fixed`, and `display: inline-block`.
-Use it to contain floats or stop margin collapse. `display: flow-root` exists only for this.
+Every element is a box made of four layers: content, padding, border, margin (inside to outside).
+- `box-sizing: content-box` (default): `width` is only the content. Padding and border are added on top.
+- `box-sizing: border-box`: `width` includes padding and border. Almost every project sets this on all elements.
+- Vertical margins between blocks can **collapse** (the bigger one wins). Not inside flex or grid.
+- See it in DevTools: the "Computed" tab draws the four layers with numbers.
 
-**How would you approach fixing browser-specific styling issues?**
-1. Reproduce it in that browser (BrowserStack, real device, Safari Technology Preview).
-2. Check MDN and the Baseline status for the feature.
-3. Use `@supports` for feature checks, not browser sniffing.
-4. Use a reset or modern normalize. Let the build add vendor prefixes (Autoprefixer, Lightning CSS).
-5. Keep the fix small and add a comment with the browser version.
+More: [The box model](#the-box-model)
 
-**Have you ever used a grid system, and if so, what do you prefer?**
-I used Bootstrap's 12-column grid in the past. Today I prefer native CSS Grid with `repeat(auto-fit, minmax())` and Tailwind's `grid-cols-*`. No extra framework is needed.
+### CSS Layout
 
-**Have you used or implemented media queries or mobile specific layouts/CSS?**
-Yes. Mobile-first with `min-width` breakpoints, container queries for components, and `clamp()` for fluid type. See [Responsive design](#responsive-design).
+Pick the right layout tool for the job.
+- **Normal flow:** blocks stack down, inline items flow in lines. This is the default and is often enough.
+- **Flexbox:** one direction (a row or a column). Navbars, button groups, centering.
+- **Grid:** two directions (rows and columns). Page layouts, card grids, forms.
+- **Position:** `relative`, `absolute`, `fixed`, `sticky` for overlays, badges, sticky headers.
+- **Floats:** only for text wrapping around an image now.
+- Responsive tools on top: media queries, container queries, `clamp()`.
 
-**Can you give an example of an @media property other than screen?**
-`@media print` (hide nav, show link URLs), `prefers-color-scheme: dark`, `prefers-reduced-motion: reduce`, `hover: hover`, `pointer: coarse`, `orientation: portrait`.
+More: [Flexbox](#flexbox), [CSS Grid](#css-grid), [Position](#position)
 
-**What are the advantages/disadvantages of using CSS preprocessors?**
-- Advantages: variables, nesting, mixins, loops, splitting files.
-- Disadvantages: a build step, debugging compiled output, and Sass variables are fixed at build time.
-- Today: native variables, nesting, `color-mix()` and `@layer` cover most needs. Tailwind v4 is not designed to be used with Sass.
+### Styling Text with CSS
 
-**Explain your understanding of the box model and how you would tell the browser in CSS to render your layout in different box models.**
-See [The box model](#the-box-model). Switch with `box-sizing: content-box` (width = content only) or `box-sizing: border-box` (width includes padding and border).
+Readable text needs good size, line height, line length and font loading.
+- `font-size` in `rem`, so it follows the user's browser setting. Fluid size: `clamp(1rem, 0.9rem + 0.5vw, 1.25rem)`.
+- `line-height: 1.5` (no unit), so it scales with the font.
+- Line length about 60–75 characters: `max-width: 65ch`.
+- `text-wrap: balance` for headings, `text-wrap: pretty` for paragraphs (fewer single words on the last line).
+- Web fonts: WOFF2, `@font-face` with `font-display: swap`. Long words: `overflow-wrap: anywhere`.
+- Cut long text: `text-overflow: ellipsis` (one line) or `line-clamp` (many lines).
 
-**What does `* { box-sizing: border-box; }` do? What are its advantages?**
-Every element's `width` and `height` include padding and border. A 50% column stays 50% even with padding. Sizes are easier to predict, and mixed units (`%` width plus `px` padding) just work.
+More: [Truncate text](#5-truncate-text-one-line-and-three-lines), [Fonts](frontend-ui.md#fonts)
 
-**What is the CSS display property and can you give a few examples of its use?**
-It sets how a box behaves in layout: `block`, `inline`, `inline-block`, `flex`, `grid`, `none`, `contents` (box disappears, children stay), `flow-root`. See [Display](#display-block-inline-inline-block).
+### Styling Boxes with CSS
 
-**What's the difference between inline and inline-block?**
-Both sit in a line of text. `inline` ignores `width`, `height` and vertical margins. `inline-block` respects them, like a small block inside the line.
+Boxes are styled with backgrounds, borders, corners, shadows and outlines.
+- `background`: colors, images, gradients. `background-size: cover` for photos.
+- `border` and `border-radius` for rounded corners.
+- `box-shadow` for depth. Many shadows can be stacked with commas.
+- `outline` does not take space. Never remove it without a replacement; use `:focus-visible` to style focus.
+- `aspect-ratio: 16 / 9` keeps a box shape. `overflow` decides what happens to extra content.
 
-**What's the difference between the "nth-of-type()" and "nth-child()" selectors?**
-`p:nth-child(2)` = the second child of the parent, **only if** it is a `<p>`.
-`p:nth-of-type(2)` = the second `<p>` among its siblings, ignoring other tags.
-Example: `<h2>`, `<p>`, `<p>`. `p:nth-child(2)` picks the first `<p>`. `p:nth-of-type(2)` picks the second `<p>`.
+```css
+.card { border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 2px 8px rgb(0 0 0 / .1); }
+.card:focus-visible { outline: 3px solid royalblue; outline-offset: 2px; }
+```
 
-**What's the difference between a relative, fixed, absolute and statically positioned element?**
-See [Position](#position). Static = normal flow. Relative = moved but keeps its space. Absolute = removed, placed against the nearest positioned ancestor. Fixed = removed, placed against the viewport.
+### CSS Units
 
-**What existing CSS frameworks have you used locally, or in production? How would you change/improve them?**
-Bootstrap (older projects), Material UI, and now Tailwind with shadcn/ui.
-Improvements I make: tokens as CSS variables for theming, and removing unused components.
-I also wrap framework CSS in an early `@layer`, so our styles win without `!important`.
+Use relative units for things the user may scale, and `px` for small fixed details.
+- `px`: borders, shadows, small fixed details.
+- `rem`: relative to the root font size. Best for font sizes and spacing.
+- `em`: relative to the element's own font size. Good for padding inside a button.
+- `%`: relative to the parent. `vw` / `vh`: viewport width and height.
+- `dvh`, `svh`, `lvh`: viewport height that handles the mobile address bar. Use `100dvh`, not `100vh`.
+- `ch`: width of the "0" character (line length). `fr`: a share of free space in grid. `cqi`: container width for container queries.
 
-**Have you played around with the new CSS Flexbox or Grid specs?**
-Yes, they are now the default way to lay out pages. Flexbox for one direction, grid for two, subgrid for aligning nested items. See [Flexbox](#flexbox) and [CSS Grid](#css-grid).
+More: [Responsive design](#responsive-design)
 
-**Can you explain the difference between coding a web site to be responsive versus using a mobile-first strategy?**
-Responsive is the goal: the site adapts to all screens. Mobile-first is one way to get there: write phone styles first, then add `min-width` queries for bigger screens. See [Responsive design](#responsive-design).
+### CSS Colors and Gradients
 
-**What is CSS selector specificity and how does it work?**
-See [Specificity and the cascade](#specificity-and-the-cascade). A score of (IDs, classes, elements), compared left to right. Same score: the later rule wins.
+Know the color formats and the three gradient types.
+- Formats: `#0a7`, `rgb(0 170 119 / 50%)`, `hsl()`, and `oklch()`. OKLCH changes lightness in even steps for the eye, and supports wide-gamut screens.
+- `color-mix(in oklch, var(--brand), white 20%)` makes lighter or darker shades without a preprocessor.
+- `currentColor` reuses the text color, useful for icons.
+- Gradients: `linear-gradient()`, `radial-gradient()`, `conic-gradient()` (pie charts, color wheels).
+- Check contrast: 4.5:1 for normal text (WCAG AA).
+
+```css
+.btn { background: linear-gradient(135deg, oklch(65% .2 250), oklch(55% .2 300)); }
+```
+
+More: [Theming and dark mode](#theming-and-dark-mode), [Color contrast](frontend-ui.md#color-contrast)
+
+### CSS Transitions and Animations
+
+A **transition** animates between two states when something changes (like hover). An **animation** uses `@keyframes` and can run by itself and loop.
+- Animate only `transform` and `opacity`. They run on the GPU and skip layout.
+- Animating `width`, `top` or `height` forces layout on every frame and causes jank.
+- Respect `prefers-reduced-motion: reduce`.
+- Newer tools: View Transitions for page and state changes, `@starting-style` to animate elements as they appear.
+
+```css
+.toast { transition: opacity .2s, transform .2s; }
+.toast[hidden] { opacity: 0; transform: translateY(8px); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+```
+
+More: [Animations and performance](#animations-and-performance)
+
+### CSS Transforms
+
+Transforms move, scale, rotate or skew a box **visually**. Other elements do not move, because layout does not change.
+- `transform: translate(10px, 0) scale(1.1) rotate(5deg)`. Order matters: it is applied right to left.
+- Separate properties also exist: `translate: 10px 0; scale: 1.1; rotate: 5deg;`. Easier to animate one at a time.
+- `transform-origin` sets the pivot point. 3D: `perspective`, `rotateY()`.
+- A transform creates a new stacking context and a new containing block for `position: fixed` children. This is a common surprise.
+- Cheap to animate. Good for hover effects, slide-ins and drawers.
+
+More: [z-index and stacking contexts](#z-index-and-stacking-contexts)
+
+### CSS Pseudo-classes and Pseudo-elements
+
+A **pseudo-class** (one colon) selects an element in a state. A **pseudo-element** (two colons) styles a part that is not a real element.
+- Pseudo-classes: `:hover`, `:focus-visible`, `:checked`, `:disabled`, `:nth-child()`, `:has()`, `:user-invalid`.
+- Pseudo-elements: `::before`, `::after` (need `content`), `::placeholder`, `::marker`, `::selection`, `::backdrop` (behind a `<dialog>`).
+- `::before` content is not reliably read by screen readers. Don't put important text there.
+
+```css
+a[target="_blank"]::after { content: " ↗"; }      /* pseudo-element */
+li:nth-child(odd) { background: #f6f6f6; }       /* pseudo-class */
+```
+
+More: [Style a form field when invalid](#14-style-a-form-field-when-invalid-only-after-the-user-typed)
+
+### CSS At-Rules (e.g. Media Queries)
+
+At-rules start with `@` and give CSS instructions beyond normal rules.
+- `@media`: styles by viewport or device (width, `prefers-color-scheme`, `print`).
+- `@container`: styles by the parent container's size. Best for reusable components.
+- `@supports`: use a feature only if the browser has it.
+- `@layer`: sets the order of groups of styles, so overrides are predictable.
+- `@font-face`, `@keyframes`, `@import`, `@property` (typed custom properties), `@scope` (limit styles to a part of the page).
+
+```css
+@container card (min-width: 400px) { .card { display: grid; grid-template-columns: 1fr 2fr; } }
+```
+
+More: [Responsive design](#responsive-design), [Modern CSS you should know](#modern-css-you-should-know)
+
+### CSS Specificity
+
+Specificity is a score that decides which rule wins when two rules target the same element.
+- Score = (IDs, classes / attributes / pseudo-classes, elements), compared left to right. `#a` (1,0,0) beats `.a.b.c` (0,3,0).
+- Same score: the rule written later wins. Inline styles beat all selectors. `!important` beats normal rules.
+- `:where()` adds zero. `:is()` and `:not()` take their strongest argument.
+- `@layer` order is checked **before** specificity, so a later layer wins even with a weaker selector.
+
+More: [Specificity and the cascade](#specificity-and-the-cascade)
+
+### CSS Preprocessors
+
+Sass, Less and Stylus add variables, nesting, mixins and loops, then compile to normal CSS.
+- Sass (SCSS syntax) is the one still common. Less and Stylus are mostly gone.
+- Native CSS now has custom properties, nesting, `color-mix()`, `@layer` and `@scope`.
+- So in 2026 most new projects use plain CSS, CSS Modules or Tailwind, and skip the preprocessor.
+- Sass still fits old projects and teams that need loops or big mixin libraries.
+
+More: [What are the advantages/disadvantages of using CSS preprocessors?](#what-are-the-advantagesdisadvantages-of-using-css-preprocessors)
+
+### CSS Naming Systems and Architecture
+
+These are ways to keep CSS easy to change when a codebase and team grow.
+- **BEM:** `.card`, `.card__title`, `.card--featured` (block, element, modifier). Flat, clear names.
+- **OOCSS / SMACSS / ITCSS:** split structure from skin, and order files from generic to specific.
+- **CSS Modules:** class names are made unique per file automatically.
+- **Utility-first (Tailwind):** small single-purpose classes in the markup, plus React components for reuse.
+- Plus design tokens (CSS variables) for colors and spacing, and `@layer` for order.
+
+More: [CSS architecture at scale](#css-architecture-at-scale), [Tailwind CSS](#tailwind-css)
+
+### Describe Floats and how they work.
+
+`float: left` takes a box out of normal flow and pushes it to the side. Text and inline content wrap around it, like a photo in a newspaper.
+- The parent does not count floated children in its height, so it "collapses" to zero.
+- Fix: `display: flow-root` on the parent (creates a BFC). The old fix was a "clearfix" `::after` hack.
+- `clear: both` makes an element start below earlier floats.
+- Before flexbox (around 2015), whole page layouts were built with floats. Today use floats only for text wrap; use flex or grid for layout.
+
+```css
+.photo { float: left; margin: 0 1rem 1rem 0; }
+.article { display: flow-root; } /* parent now contains the float */
+```
+
+### Describe z-index and how stacking context is formed.
+
+`z-index` sets which positioned element sits on top. It only competes **inside the same stacking context**.
+- A stacking context is a group that is layered as one unit. A child can never escape above things outside its group.
+- Created by: the root element, `position` with a `z-index` other than `auto`, `opacity` below 1, `transform`, `filter`, `isolation: isolate`, flex or grid items with `z-index`, `position: fixed` or `sticky`.
+- Classic bug: a modal with `z-index: 9999` sits under a header, because the modal's parent has `transform`.
+- Fixes: render modals in a portal at the end of `<body>`, or use `<dialog>` / `popover`, which use the top layer.
+
+More: [z-index and stacking contexts](#z-index-and-stacking-contexts)
+
+### Describe BFC (Block Formatting Context) and how it works.
+
+A BFC is a separate layout area. What happens inside does not leak out, and the outside does not leak in.
+- Inside a BFC, floats are contained, so the parent wraps its floated children.
+- Margins of children do not collapse with the BFC's own margins.
+- A BFC box does not overlap nearby floats.
+- Created by: `display: flow-root` (made only for this), `overflow` not `visible`, `float`, `position: absolute/fixed`, `display: inline-block`. Flex and grid containers make a similar context for their items.
+- Use `display: flow-root` instead of `overflow: hidden`; it does not cut off shadows or dropdowns.
+
+### How would you approach fixing browser-specific styling issues?
+
+Reproduce, find the cause, fix it with feature checks, and add a test so it stays fixed.
+1. Reproduce on the real browser and version (Safari on iOS is the usual one). Use BrowserStack or a real device.
+2. Check MDN, caniuse and the **Baseline** status of the feature.
+3. Use `@supports` feature checks, not user-agent sniffing.
+4. Use a small modern reset. Let the build add vendor prefixes (Lightning CSS or Autoprefixer, driven by `browserslist`).
+5. Keep the fix small, comment it with the browser and version, and remove it when support improves.
+6. Add a Playwright test on WebKit and Firefox in CI, so it does not come back.
+
+```css
+.panel { position: fixed; }
+@supports (position-anchor: --btn) { .panel { position-anchor: --btn; } } /* only if supported */
+```
+
+### Have you ever used a grid system, and if so, what do you prefer?
+
+Yes. Earlier the Bootstrap 12-column grid. Today I prefer native CSS Grid, often through Tailwind classes. No framework is needed.
+- `repeat(auto-fit, minmax(16rem, 1fr))` gives a responsive card grid with no media queries.
+- `grid-template-areas` makes page layouts easy to read.
+- `subgrid` lines up titles and buttons across cards.
+- A 12-column design grid from Figma maps to `grid-template-columns: repeat(12, 1fr)`.
+
+```css
+.cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+```
+
+More: [CSS Grid](#css-grid), [Responsive card grid](#4-responsive-card-grid-no-media-queries)
+
+### Have you used or implemented media queries or mobile specific layouts/CSS?
+
+Yes, on every project. I build mobile-first, then add `min-width` breakpoints for larger screens.
+- Media queries for the page layout. Container queries for components, so a card adapts to its slot, not the screen.
+- `clamp()` for fluid font sizes and spacing. `100dvh` for full-height mobile screens.
+- Touch targets at least 24×24 px (WCAG 2.2), better 44×44 px. `@media (hover: hover)` for hover-only effects.
+- Test on real phones and with DevTools device mode.
+
+```css
+.layout { display: grid; gap: 1rem; }
+@media (min-width: 48rem) { .layout { grid-template-columns: 16rem 1fr; } } /* tablet and up */
+```
+
+More: [Responsive design](#responsive-design)
+
+### Can you give an example of an @media property other than screen?
+
+`print` is the classic other media type. Media **features** are used even more in 2026.
+- `@media print`: hide nav and buttons, show link URLs, black text on white.
+- `prefers-color-scheme: dark`: dark theme. `prefers-reduced-motion: reduce`: turn off big animations.
+- `hover: hover` and `pointer: coarse`: mouse vs touch. `orientation: portrait`.
+- `prefers-contrast: more` for high-contrast users.
+
+```css
+@media print { nav, .btn { display: none; } a::after { content: " (" attr(href) ")"; } }
+```
+
+More: [Theming and dark mode](#theming-and-dark-mode)
+
+### What are the advantages/disadvantages of using CSS preprocessors?
+
+**Advantages:**
+- Variables, nesting, mixins, functions and loops. Split code into partial files.
+- Mature tools and a lot of existing code (Bootstrap 5 is still written in Sass).
+
+**Disadvantages:**
+- An extra build step and slower builds. Debugging needs source maps.
+- Sass variables are fixed at build time. CSS variables change at runtime (themes, dark mode).
+- Deep nesting creates long, high-specificity selectors.
+
+**Today:** native CSS covers most of it (custom properties, nesting, `color-mix()`, `@layer`). Tailwind v4 says not to use it with Sass, Less or Stylus.
+
+More: [Tailwind v4: what changed](#tailwind-v4-what-changed)
+
+### Explain your understanding of the box model and how you would tell the browser in CSS to render your layout in different box models.
+
+Every box is content + padding + border + margin. `box-sizing` decides what `width` and `height` measure.
+- `box-sizing: content-box` (default): `width` = content only. A 200px box with 20px padding and 1px border is 242px wide.
+- `box-sizing: border-box`: `width` = content + padding + border. The same box stays 200px wide.
+- Margin is never inside `width` in either model.
+- Most projects set `border-box` on everything once, at the top of the CSS.
+
+```css
+*, *::before, *::after { box-sizing: border-box; }
+.legacy-widget { box-sizing: content-box; } /* switch back for one part */
+```
+
+More: [The box model](#the-box-model)
+
+### What does * { box-sizing: border-box; } do? What are its advantages?
+
+It makes every element's `width` and `height` include its padding and border.
+- Sizes are what you write. A `width: 50%` column stays 50% even after you add padding.
+- Mixed units work: `width: 100%` plus `padding: 1rem` does not overflow the parent.
+- Less math, fewer surprise scrollbars, and it matches how designers measure boxes.
+- Add `*::before` and `*::after` too, because `*` does not match pseudo-elements.
+- Tailwind's Preflight and most modern resets already include it.
+
+More: [The box model](#the-box-model)
+
+### What is the CSS display property and can you give a few examples of its use?
+
+`display` sets how a box takes part in layout: its outer type (block or inline) and how it lays out its children.
+- `block`: new line, full width (`<div>`, `<p>`). `inline`: flows in text, ignores width and height (`<span>`, `<a>`).
+- `inline-block`: sits in a line but respects width, height and padding (badges, buttons).
+- `flex` and `grid`: lay out the children. `inline-flex` for an icon + text button.
+- `none`: removes the box. It is hidden from screen readers too.
+- `contents`: the box disappears, children stay. `flow-root`: makes a BFC to contain floats.
+
+More: [Display: block, inline, inline-block](#display-block-inline-inline-block)
+
+### What’s the difference between inline and inline-block?
+
+Both sit inside a line of text. Only `inline-block` respects box sizes.
+- `inline`: ignores `width` and `height`. Vertical margins do not push other lines away.
+- `inline-block`: respects `width`, `height`, padding and margins, like a small block inside the line.
+- Use `inline-block` (or `inline-flex`) for badges, tags and icon buttons.
+- Small gotcha: spaces in the HTML between inline-block items show as small gaps. Flexbox with `gap` avoids it.
+
+```css
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; }
+```
+
+More: [Display: block, inline, inline-block](#display-block-inline-inline-block)
+
+### What’s the difference between the “nth-of-type()” and “nth-child()” selectors?
+
+`nth-child()` counts **all** siblings. `nth-of-type()` counts only siblings of the **same tag**.
+- `p:nth-child(2)`: the second child of the parent, but **only if** it is a `<p>`.
+- `p:nth-of-type(2)`: the second `<p>` among its siblings, other tags ignored.
+- Example children: `<h2>`, `<p>`, `<p>`. `p:nth-child(2)` picks the first `<p>`. `p:nth-of-type(2)` picks the second `<p>`.
+- Newer: `:nth-child(2 of .active)` counts only elements that match `.active`.
+- Patterns: `odd`, `even`, `3n+1`, `-n+3` (first three).
+
+### What’s the difference between a relative, fixed, absolute and statically positioned element?
+
+- `static` (default): normal flow. `top` and `left` do nothing.
+- `relative`: stays in flow and keeps its space, but can shift with `top` / `left`. Often used as the anchor for absolute children.
+- `absolute`: leaves the flow (no space kept). Placed against the nearest positioned ancestor (not static).
+- `fixed`: leaves the flow. Placed against the viewport, so it stays while scrolling. A `transform` on an ancestor breaks this.
+- `sticky` (the fifth one): normal until a scroll point, then sticks. Needs `top`, and fails if a parent has `overflow: hidden`.
+
+```css
+.card { position: relative; }
+.card .badge { position: absolute; top: 8px; right: 8px; } /* placed inside the card */
+```
+
+More: [Position](#position)
+
+### What existing CSS frameworks have you used locally, or in production? How would you change/improve them?
+
+Name what you used, why, and one real improvement you made.
+- Typical path: Bootstrap on older apps, Material UI on admin tools, now Tailwind with shadcn/ui and Radix for behavior.
+- Improvements I made:
+  - Moved colors and spacing into design tokens (CSS variables), so theming and dark mode need no rebuild.
+  - Put vendor CSS in an early `@layer`, so our styles win without `!important`.
+  - Removed unused components to cut CSS size.
+  - Wrapped Tailwind class lists in typed React components with `cva`, so teams use variants, not random classes.
+- With Bootstrap I would replace Sass variables with CSS variables and drop jQuery-based parts.
+
+More: [Tailwind in a React design system](#tailwind-in-a-react-design-system), [Tailwind: good and bad](#tailwind-good-and-bad)
+
+### Have you played around with the new CSS Flexbox or Grid specs?
+
+Yes. They are not new anymore. They are the default way to lay out pages.
+- Flexbox for one direction: navbars, toolbars, centering. Know `flex: 1` and `min-width: 0` for long text.
+- Grid for two directions: page shells, dashboards, card grids. `auto-fit` + `minmax()`, `grid-template-areas`.
+- `gap` works in both. `subgrid` (all major browsers since 2023) aligns nested items with the parent grid.
+- Pair them with container queries, so components adapt to the space they get.
+
+More: [Flexbox](#flexbox), [CSS Grid](#css-grid), [Holy-grail layout with grid](#3-holy-grail-layout-with-grid)
+
+### Can you explain the difference between coding a web site to be responsive versus using a mobile-first strategy?
+
+Responsive is the **goal**: one site that adapts to every screen size. Mobile-first is one **way** to reach it.
+- Mobile-first: write the base styles for small screens, then add `min-width` media queries for bigger ones.
+- Desktop-first: write for desktop, then undo things with `max-width` queries. This usually means more overrides.
+- Mobile-first gives simpler CSS, and phones load less. It also forces you to decide what really matters.
+- Most traffic is mobile, and Google indexes the mobile version, so mobile-first is the normal default. Tailwind is mobile-first too (`md:` means "from md and up").
+
+More: [Mobile-first vs desktop-first](#mobile-first-vs-desktop-first)
+
+### What is CSS selector specificity and how does it work?
+
+When two rules set the same property on the same element, the more specific selector wins.
+- Count three numbers: (IDs, classes + attributes + pseudo-classes, elements + pseudo-elements).
+- Compare left to right. `#nav a` = (1,0,1) beats `.menu .item a.link` = (0,3,1).
+- Same score: the rule written later wins. Inline `style` beats selectors. `!important` beats normal declarations.
+- `:where()` counts as zero, good for resets and libraries. `:is()` counts as its strongest argument.
+- Cascade layers (`@layer`) are checked before specificity. Keep selectors flat (one class) to avoid wars.
+
+More: [Specificity and the cascade](#specificity-and-the-cascade)
 
 ---
 

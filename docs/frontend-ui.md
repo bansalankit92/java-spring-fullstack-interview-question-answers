@@ -20,7 +20,8 @@ JavaScript questions live in [javascript.md](javascript.md). CSS questions live 
 - [Frontend system design: autocomplete / typeahead](#frontend-system-design-autocomplete--typeahead)
 - [Frontend system design: infinite news feed](#frontend-system-design-infinite-news-feed)
 - [Frontend system design: a design system for many teams](#frontend-system-design-a-design-system-for-many-teams)
-- [Older questions (2019 list)](#older-questions-2019-list)
+- [General questions from the README list](#general-questions-from-the-readme-list)
+- [HTML questions from the README list](#html-questions-from-the-readme-list)
 - [Frontend UI questions](#frontend-ui-questions)
 
 ---
@@ -1353,83 +1354,353 @@ More on React-side choices (headless components, shadcn/ui, monorepos): [Shared 
 
 ---
 
-## Older questions (2019 list)
+## General questions from the README list
 
-Short answers to the original README questions, in their original wording.
+Short answers to the older "General" question list in the README. Each links to the deeper section above when there is one.
+The personal questions have a fill-in template, a short sample answer, and what the interviewer listens for.
 
-### HTML
+### What did you learn yesterday/this week?
 
-**What were some of the key goals and motivations for the HTML5 specification?**
-- Replace plugins (Flash) with native video, audio and canvas.
-- Add meaning to markup with semantic elements.
-- Better forms (new input types, validation) and app APIs (storage, workers, offline).
-- Define exact parsing rules so all browsers handle broken HTML the same way.
+The interviewer wants to see that you keep learning, and that you can explain a new idea simply.
+Template: "This week I learned **X**. I needed it because **Y**. I tried it in **Z**, and the result was **N**."
 
-**What are some of the key new features in HTML5?**
-- Semantic elements: `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<footer>`.
-- `<video>`, `<audio>`, `<canvas>`, inline `<svg>`.
-- Form types: `email`, `date`, `number`, `range`, plus `required` and `pattern`.
-- APIs: Web Storage, Web Workers, Geolocation, drag and drop, History API.
-- Simple doctype: `<!DOCTYPE html>`.
+> "This week I learned how INP is measured in the field. Our checkout button had a 350 ms click handler. I split the work and called `scheduler.yield()` where the browser supports it. Our p75 INP went from 280 ms to 160 ms."
 
-**What are "web workers"?**
-- Scripts that run in a background thread, so heavy work does not freeze the page.
-- No DOM access. They talk to the page with `postMessage`.
-- Use for parsing big files, image processing, heavy calculations. More in [javascript.md](javascript.md).
+- Other good topics: a Spring Boot 4 change, a Kafka consumer setting, a new CSS feature like container queries.
+- They listen for: a real thing (not a headline you read), why it mattered, and one detail that proves you used it.
+- Avoid: "I watched a course on React." Say what you built or changed.
 
-**How do you indicate the character set being used by an HTML5 document? How does this differ from older HTML standards?**
-- HTML5: `<meta charset="utf-8">`, early in `<head>` (within the first 1024 bytes).
-- Older HTML: `<meta http-equiv="Content-Type" content="text/html; charset=utf-8">`.
-- The HTTP `Content-Type` header can also set it, and it wins.
+More: [How to fix INP](#how-to-fix-inp)
 
-**Discuss the differences between an HTML specification and a browser's implementation thereof.**
-- The spec (today the WHATWG HTML Living Standard) says how things should work.
-- Each browser engine (Blink, Gecko, WebKit) builds it. Some features arrive late, partly or with bugs.
-- So we check support on MDN or caniuse, look for "Baseline" (works in all major browsers), and use fallbacks.
+### What excites or interests you about coding?
 
-**Briefly describe the correct usage of the following HTML5 semantic elements: `<header>, <article>, <section>, <footer>`.**
-- `<header>`: intro content for the page or a section: logo, title, nav.
-- `<article>`: content that stands alone: a blog post, a product card, a comment.
-- `<section>`: a themed group of content, usually with a heading.
-- `<footer>`: closing info for the page or a section: author, copyright, links.
+Be honest and specific. Tie it to users or to a hard problem, not to "I like technology".
+Template: "I enjoy **kind of problem**, because **reason**. A recent example is **story**."
 
-**Can a `<section>` contain `<article>` elements? Can an `<article>` contain `<section>` elements? Provide usage examples.**
-- Yes to both.
+> "I like the moment when a slow, confusing screen becomes fast and simple. Last quarter I moved our order page from a 4 MB SPA to Server Components. LCP dropped from 4.1 s to 1.8 s, and support tickets about 'page stuck' went down."
+
+- A senior can also say: "I enjoy helping a team ship safely: good reviews, good tests, calm releases."
+- They listen for: energy, real examples, and whether you care about users and the team, not only tools.
+
+### What is a recent technical challenge you experienced and how did you solve it?
+
+Use STAR: **S**ituation, **T**ask, **A**ction, **R**esult. Spend most of the time on Action. End with a number and a lesson.
+Template: "We had **problem** (impact: **number**). I owned **part**. I found the cause by **how you debugged**. I fixed it with **change**. Result: **number**. Next time I would **lesson**."
+
+> "After a release, 3% of checkouts failed only on Safari. I checked our frontend error tool and saw a `structuredClone` error on old iOS versions. I added a small fallback, a Playwright test on WebKit, and a release check for browser errors. Failures went back to 0.1%."
+
+- Good full-stack stories: a memory leak, a Kafka consumer lag, a slow SQL query behind a page, a hard migration.
+- They listen for: how you found the root cause (data, not guessing), trade-offs, and what you changed so it does not happen again.
+
+More: [Frontend errors only for some users](production-ready.md#frontend-errors-only-for-some-users), [Talking about your biggest React project](react.md#talking-about-your-biggest-react-project)
+
+### When building a new web site or maintaining one, can you explain some techniques you have used to increase performance?
+
+Measure first with real-user data, then fix the biggest problem. Don't guess.
+- **Measure:** Core Web Vitals at p75 from CrUX or our own RUM (real user monitoring). Use Lighthouse only to debug.
+- **Server:** CDN in front, HTTP/2 or HTTP/3, cache HTML where possible, fast APIs (Spring Boot p95 under 200 ms).
+- **Less JavaScript:** Server Components, code splitting per route, remove heavy libraries, fewer third-party tags.
+- **LCP image:** in the HTML, `fetchpriority="high"`, never lazy-loaded, AVIF or WebP, right size.
+- **INP:** break long tasks, fewer re-renders, heavy work in a Web Worker. **CLS:** width and height on media, reserved space.
+- **Keep it fast:** a performance budget in CI (for example "JS per route under 170 KB gzip") and alerts on RUM.
+
+More: [Web performance and Core Web Vitals](#web-performance-and-core-web-vitals), [Frontend monitoring](production-ready.md#frontend-monitoring)
+
+### Can you describe some SEO best practices or techniques you have used lately?
+
+Give crawlers real HTML, clear structure and a fast page. Then help them find every page.
+- **Render on the server:** SSR, SSG or ISR, so the HTML already has the content. Google can run JS, but it is slower and less reliable.
+- **Per page:** unique `<title>`, meta description, one `<h1>`, semantic HTML, `alt` text, real `<a href>` links.
+- **URLs:** clean and stable. `rel="canonical"` for duplicates. 301 redirects when URLs change. `hreflang` for languages.
+- **Discovery:** `sitemap.xml` and `robots.txt`. In Next.js, `app/sitemap.ts`, `app/robots.ts` and `generateMetadata()`.
+- **Structured data:** JSON-LD for products, articles and breadcrumbs, so search can show rich results.
+- **Speed and mobile:** good Core Web Vitals; Google indexes the mobile version first.
+- **2026 extra:** decide in `robots.txt` which AI crawlers may read the site. Keep key facts in plain HTML text, not only in images or JS.
+
+More: [Rendering strategies](#rendering-strategies-csr-ssr-ssg-isr-streaming), [Semantic HTML](#semantic-html)
+
+### Can you explain any common techniques or recent issues solved in regards to front-end security?
+
+Name the attack, the fix, and one real case.
+- **XSS:** React escapes text. Danger is `dangerouslySetInnerHTML`, `javascript:` URLs and markdown. Sanitize with DOMPurify. Add a strict CSP with nonces.
+- **CSRF:** `SameSite=Lax` cookies plus a CSRF token on state-changing requests (Spring Security does this).
+- **Tokens:** keep them in `HttpOnly`, `Secure` cookies behind a BFF, not in `localStorage`.
+- **Supply chain:** lockfile, `npm ci`, Dependabot or Renovate, block install scripts (pnpm 10 does this by default). The 2025 npm worm attacks showed why.
+- **Recent real issues:** CVE-2025-29927 let attackers skip Next.js middleware with one header, so auth only in middleware was unsafe. CVE-2025-55182 (React2Shell, December 2025) allowed remote code execution through React Server Components. Fix: patch fast, and check auth again in the server code and in Spring.
+
+More: [Frontend security](#frontend-security), [Dependency and supply-chain risk](#dependency-and-supply-chain-risk), [CORS and CSRF in Spring](spring-ecosystem.md#cors-and-csrf)
+
+### What actions have you personally taken on recent projects to increase maintainability of your code?
+
+Say what **you** did and what it changed. Pick 3–4 actions, not a list of 15 tools.
+- **Types:** TypeScript `strict`, types generated from the Spring OpenAPI spec, so API changes break the build, not production.
+- **Structure:** feature folders (`features/orders`) with one public `index.ts`. Lint rules block deep imports.
+- **Shared UI:** a design system with Storybook, so teams stop copying buttons and modals.
+- **Tests:** unit tests for logic, Testing Library for components, a few Playwright journeys. Fast and not flaky.
+- **Guard rails:** ESLint and Prettier (or Biome) in CI, small PRs, CODEOWNERS, ADRs (short notes on why we chose something).
+- Example: "I added generated API types. In six months we had zero 'field renamed' bugs in production, down from about one a month."
+
+More: [Keeping a big codebase healthy](react.md#keeping-a-big-codebase-healthy), [Structuring a large React app](react.md#structuring-a-large-react-app)
+
+### Which version control systems are you familiar with?
+
+Git, every day. Older teams also used SVN (central server) and Mercurial, but Git won.
+A senior should talk about the **workflow**, not only the tool:
+- Trunk-based development: short-lived branches (1–2 days), feature flags for unfinished work.
+- Pull requests with CI checks (lint, tests, build, preview deploy) and at least one review.
+- `rebase` to keep my branch clean, `merge` or squash into `main`. Never rewrite shared history.
+- Conventional commits (`feat:`, `fix:`) to make changelogs. Tags for releases.
+- Useful tools: `git bisect` to find the bad commit, `git reflog` to recover lost work.
+
+### Can you describe your workflow when you create a web page?
+
+1. **Understand:** the user goal, the Figma design, and every state: loading, empty, error, long text, mobile.
+2. **Plan:** the URL, the data needed, which parts are Server Components and which need the client.
+3. **API first:** agree the contract with the backend (OpenAPI), generate types, mock it if Spring is not ready.
+4. **Build:** semantic HTML first, then mobile-first styles with design system parts, then behavior.
+5. **Check:** keyboard only, screen reader smoke test, axe, unit and component tests, one Playwright test.
+6. **Ship:** check bundle size and Core Web Vitals, release behind a feature flag, watch errors and RUM.
+
+More: [Frontend system design: how to answer](#frontend-system-design-how-to-answer)
+
+### If you have 5 different stylesheets, how would you best integrate them into the site?
+
+Let the build tool (Vite, Next.js) combine, minify and hash them. Don't add 5 `<link>` tags by hand.
+- Import them in code. The bundler makes one or a few files, with hashed names for long caching.
+- Split per route if they are big, so each page loads only its CSS.
+- Avoid `@import` inside CSS files. Each one waits for the previous file to download.
+- Fix the order with `@layer` (`reset, vendor, base, components, utilities`), so no `!important` fights.
+- Inline the small "critical" CSS for the first screen only if measurements show it helps.
+
+```css
+@layer reset, vendor, base, components, utilities; /* later layer wins */
+@import url("vendor.css") layer(vendor);
+```
+
+More: [CSS architecture at scale](css-tailwind.md#css-architecture-at-scale), [Specificity and the cascade](css-tailwind.md#specificity-and-the-cascade)
+
+### Can you describe the difference between progressive enhancement and graceful degradation?
+
+Both aim for a page that works for everyone. They start from opposite ends.
+- **Progressive enhancement:** start with a basic version that works everywhere (plain HTML). Then add CSS and JS for browsers that can do more.
+- **Graceful degradation:** build the full rich version first. Then make sure it still works, in a simpler way, on weaker browsers.
+- Progressive enhancement is the safer default. It also helps slow phones, failed JS downloads and crawlers.
+- Modern example: a Next.js Server Action on a plain `<form action>`. The form submits even before JS loads. After hydration, React adds pending state and no full reload.
+- CSS example: `@supports (anchor-name: --a)` adds a new layout only where the browser supports it.
+
+More: [Rendering strategies](#rendering-strategies-csr-ssr-ssg-isr-streaming)
+
+### How would you optimize a website's assets/resources?
+
+Send less, send it smaller, send it once, and send the important things first.
+- **JS and CSS:** tree shaking, code splitting, minify, compress with Brotli (or zstd where the CDN supports it).
+- **Images:** AVIF or WebP, `srcset` and `sizes`, `loading="lazy"` below the fold, width and height to stop jumps.
+- **Fonts:** WOFF2, subset, `font-display: swap`, preload only the main one, or use system fonts.
+- **Caching:** hashed file names with `Cache-Control: public, max-age=31536000, immutable`. HTML short or `no-cache`.
+- **Priority:** `fetchpriority="high"` for the LCP image, `preconnect` to the API, `defer` for scripts.
+- **Audit:** a bundle analyzer and a size budget in CI, so new libraries cannot sneak in.
+
+More: [Images](#images), [Fonts](#fonts), [Code splitting](#code-splitting), [Caching headers](#caching-headers)
+
+### What does CORS stand for and what issue does it address?
+
+CORS means **Cross-Origin Resource Sharing**. It lets a server say which other origins may read its responses in the browser.
+- By default the browser's same-origin policy blocks JS on `app.com` from reading a response from `api.com`.
+- The server opts in with headers like `Access-Control-Allow-Origin: https://app.com`.
+- For "non-simple" requests (JSON body, `Authorization` header, `PUT`) the browser first sends an `OPTIONS` preflight.
+- With cookies you need `Access-Control-Allow-Credentials: true` and an exact origin, never `*`.
+- CORS is a browser rule. It does not protect your API from curl, bots or CSRF.
+- Best fix in 2026: often no CORS at all. Put the API behind the same origin (a Next.js BFF or a reverse proxy).
+
+More: [CORS (what it is and is not)](#cors-what-it-is-and-is-not), [CORS and CSRF in Spring](spring-ecosystem.md#cors-and-csrf)
+
+### Do you have any pet projects? What kind?
+
+One small, real project you can show is enough. Talk about what you learned, not just the feature list.
+Template: "I built **what** for **who or why**. Stack: **tools**. The hard part was **problem**. I learned **lesson**. It is live at **link**."
+
+> "I built an interview-prep site from my notes. It is a Next.js app with a swipe-card reader, deployed with Docker and nginx. The hard part was turning long markdown into flashcards and keeping Mermaid diagrams readable on phones. I learned a lot about mobile performance and caching."
+
+- Good options: a tool you use daily, a small open-source fix, a side app that tries a new tech (Kafka Streams, an AI feature).
+- If you have none, say so honestly and talk about what you explore at work instead.
+- They listen for: curiosity, ownership end to end (build, deploy, fix), and honest trade-offs.
+
+### Explain your current project with data flow architecture, file structure,...?
+
+Answer like a small system design: purpose, users and scale, one diagram, data flow, structure, your part, one improvement.
+Template: "It is **product** for **users** (**scale**). Browser → **frontend** → **backend** → **data**. I own **part**. I improved **X** by **number**. I would change **Y**."
+
+```mermaid
+flowchart LR
+    B["Browser"] --> CDN["CDN"]
+    CDN --> N["Next.js BFF"]
+    N -->|"REST with JWT"| O["Order Service (Spring)"]
+    N -->|"REST"| C["Catalog Service (Spring)"]
+    O --> PG["PostgreSQL"]
+    O -->|"OrderPlaced event"| K["Kafka"]
+    K --> P["Payment Service (Spring)"]
+    K --> NT["Notification Service"]
+    C --> R["Redis cache"]
+```
+
+> "It is an ordering platform for about 200k daily users. The browser talks only to Next.js. Next.js is our BFF: it renders pages, keeps the login cookie and calls Spring services with a JWT. Order Service saves to PostgreSQL and publishes `OrderPlaced` to Kafka, using the outbox pattern. Payment and Notification consume it. I own the checkout flow, frontend and Order Service."
+
+Sample file structure (frontend):
+
+```text
+apps/web/
+  app/(shop)/orders/page.tsx   # route: Server Component, fetches data
+  features/orders/             # one folder per business feature
+    components/  hooks/  api.ts  types.ts  index.ts
+  shared/ui/                   # design system parts
+packages/api-types/            # generated from Spring OpenAPI
+```
+
+- They listen for: clear boundaries, where state lives (server data in RSC or TanStack Query, UI state in components), failure handling, and your personal part.
+
+More: [Talking about your biggest React project](react.md#talking-about-your-biggest-react-project), [Structuring a large React app](react.md#structuring-a-large-react-app), [Next.js as a BFF](nextjs.md#nextjs-architecture-and-server-components), [How to answer a system design question](system-design.md#how-to-answer-a-system-design-question)
+
+---
+
+## HTML questions from the README list
+
+Short answers to the older "HTML" question list in the README. Each links to the deeper section above when there is one.
+
+### What were some of the key goals and motivations for the HTML5 specification?
+
+HTML5 turned HTML from a document format into a platform for web apps, with no plugins.
+- **No plugins:** native `<video>`, `<audio>` and `<canvas>` replaced Flash and Silverlight.
+- **Meaning:** semantic elements like `<article>` and `<nav>`, so browsers, screen readers and search engines understand the page.
+- **App features:** better forms, storage, offline, workers, history API.
+- **Same parsing everywhere:** exact rules for broken HTML, so all browsers build the same DOM.
+- **Backward compatible:** old pages keep working.
+- Today there is no "HTML6". HTML is a **Living Standard** (WHATWG) that changes a little at a time.
+
+### What are some of the key new features in HTML5?
+
+- **Semantic elements:** `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<aside>`, `<footer>`, `<figure>`.
+- **Media and graphics:** `<video>`, `<audio>`, `<canvas>`, inline `<svg>`.
+- **Forms:** `type="email|date|number|range|search"`, `required`, `pattern`, `placeholder`, built-in validation.
+- **APIs:** Web Storage, Web Workers, Geolocation, History API (`pushState`, used by SPA routers), drag and drop.
+- **Simple doctype and charset:** `<!DOCTYPE html>` and `<meta charset="utf-8">`.
+- Newer additions worth naming in 2026: `<dialog>`, `<details>`, the `popover` attribute, `loading="lazy"` and `fetchpriority`.
+
+More: [Semantic HTML](#semantic-html)
+
+### What are “web workers”?
+
+A Web Worker runs JavaScript on a background thread, so heavy work does not freeze the page.
+- It has no DOM access. The page and the worker talk with `postMessage`, and data is copied (or transferred).
+- Use it for big JSON or CSV parsing, image work, search over 100k items, encryption.
+- Other kinds: **shared workers** (shared by tabs) and **service workers** (a network proxy for offline and caching).
+
+```js
+// main.js
+const worker = new Worker(new URL("./parse.js", import.meta.url), { type: "module" });
+worker.postMessage(bigCsvText);
+worker.onmessage = (e) => renderTable(e.data); // UI stays smooth meanwhile
+// parse.js
+self.onmessage = (e) => self.postMessage(parseCsv(e.data));
+```
+
+More: [How to fix INP](#how-to-fix-inp), [Service workers and PWA basics](#service-workers-and-pwa-basics), [JavaScript event loop](javascript.md#how-javascript-runs-the-event-loop)
+
+### How do you indicate the character set being used by an HTML5 document? How does this differ from older HTML standards?
+
+HTML5: put `<meta charset="utf-8">` as the first thing in `<head>`. It must be inside the first 1024 bytes.
+- Older HTML 4 and XHTML used a long form: `<meta http-equiv="Content-Type" content="text/html; charset=utf-8">`.
+- The HTTP header `Content-Type: text/html; charset=utf-8` also sets it, and it wins over the meta tag.
+- Always use UTF-8. Without it you may see broken text like "Ã©" instead of "é".
 
 ```html
-<section><h2>Latest posts</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"> <!-- first line in head -->
+```
+
+### Discuss the differences between an HTML specification and a browser’s implementation thereof.
+
+The spec says how a feature **should** work. Each browser engine decides **when and how well** to build it.
+- The HTML spec is the WHATWG Living Standard. Engines: Blink (Chrome, Edge), Gecko (Firefox), WebKit (Safari, and every browser on iOS).
+- A feature can be missing, behind a flag, partly built, or buggy in one engine.
+- To check support: MDN, caniuse.com, and the **Baseline** label ("Newly available" = in all major browsers, "Widely available" = for 30 months).
+- The yearly **Interop** project makes the engines fix the same gaps together.
+- In practice: feature detection (`@supports`, `"popover" in HTMLElement.prototype`), fallbacks, and tests on real Safari.
+
+### Briefly describe the correct usage of the following HTML5 semantic elements: `<header>, <article>, <section>, <footer>`.
+
+- `<header>`: intro content for the page or for a section. Logo, title, main nav, or an article's title and date.
+- `<article>`: content that makes sense alone and could be shared or reused. A blog post, a product card, a comment.
+- `<section>`: a themed part of a page or article, **with a heading**. If there is no natural heading, use a `<div>`.
+- `<footer>`: closing info for the page or a section. Author, copyright, related links.
+- Quick test: "Could I put this in an RSS feed alone?" Yes → `<article>`. "Is it a chapter with a heading?" → `<section>`.
+
+More: [Semantic HTML](#semantic-html)
+
+### Can a `<section>` contain `<article>` elements? Can an `<article>` contain `<section>` elements? Provide usage examples.
+
+Yes to both. Pick by meaning, not by nesting rules.
+
+```html
+<section> <h2>Latest posts</h2>           <!-- a group of articles -->
   <article><h3>Java 25 is out</h3>...</article>
   <article><h3>Spring Boot 4 tips</h3>...</article>
 </section>
 
-<article><h1>How we cut LCP by 40%</h1>
+<article> <h1>How we cut LCP by 40%</h1>  <!-- one article with chapters -->
   <section><h2>The problem</h2>...</section>
   <section><h2>The fix</h2>...</section>
 </article>
 ```
 
-**Can a web page contain multiple `<header>` elements? What about `<footer>` elements?**
-- Yes. Each `<article>` or `<section>` can have its own `<header>` and `<footer>`.
-- Only the top-level ones (not inside article or section) act as page landmarks.
+An `<article>` can also hold other articles, like comments under a blog post.
 
-**Describe the relationship between the `<header>` and `<h1>` tags in HTML5.**
-- `<header>` is a container. `<h1>` is a heading.
-- A `<header>` often holds the `<h1>`, but it does not have to. An `<h1>` can live without a `<header>`.
-- Use one `<h1>` per page for the main topic. That is best for screen readers and SEO.
+### Can a web page contain multiple `<header>` elements? What about `<footer>` elements?
 
-**Give a simple implementation of the `<video>` tag to embed a video stored at http://www.example.com/amazing_video.mp4. Give the video a width of 640 pixels by 360 pixels. Provide the user with controls.**
+Yes. Each `<article>` or `<section>` can have its own `<header>` and `<footer>`.
+- Only the `<header>` and `<footer>` that are **not** inside `<article>`, `<section>`, `<aside>`, `<nav>` or `<main>` become page landmarks (`banner` and `contentinfo`).
+- Screen reader users jump between landmarks, so keep one page-level header and one page-level footer.
+- A `<header>` cannot be inside another `<header>` or a `<footer>`.
 
 ```html
-<video src="http://www.example.com/amazing_video.mp4" width="640" height="360" controls>
-  Your browser does not support video. <a href="http://www.example.com/amazing_video.mp4">Download it</a>.
-</video>
-<!-- For accessibility, add captions: <track kind="captions" src="captions.vtt" srclang="en"> -->
+<header>Site logo and nav</header>            <!-- page banner -->
+<main>
+  <article><header><h2>Post</h2><time>...</time></header> ... <footer>By Ankit</footer></article>
+</main>
+<footer>© 2026</footer>                       <!-- page contentinfo -->
 ```
 
-**Write the code necessary to create a 300 pixel by 300 pixel `<canvas>`. Within it, paint a blue 100 pixel by 100 pixel square with the top-left corner of the square located 50 pixels from both the top and left edges of the canvas.**
+### Describe the relationship between the `<header>` and `<h1>` tags in HTML5.
+
+`<header>` is a container for intro content. `<h1>` is a heading. They are not the same thing.
+- A `<header>` often holds a heading, but it can also hold a logo, nav or search box with no heading.
+- An `<h1>` does not need a `<header>` around it.
+- Use one `<h1>` per page for the main topic, then `<h2>`, `<h3>` in order. Don't skip levels for styling.
+- Headings make the outline that screen readers and search engines use. `<header>` does not change the outline.
+
+More: [Semantic HTML](#semantic-html), [Accessibility (a11y)](#accessibility-a11y)
+
+### Give a simple implementation of the `<video>` tag to embed a video stored at http://www.example.com/amazing_video.mp4. Give the video a width of 640 pixels by 360 pixels. Provide the user with controls.
 
 ```html
-<canvas id="box" width="300" height="300"></canvas>
+<video width="640" height="360" controls preload="metadata"
+       poster="https://www.example.com/amazing_video.jpg">
+  <source src="https://www.example.com/amazing_video.mp4" type="video/mp4">
+  <track kind="captions" src="captions.vtt" srclang="en" label="English"> <!-- a11y -->
+  Your browser cannot play this video.
+  <a href="https://www.example.com/amazing_video.mp4">Download it</a>.
+</video>
+```
+
+- `controls` shows play, volume and full screen. `width` and `height` reserve space, so no layout shift (CLS).
+- Use `https`: an `http` video on an `https` page is blocked as mixed content.
+- Captions help deaf users and are needed for WCAG. `preload="metadata"` saves data.
+
+### Write the code necessary to create a 300 pixel by 300 pixel `<canvas>`. Within it, paint a blue 100 pixel by 100 pixel square with the top-left corner of the square located 50 pixels from both the top and left edges of the canvas.
+
+```html
+<canvas id="box" width="300" height="300">A blue square</canvas>
 <script>
   const ctx = document.getElementById("box").getContext("2d");
   ctx.fillStyle = "blue";
@@ -1437,129 +1708,114 @@ Short answers to the original README questions, in their original wording.
 </script>
 ```
 
-**What is HTML5 Web Storage? Explain localStorage, sessionStorage, cookies.**
-- Web Storage is a key-value store in the browser: `localStorage` (stays until cleared) and `sessionStorage` (one tab, cleared on close).
-- Cookies are small, sent to the server with every request, and can be `HttpOnly`.
-- Full table: [Browser storage and caching](#browser-storage-and-caching).
+- Set the size with the `width` and `height` attributes. Sizing only with CSS stretches the bitmap and makes it blurry.
+- The text inside `<canvas>` is a fallback. Canvas content is invisible to screen readers, so describe it.
 
-**What is the difference between span and div?**
-- `<div>` is a block element (starts on a new line, full width). `<span>` is inline (inside a line of text).
-- Neither has meaning. Use them only when no semantic element fits.
+### What is HTML5 Web Storage? Explain localStorage, sessionStorage, cookies.
 
-**What is the Geolocation API in HTML5?**
-- `navigator.geolocation.getCurrentPosition(success, error)` gives latitude and longitude.
-- The user must allow it, and the page must be on HTTPS.
-- Ask only when the user clicks something like "Find stores near me", not on page load.
+Web Storage is a simple key-value store (strings only) in the browser, per origin.
+- `localStorage`: stays until cleared. Shared by all tabs of the origin. About 5 MB.
+- `sessionStorage`: one tab only. Gone when the tab closes.
+- Cookies: tiny (about 4 KB). Sent to the server with **every** request. Can be `HttpOnly`, `Secure`, `SameSite`.
+- Both storages are synchronous (they block the main thread) and any script can read them. So never keep tokens there; an XSS bug would steal them.
+- Big or structured data: IndexedDB (async, much larger).
 
-**What's one main result if you do not specify a doctype in an HTML page?**
-- The browser uses **quirks mode**: it copies old, buggy layout behavior (for example a different box model). Layouts break in odd ways.
-- Always start with `<!DOCTYPE html>`.
+```js
+localStorage.setItem("theme", "dark");
+const cart = JSON.parse(sessionStorage.getItem("cart") ?? "[]");
+```
 
-**What's the difference between the `<svg> and <canvas>` elements?**
+More: [Browser storage and caching](#browser-storage-and-caching), [Storing tokens](#storing-tokens-httponly-cookie-vs-localstorage)
+
+### What is the difference between span and div?
+
+`<div>` is a block box: it starts on a new line and takes the full width. `<span>` is inline: it sits inside a line of text.
+- Both have no meaning. They are "boxes for styling".
+- Use `<div>` to group blocks for layout. Use `<span>` to style a few words.
+- Check first if a semantic element fits: `<section>`, `<nav>`, `<em>`, `<strong>`, `<time>`, `<button>`.
+- Their display can be changed with CSS, but the default tells you the intended use.
+
+```html
+<div class="card">Price: <span class="price">₹499</span></div>
+```
+
+### What is the Geolocation API in HTML5?
+
+A browser API that gives the user's latitude and longitude, if the user allows it.
+- Works only on HTTPS. The browser shows a permission prompt.
+- Ask only after a user action, like "Find stores near me". Asking on page load annoys users, and many say no.
+- Handle the "denied" and "timeout" cases. Offer a city or PIN code search as a fallback.
+
+```js
+button.onclick = () =>
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => findStores(coords.latitude, coords.longitude),
+    (err) => showCityPicker(err.message),
+    { enableHighAccuracy: false, timeout: 10000 }
+  );
+```
+
+### What’s one main result if you do not specify a doctype in an HTML page?
+
+The browser switches to **quirks mode**. It copies old, buggy layout rules from early-2000s browsers.
+- Example: tables and some sizes act like old Internet Explorer, and some CSS behaves differently.
+- Layouts look different between browsers and are hard to debug.
+- Always start every page with `<!DOCTYPE html>`. It is short and switches on standards mode.
+- Check in DevTools: `document.compatMode` is `"CSS1Compat"` in standards mode and `"BackCompat"` in quirks mode.
+
+### What’s the difference between the `<svg> and <canvas>` elements?
+
+SVG is vector shapes in the DOM. Canvas is a bitmap you paint with JavaScript.
 
 | `<svg>` | `<canvas>` |
 |---|---|
-| Vector shapes in the DOM | A bitmap you draw on with JavaScript |
-| Sharp at any zoom | Gets blurry when scaled |
-| Each shape can have events, CSS and ARIA | No DOM per shape. You track clicks yourself |
-| Best for icons, logos, simple charts | Best for games, many thousands of points, image editing |
+| Shapes are DOM elements | One bitmap. No DOM per shape |
+| Sharp at any zoom | Blurry if scaled up |
+| CSS, events and ARIA on each shape | You track clicks and redraw yourself |
+| Slow with tens of thousands of shapes | Fast with many shapes and animation |
+| Icons, logos, simple charts, diagrams | Games, big data charts, image editing |
 
-**Describe the difference between `<script>, <script async> and <script defer>`.**
-- `<script>`: stops HTML parsing, downloads and runs at once.
-- `async`: downloads in parallel, runs as soon as ready, order not kept.
-- `defer`: downloads in parallel, runs after parsing, in order.
-- Table: [async vs defer scripts](#async-vs-defer-scripts).
+- Rule of thumb: under a few thousand shapes and you need interaction or accessibility → SVG. Many moving points → canvas (or WebGL).
 
-**Why is it generally a good idea to position CSS `<link>s between <head></head> and JS <script>`s just before `</body>`? Do you know any exceptions?**
-- CSS in `<head>`: the browser needs styles before the first paint. Otherwise users see unstyled content that then jumps.
-- Scripts at the end: a normal script blocks parsing, so putting it last lets the content show first.
-- Today: put scripts in `<head>` with `defer` (or `type="module"`). They download early and do not block.
-- Exceptions: small scripts that must run before paint, like setting the dark-mode class to avoid a flash. Or analytics with `async` in `<head>`.
+### Describe the difference between `<script>, <script async> and <script defer>`.
 
-**Why Meta tags are used in HTML?**
-- They give information about the page to browsers, search engines and social apps.
-- `<meta charset="utf-8">`: text encoding.
-- `<meta name="viewport" content="width=device-width, initial-scale=1">`: makes mobile layouts work.
-- `<meta name="description">`: the snippet in search results.
-- Open Graph (`og:title`, `og:image`): the preview card on WhatsApp, LinkedIn, Slack.
-- `<meta name="robots" content="noindex">`: hide a page from search.
+- `<script>`: stops HTML parsing, downloads the file, runs it, then parsing continues.
+- `<script async>`: downloads in parallel, runs **as soon as it arrives**. Order is not kept. Good for independent scripts like analytics.
+- `<script defer>`: downloads in parallel, runs **after parsing**, in document order, before `DOMContentLoaded`. Good for app code.
+- `<script type="module">` is deferred by default.
+- Inline scripts ignore `async` and `defer` (except module scripts with `async`).
 
-### General
+More: [async vs defer scripts](#async-vs-defer-scripts), [How the browser renders a page](#how-the-browser-renders-a-page)
 
-**What did you learn yesterday/this week?**
-- Have one real, recent example ready. Say what, why and how you used it.
-- Example: "I learned how INP is measured and found a 300 ms click handler. I split it with `scheduler.yield()` and INP dropped below 200 ms."
+### Why is it generally a good idea to position CSS `<link>s between <head></head> and JS <script>`s just before `</body>`? Do you know any exceptions?
 
-**What excites or interests you about coding?**
-- Be honest and specific. For example: "Making something fast and usable for real people, and seeing the numbers move after a release."
+- **CSS in `<head>`:** the browser does not paint until it has the CSS. Found early, it downloads early. Found late, users see unstyled content that then jumps (FOUC).
+- **Scripts before `</body>`:** a normal script blocks parsing. At the end, the content is already parsed and visible.
+- **Today the better way:** put scripts in `<head>` with `defer` or `type="module"`. They start downloading early and still do not block. Frameworks like Next.js do this for you.
+- **Exceptions:** a tiny inline script that must run before paint, like setting the dark theme class to avoid a flash.
+- Analytics or tag managers often go in `<head>` with `async`.
+- Non-critical CSS (print styles, below-the-fold widgets) can load later or with `media="print"`.
 
-**What is a recent technical challenge you experienced and how did you solve it?**
-- Use STAR: Situation, Task, Action, Result. Give numbers.
-- Pick a real frontend problem: a slow page, a memory leak, a flaky test, a hard migration.
+More: [How the browser renders a page](#how-the-browser-renders-a-page), [Smooth dark mode toggle](css-tailwind.md#9-smooth-dark-mode-toggle)
 
-**When building a new web site or maintaining one, can you explain some techniques you have used to increase performance?**
-- Measure first (CrUX, RUM, Lighthouse). Fix the biggest problem.
-- CDN, HTTP/2 or HTTP/3, long cache on hashed files.
-- Code splitting, less JavaScript, fewer third-party scripts.
-- Modern images with sizes and lazy loading. `fetchpriority` on the LCP image.
-- Details: [Web performance and Core Web Vitals](#web-performance-and-core-web-vitals).
+### Why Meta tags are used in HTML?
 
-**Can you describe some SEO best practices or techniques you have used lately?**
-- Server-render or pre-render pages so crawlers get real HTML ([Rendering strategies](#rendering-strategies-csr-ssr-ssg-isr-streaming)).
-- Unique `<title>` and meta description per page. One `<h1>`. Semantic HTML.
-- Good Core Web Vitals and a mobile-friendly layout.
-- Clean URLs, `rel="canonical"` for duplicates, a sitemap, `robots.txt`.
-- Structured data (JSON-LD) for products, articles, FAQs.
-- Real `<a href>` links, so crawlers can follow them.
+Meta tags give data **about** the page to browsers, search engines and social apps. Users don't see them.
 
-**Can you explain any common techniques or recent issues solved in regards to front-end security?**
-- XSS: React escaping, DOMPurify, CSP. CSRF: SameSite cookies and tokens. Tokens in HttpOnly cookies. Dependency audits.
-- Details: [Frontend security](#frontend-security).
+```html
+<meta charset="utf-8">                                                  <!-- text encoding -->
+<meta name="viewport" content="width=device-width, initial-scale=1">    <!-- mobile layout -->
+<meta name="description" content="Fresh groceries in 10 minutes">       <!-- search snippet -->
+<meta name="robots" content="noindex">                                  <!-- hide from search -->
+<meta property="og:title" content="Fresh groceries">                    <!-- share preview card -->
+<meta property="og:image" content="https://shop.example/og.png">
+<meta name="theme-color" content="#0a7">                                <!-- browser bar color -->
+```
 
-**What actions have you personally taken on recent projects to increase maintainability of your code?**
-- TypeScript in strict mode. ESLint and Prettier (or Biome) in CI.
-- Small components, feature-based folders, a shared design system.
-- Tests at the right level: unit for logic, component tests with Testing Library, a few end-to-end tests with Playwright.
-- Clear PRs, code review, and ADRs (short notes on why we decided something).
+- Without the viewport tag, phones render a tiny desktop page.
+- In Next.js, use the Metadata API (`export const metadata` or `generateMetadata`) instead of writing tags by hand.
 
-**Which version control systems are you familiar with?**
-- Git (GitHub, GitLab, Bitbucket). Mention your workflow: trunk-based or short-lived feature branches, PR reviews, rebase vs merge, conventional commits.
-
-**Can you describe your workflow when you create a web page?**
-1. Understand the need and the design (Figma). Ask about states: empty, error, loading, mobile.
-2. Plan the HTML structure and components, reusing the design system.
-3. Build mobile-first, semantic HTML first, then style, then behavior.
-4. Connect to the API with typed models.
-5. Test: keyboard, screen reader smoke test, axe, unit and component tests.
-6. Check performance, then ship behind a feature flag and watch the metrics.
-
-**If you have 5 different stylesheets, how would you best integrate them into the site?**
-- Let the build tool bundle and minify them, split per route if large. Details in [css-tailwind.md](css-tailwind.md).
-
-**Can you describe the difference between progressive enhancement and graceful degradation?**
-- **Progressive enhancement:** start with a basic version that works everywhere, like a plain HTML form. Then add extras for capable browsers (JS validation, animations).
-- **Graceful degradation:** build the full version first, then make sure it still works in a reduced way on older browsers.
-- Progressive enhancement is the safer default. Server Actions in a plain `<form>` follow this idea: the form works before JS loads.
-
-**How would you optimize a website's assets/resources?**
-- Minify and compress (Brotli or gzip) JS and CSS. Remove unused code (tree shaking).
-- Images: AVIF or WebP, correct size, `srcset`, lazy loading.
-- Fonts: WOFF2, subset, `font-display`, preload the main one.
-- Cache: hashed names, one year `immutable`, CDN.
-- Load less: code split, `defer`, remove unused libraries.
-
-**What does CORS stand for and what issue does it address?**
-- Cross-Origin Resource Sharing. Browsers block JS from reading responses from another origin. CORS lets a server allow specific origins to read its responses.
-- It is a browser rule, not a server protection. See [CORS](#cors-what-it-is-and-is-not) and [Spring side](spring-ecosystem.md#cors-and-csrf).
-
-**Do you have any pet projects? What kind?**
-- Mention one small thing you built and what you learned from it. A live link or a GitHub repo helps.
-
-**Explain your current project with data flow architecture, file structure,...?**
-- Draw it like a mini system design: Browser → CDN → Next.js (BFF) → Spring Boot APIs → database and Kafka.
-- Explain where state lives (server state in TanStack Query or Server Components, UI state in components).
-- Show the folder structure (by feature: `features/orders`, `features/cart`, shared `ui/`).
-- End with one thing you improved and one thing you would change.
+More: [SEO answer above](#can-you-describe-some-seo-best-practices-or-techniques-you-have-used-lately)
 
 ---
 

@@ -4,22 +4,38 @@
 
 This file explains Node.js for people who build backends, especially if you come from Java and Spring.
 Every topic starts with a simple story, then the real mechanism, then code you can run.
-All JavaScript examples were run on Node 24. The outputs shown are real.
+Examples marked "run with Node 24" were really run, and their outputs are real. Examples that need a database, Redis or S3 were checked by hand and with `node --check`.
 
 **Contents:**
-- [How Node.js works](#how-nodejs-works)
+- [How Node.js works](#how-nodejs-works) (and [Inside Node: V8, libuv, bindings and the thread pool](#inside-node-v8-libuv-bindings-and-the-thread-pool))
 - [The Node event loop phases](#the-node-event-loop-phases)
 - [What blocks the event loop](#what-blocks-the-event-loop)
 - [Worker threads, child processes and cluster](#worker-threads-child-processes-and-cluster)
 - [Streams and backpressure](#streams-and-backpressure)
+- [EventEmitter in depth](#eventemitter-in-depth)
+- [Buffers and binary data](#buffers-and-binary-data)
 - [Async error handling](#async-error-handling)
+- [Modules: CommonJS, ES modules and package.json](#modules-commonjs-es-modules-and-packagejson)
 - [Building APIs: Express, Fastify, NestJS](#building-apis-express-fastify-nestjs)
+- [Validation, API design and rate limiting](#validation-api-design-and-rate-limiting)
+- [Configuration and secrets](#configuration-and-secrets)
+- [Authentication and authorization in Node APIs](#authentication-and-authorization-in-node-apis)
+- [Databases from Node](#databases-from-node)
+- [Caching and Redis from Node](#caching-and-redis-from-node)
+- [Files and uploads](#files-and-uploads)
+- [Background jobs and queues](#background-jobs-and-queues)
+- [Real-time: WebSockets and Server-Sent Events](#real-time-websockets-and-server-sent-events)
+- [Logging and observability in Node](#logging-and-observability-in-node)
+- [Microservices with Node](#microservices-with-node)
 - [Scaling Node.js](#scaling-nodejs)
 - [Memory leaks and performance](#memory-leaks-and-performance)
 - [Graceful shutdown](#graceful-shutdown)
+- [Deploying Node: PM2, Docker and Kubernetes](#deploying-node-pm2-docker-and-kubernetes)
+- [Testing Node services](#testing-node-services)
 - [Security in Node](#security-in-node)
 - [Modern Node (20 to 24+)](#modern-node-20-to-24)
 - [Node vs Java/Spring: how to choose](#node-vs-javaspring-how-to-choose)
+- [Node.js coding problems (with answers)](#nodejs-coding-problems-with-answers)
 - [Interview questions](#interview-questions)
 
 Browser basics (call stack, task queue, microtasks) are in [javascript.md](javascript.md). This file does not repeat them.
@@ -92,6 +108,88 @@ flowchart LR
 - **Is Node single-threaded?** Your JS runs on one thread. Node itself uses more threads: the libuv pool, V8 garbage collector threads, and worker threads if you create them.
 - **How big is the thread pool?** 4 by default. Change it with the `UV_THREADPOOL_SIZE` environment variable (max 1024). Set it before the app starts.
 - **Does an HTTP call use the thread pool?** The socket does not. But `dns.lookup` (used by default to resolve host names) does. Many slow DNS lookups can fill the 4 threads and slow down file reads too.
+
+### Inside Node: V8, libuv, bindings and the thread pool
+
+**In one line:** Node is layers: your JS, core JS libraries, C++ bindings, then V8 (runs JS) and libuv (event loop and I/O).
+
+**Story:** Think of a hotel front desk.
+- **You (the guest)** speak to the receptionist in plain words. That is your JavaScript.
+- **The receptionist's forms** (`fs`, `http`, `crypto`) are Node's core JS libraries.
+- **The phone line to the back office** is the C++ *bindings* layer. It turns a JS call into a C/C++ call.
+- **The back office** has two teams. **V8** reads and runs the instructions. **libuv** handles the waiting: it calls the laundry, the taxi company, the kitchen, and rings a bell when they are done.
+
+**How it works:**
+1. **Your code** calls `fs.readFile(path, cb)`.
+2. **Core JS library** (`lib/fs.js` inside Node) checks the arguments and calls the binding.
+3. **C++ binding** creates a libuv *request* (a small C struct that remembers "read this file, then call back").
+4. **libuv** decides how to wait:
+   - **Network sockets:** register the socket with the OS readiness API. *epoll* (Linux), *kqueue* (macOS, BSD) or *IOCP* (Windows) tell libuv "this socket has data now". No thread is used while waiting.
+   - **File system and some other work:** there is no good async OS API that works the same everywhere. libuv runs the blocking call on its **thread pool**.
+5. When the work is done, libuv puts the callback in a queue. The event loop runs it on the main thread, and V8 executes your JS callback.
+6. **V8** also owns the heap and the garbage collector. It compiles hot functions to machine code with its JIT compilers (Ignition interpreter first, then optimizing tiers).
+
+**Diagram: the layers.**
+
+```mermaid
+flowchart TD
+    APP["Your JavaScript (app code, npm packages)"] --> CORE["Node core JS libraries (fs, http, crypto, stream)"]
+    CORE --> BIND["C++ bindings (JS to C/C++ bridge)"]
+    BIND --> V8["V8: runs JS, JIT, heap, GC"]
+    BIND --> UV["libuv: event loop, timers, async I/O"]
+    BIND --> LIBS["Other C libs: OpenSSL, zlib, llhttp, c-ares"]
+    UV --> OSIO["OS readiness APIs: epoll, kqueue, IOCP"]
+    UV --> POOL["Thread pool (default 4 threads)"]
+```
+
+**What uses the thread pool (from the Node docs):**
+| Uses the pool | Does not use the pool |
+|---|---|
+| All async `fs` APIs (except file watchers) | TCP/UDP sockets, HTTP, `fetch`, DB drivers' sockets |
+| `dns.lookup()` (the default for `http.get('host')`) | `dns.resolve*()` (uses c-ares, network-based) |
+| Async crypto: `pbkdf2`, `scrypt`, `randomBytes`, `randomFill`, `generateKeyPair` | Timers |
+| All async `zlib` APIs | Pure JS code (always the main thread) |
+
+**Why network I/O does not need threads:**
+- A socket is a file descriptor (a number the OS gives to an open connection).
+- epoll/kqueue let one thread ask: "tell me which of these 10,000 sockets has data". The OS answers with a short list.
+- So one thread can watch thousands of sockets. Files on disk do not work well with these APIs (a disk file is "always ready"), so libuv uses threads for them.
+
+**Example: the pool is a shared queue (run with Node 24).**
+
+```javascript
+const crypto = require('node:crypto');
+
+const start = Date.now();
+for (let i = 1; i <= 8; i++) {
+  crypto.pbkdf2('secret', 'salt', 300_000, 64, 'sha512', () => {  // async: runs on the libuv pool
+    console.log(`hash ${i} done at ${Date.now() - start} ms`);
+  });
+}
+```
+
+Real output on my 18-core laptop:
+- **Default pool (4 threads):** hashes 1-4 finished at about 52 ms, hashes 5-8 at about 105 ms. Two "waves".
+- **`UV_THREADPOOL_SIZE=8 node pool.js`:** all 8 finished at about 60 ms. One wave.
+
+The trap: password hashing, file reads, gzip and `dns.lookup` all share these 4 threads. Slow hashing on login can make unrelated file reads and DNS lookups slow too.
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| One thread watches thousands of sockets cheaply | Only 4 pool threads by default, shared by fs, DNS, crypto and zlib |
+| Blocking work is hidden behind async APIs | Pool saturation looks like "random slowness" in unrelated calls |
+| `UV_THREADPOOL_SIZE` is easy to change | Setting it from inside the code (`process.env`) may be too late; the pool may already exist |
+
+**Say this in the interview:**
+
+> "Node has layers: my JS, Node's core JS libraries, C++ bindings, and then V8 and libuv. V8 runs the JavaScript and the garbage collector. libuv runs the event loop and the I/O. Sockets use the OS readiness APIs like epoll or kqueue, so no thread waits for them. File system calls, dns.lookup, async crypto and zlib run on the libuv thread pool, which has 4 threads by default. If many slow hashes fill the pool, file reads and DNS lookups wait too, so I raise UV_THREADPOOL_SIZE or move hashing to worker threads."
+
+**They may ask next:**
+- **How do you set the pool size?** As an environment variable before Node starts: `UV_THREADPOOL_SIZE=16 node app.js`, or in the Dockerfile `ENV`. Max is 1024.
+- **Should I set it to 128?** No. More threads than cores means more context switching. Size it for your real mix: a bit above the number of cores is a common start. Measure.
+- **Why does `http.get('api.example.com')` touch the pool?** Host name resolution uses `dns.lookup`, which calls the OS `getaddrinfo` on a pool thread. Cache DNS or use keep-alive connections to reduce lookups.
+- **What are worker threads vs the libuv pool?** The libuv pool runs C++ tasks for Node APIs. Worker threads run *your* JavaScript, each with its own V8 instance. See [Worker threads](#worker-threads-child-processes-and-cluster).
 
 ---
 
@@ -542,6 +640,158 @@ In an HTTP handler, pass `res` as the last stage. If the client disconnects, `pi
 
 ---
 
+## EventEmitter in depth
+
+**In one line:** An EventEmitter keeps listeners per event name and calls them **synchronously**, in order, on `emit`.
+
+**Story:** A school bell.
+- Teachers "subscribe" by standing near the bell (`on`).
+- When the peon rings it (`emit`), every teacher hears it **at that same moment**, one after another. The peon waits until the last teacher has heard it.
+- A teacher who only wants the first bell of the day uses `once`.
+- If a fire alarm rings (`'error'`) and no one is assigned to it, the whole school is evacuated (the process crashes).
+
+**How it works:**
+1. `on(name, fn)` adds `fn` to the list for `name`. `once` adds a wrapper that removes itself after the first call. `off` (same as `removeListener`) removes it.
+2. `emit(name, ...args)` calls every listener **right now**, on the same call stack. It is **not** async. `emit` returns `true` if there were listeners.
+3. A slow listener blocks the emitter and the event loop. Do heavy work later (`setImmediate`, a queue).
+4. **`'error'` is special.** If you emit `'error'` and nobody listens, Node throws the error and the process exits.
+5. **Leak warning:** more than **10** listeners for one event prints `MaxListenersExceededWarning`. It is only a warning, but it usually means you add a listener per request and never remove it. Raise the limit with `setMaxListeners(n)` only if you really need more.
+6. **Async listeners:** if an `async` listener rejects, the emitter does not see it. Use `new EventEmitter({ captureRejections: true })` to route the rejection to `'error'`.
+7. **Promise helpers:** `events.once(emitter, name, { signal })` returns a promise. `events.on(emitter, name, { signal })` returns an async iterator. Both stop when the `AbortSignal` fires.
+8. Streams, HTTP servers, sockets and `process` are all EventEmitters.
+
+**Example (run with Node 24).**
+
+```javascript
+const { EventEmitter, once } = require('node:events');
+
+const orders = new EventEmitter();
+orders.on('created', (o) => console.log('listener 1 got', o.id));
+orders.on('created', (o) => console.log('listener 2 got', o.id));
+console.log('before emit');
+orders.emit('created', { id: 7 });              // runs both listeners now, synchronously
+console.log('after emit');
+
+for (let i = 0; i < 11; i++) orders.on('paid', () => {}); // 11 > default 10: leak warning
+
+orders.on('error', (err) => console.log('handled:', err.message)); // without this: crash
+orders.emit('error', new Error('payment gateway down'));
+
+(async () => {
+  const ac = new AbortController();
+  setTimeout(() => ac.abort(), 50);             // stop waiting after 50 ms
+  try { await once(orders, 'shipped', { signal: ac.signal }); }
+  catch (err) { console.log('stopped waiting:', err.name); }
+})();
+```
+
+Real output:
+
+```text
+before emit
+listener 1 got 7
+listener 2 got 7
+after emit
+handled: payment gateway down
+(node:PID) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 paid listeners added to [EventEmitter]. MaxListeners is 10. ...
+stopped waiting: AbortError
+```
+
+`after emit` comes after both listeners. That proves `emit` is synchronous.
+
+**Why `process.nextTick` is used with emitters:** a constructor that emits an event right away fires before the caller can attach a listener. Emitting inside `process.nextTick` gives the caller time to call `.on()` first.
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Simple, decoupled: the emitter does not know who listens | Listeners run synchronously; one slow listener slows everyone |
+| Built into streams, sockets and servers | Forgotten listeners are a classic memory leak |
+| `once()` and `on()` with `AbortSignal` work with `await` | Errors in async listeners are lost unless `captureRejections` is on |
+| Good for in-process events | Not durable: if the process dies, events are gone. Use Kafka or a queue across services |
+
+**Say this in the interview:**
+
+> "EventEmitter keeps a list of listeners per event and calls them synchronously, in order, when you emit. So a slow listener blocks the emitter. The 'error' event is special: with no listener the process crashes, so I always attach one to streams and sockets. The max listeners warning at 10 usually means a leak, like adding a listener per request. For async code I use events.once with an AbortSignal, so I never wait forever."
+
+**They may ask next:**
+- **Is `emit` async?** No. Listeners run before `emit` returns. Only if a listener itself schedules async work does anything happen later.
+- **EventEmitter vs Kafka?** EventEmitter is in-memory, in one process, with no retry or storage. Kafka is durable and works across services. See [kafka.md](kafka.md).
+- **How do you remove a listener added with `once`?** `off(name, sameFn)` works, because Node remembers the original function inside the wrapper. With `AbortSignal` you can also pass `{ signal }` to `events.on`/`events.once`.
+- **What is `EventTarget`?** The browser-style API (`addEventListener`). Node has it too, and `AbortSignal` is one. EventEmitter is the older Node-only API.
+
+---
+
+## Buffers and binary data
+
+**In one line:** A `Buffer` is a fixed-size chunk of raw bytes (a subclass of `Uint8Array`), used for files, sockets, images and any binary protocol.
+
+**Story:** A string is a written letter. A Buffer is the envelope of bytes the post office actually carries. To read the letter, you must know the language it was written in. That "language" is the *encoding* (UTF-8, base64, hex).
+
+**How it works:**
+1. `Buffer` extends `Uint8Array`. Any API that takes a `Uint8Array` also takes a Buffer.
+2. **Create:** `Buffer.from('text', 'utf8')`, `Buffer.from(arrayBuffer)`, `Buffer.alloc(n)` (zero-filled, safe), `Buffer.allocUnsafe(n)` (faster, but may contain old memory: fill it before reading).
+3. **Encodings:** `utf8` (default), `hex`, `base64`, `base64url` (safe in URLs and JWTs), `latin1`, `utf16le`.
+4. **Length is bytes, not characters.** `'₹'` is 1 character but 3 bytes in UTF-8.
+5. **`subarray` shares memory.** Changing the slice changes the original. Use `Buffer.from(buf)` to copy.
+6. Buffer memory lives **outside the V8 heap**. It shows as `external` / `arrayBuffers` in `process.memoryUsage()`, not in `heapUsed`.
+7. Small `allocUnsafe` and `Buffer.from` calls are cut from a shared 8 KB pool (`Buffer.poolSize`). Keeping one tiny slice alive keeps the whole 8 KB alive.
+8. **Multi-byte characters split across chunks:** a UTF-8 character can arrive in two network chunks. Use `StringDecoder` or `setEncoding('utf8')` on the stream, not `chunk.toString()` per chunk.
+
+**Example (run with Node 24).**
+
+```javascript
+const b = Buffer.from('Hi ₹', 'utf8');           // ₹ takes 3 bytes in UTF-8
+console.log(b, 'bytes:', b.length, 'chars:', 'Hi ₹'.length);
+console.log(b.toString('hex'), b.toString('base64'), b.toString('base64url'));
+console.log(b instanceof Uint8Array);            // true: Buffer is a Uint8Array
+console.log(b.subarray(0, 4).toString());        // cuts ₹ in half: shows a replacement char
+
+const header = Buffer.alloc(6);
+header.writeUInt16BE(0xCAFE, 0);                 // binary protocol: big-endian 2 bytes
+header.writeUInt32BE(1024, 2);                   // payload length
+console.log(header, header.readUInt32BE(2));
+
+const { StringDecoder } = require('node:string_decoder');
+const d = new StringDecoder('utf8');
+console.log(d.write(b.subarray(0, 4)) + d.write(b.subarray(4))); // joins split bytes correctly
+```
+
+Real output:
+
+```text
+<Buffer 48 69 20 e2 82 b9> bytes: 6 chars: 4
+486920e282b9 SGkg4oK5 SGkg4oK5
+true
+Hi �
+<Buffer ca fe 00 00 04 00> 1024
+Hi ₹
+```
+
+**Buffer vs Uint8Array:**
+| | `Buffer` | `Uint8Array` |
+|---|---|---|
+| Where | Node only (and Bun, Deno for compatibility) | Standard JS: browsers, Node, workers |
+| Extras | `toString(encoding)`, `readUInt32BE`, `equals`, `compare` | Plain bytes; use `TextEncoder`/`TextDecoder` for text |
+| Use for | Node APIs, binary protocols | Code shared with the browser, Web Streams, `fetch` bodies |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Fast raw bytes, outside the JS heap | `allocUnsafe` can leak old memory if you send it before filling it |
+| Easy encodings: hex, base64, base64url | `toString()` per chunk breaks multi-byte characters |
+| Works with all `Uint8Array` APIs | Reading a 2 GB file into one Buffer is slow and risky; stream it |
+
+**Say this in the interview:**
+
+> "A Buffer is a fixed-size block of bytes and a subclass of Uint8Array. Its memory lives outside the V8 heap, so a Buffer leak shows in RSS, not in heapUsed. Length is in bytes, not characters, so a rupee sign is three bytes. I use Buffer.alloc unless I fill the memory right away, and StringDecoder when text arrives in chunks. For big files I stream instead of loading one huge Buffer."
+
+**They may ask next:**
+- **How do you compare two secrets safely?** `crypto.timingSafeEqual(a, b)` with Buffers of the same length. A normal `===` returns early and leaks timing.
+- **base64 vs base64url?** base64url uses `-` and `_` instead of `+` and `/`, and drops `=` padding. JWTs use base64url.
+- **Why is RSS high but heap small?** Often Buffers: big uploads held in memory, or many small slices keeping 8 KB pool blocks alive.
+
+---
+
 ## Async error handling
 
 **In one line:** Await or `.catch()` every promise, handle expected failures in place, and let unknown bugs crash the process so it restarts clean.
@@ -635,6 +885,108 @@ process.on('uncaughtException', (err) => {
 - **Promise vs callback?** A promise is an object for a future result. You can chain it, combine it (`Promise.all`) and use `await`. Callbacks nest deeply and handle errors by hand.
 - **What does async/await really do?** An `async` function always returns a promise. `await` pauses that function and gives the thread back. The rest runs later as a microtask.
 - **Why not just catch everything in `uncaughtException` and continue?** After an unknown error, open transactions, locks or half-written data may be wrong. Restarting is safer.
+
+---
+
+## Modules: CommonJS, ES modules and package.json
+
+**In one line:** `require` loads and caches files synchronously, ES modules are linked before they run, and `exports` in package.json sets a package's public files.
+
+The basics (syntax, `"type": "module"`, `require(esm)`) are in [ESM vs CommonJS](#esm-vs-commonjs). This section adds how loading really works.
+
+**Story:** A library.
+- **CommonJS** is a librarian who fetches each book the moment you ask, and keeps a copy on the desk. Ask again and you get the **same copy** from the desk (the cache).
+- **ES modules** is a librarian who first reads your whole reading list and collects every book. She checks that every chapter you mention exists. Only then can you start reading.
+- **`exports` in package.json** is the "reference only" sign: you may read the public shelves, not the back room.
+
+**How CommonJS `require('x')` finds a file:**
+1. **Core module?** `node:fs` or `fs`: return it.
+2. **Starts with `./`, `../` or `/`?** Try the exact file, then add `.js`, `.json`, `.node`. If it is a folder, use its `package.json` `"main"`, else `index.js`.
+3. **Bare name (`express`)?** Look in `./node_modules`, then `../node_modules`, and so on up to the root.
+4. Inside the package, `"exports"` (if present) wins over `"main"`, and blocks every path it does not list.
+5. **Cache:** the module runs **once**. Its `module.exports` is stored in `require.cache` by full file path. Every later `require` gets the same object. That is why a module works like a singleton.
+6. **Circular requires:** if A requires B and B requires A, B gets A's **unfinished** `exports` (often `{}`). Fix by moving shared code to a third module.
+
+**Diagram: CommonJS resolution.**
+
+```mermaid
+flowchart TD
+    R["Call require with a name"] --> C{"In require.cache?"}
+    C -->|"yes"| RET["Return cached module.exports"]
+    C -->|"no"| CORE{"Core module like node:fs?"}
+    CORE -->|"yes"| RET2["Return core module"]
+    CORE -->|"no"| PATH{"Starts with ./ or ../ or /?"}
+    PATH -->|"yes"| FILE["Try file, .js, .json, .node, folder index"]
+    PATH -->|"no"| NM["Search node_modules up the folders, read package.json exports or main"]
+    FILE --> RUN["Run the file once, store in cache"]
+    NM --> RUN
+```
+
+**How ES modules load (three steps):**
+1. **Parse and find imports.** Node reads the file and finds all static `import` lines **before running anything**. Then it loads those files the same way.
+2. **Link.** Node connects every `import { x }` to the matching `export`. A missing export fails here, before any code runs.
+3. **Evaluate.** Code runs, children first. Top-level `await` is allowed.
+- Imports are **live bindings**: if the exporting module changes a `let`, importers see the new value.
+- Relative imports need the file extension: `import './db.js'`, not `'./db'`.
+- `import()` (dynamic import) loads a module later and returns a promise. It works in both CommonJS and ESM.
+- There is no `require.cache` for ESM. You cannot "reload" a module by deleting a cache entry.
+
+**package.json fields that matter:**
+| Field | What it does |
+|---|---|
+| `"type": "module"` | `.js` files in this package are ESM. Without it they are CommonJS |
+| `"main"` | Old entry point. Ignored when `"exports"` exists |
+| `"exports"` | The public entry points. Anything not listed gives `ERR_PACKAGE_PATH_NOT_EXPORTED` |
+| Conditions in `"exports"` | `"import"`, `"require"`, `"module-sync"`, `"node"`, `"default"` (Node); `"types"` (TypeScript) |
+| `"imports"` | Private aliases that start with `#`, like `#config`. Only code inside the package can use them. Node's answer to TS `paths` |
+
+**Example: a dual package (run with Node 24).**
+
+```json
+{
+  "name": "shop-utils",
+  "type": "module",
+  "exports": {
+    ".": { "import": "./src/index.js", "require": "./src/index.cjs" },
+    "./money": "./src/money.js"
+  },
+  "imports": { "#config": "./internal/config.js" }
+}
+```
+
+```javascript
+// app.cjs
+const a = require('./counter.js');
+const b = require('./counter.js');        // from require.cache, not run again
+a.inc(); console.log('same object?', a === b, 'count via b =', b.inc());
+console.log(require('shop-utils').who);     // "require" condition -> CJS build
+try { require('shop-utils/src/money.js'); } catch (e) { console.log(e.code); } // not in "exports"
+```
+
+Real output: `counter.js runs` (printed once), `same object? true count via b = 2`, `cjs build`, `ERR_PACKAGE_PATH_NOT_EXPORTED`. The same package loaded with `import` printed `esm build`, and `#config` resolved inside the package.
+
+**The dual package hazard:**
+- A package ships both a CJS build and an ESM build.
+- One part of your app `require`s it, another part `import`s it. Now **two copies** are loaded.
+- Two copies means two singletons, two caches, and `instanceof` checks that fail.
+- Fixes: ship one real implementation and a thin wrapper for the other format, or ship ESM only and rely on `require(esm)` (default in Node 22.12+ and 20.19+).
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| ESM is the standard: same in browsers and Node, top-level `await`, static analysis for tree shaking | Mixing CJS and ESM in one app causes confusing errors and dual copies |
+| `exports` hides internal files, so a library can change them safely | Adding `exports` to an old package is a breaking change for deep imports |
+| `imports` with `#` gives clean internal aliases without a bundler | Jest and older tools needed extra setup for ESM |
+
+**Say this in the interview:**
+
+> "CommonJS require is synchronous. It resolves the path, runs the file once, and caches module.exports by file name, so every require gets the same object. ES modules are parsed and linked before any code runs, so a missing export fails early, and imports are live bindings. In package.json, exports defines the public entry points and the import or require conditions, and imports gives private hash aliases. I start new projects as ESM, and I watch for the dual package hazard, where a package gets loaded twice."
+
+**They may ask next:**
+- **How do you mock or reload a CommonJS module?** Delete it from `require.cache` and require again. Test tools do this. For ESM, test runners use loader hooks instead.
+- **Why is `__dirname` missing in ESM?** ESM uses URLs. Use `import.meta.dirname` and `import.meta.filename`.
+- **What is `module-sync`?** An exports condition that matches for both `import` and `require`, for packages whose ESM has no top-level `await`, so `require(esm)` can load it.
+- **Does `require` block the event loop?** Yes, it reads files synchronously. That is fine at start-up, bad inside a request handler.
 
 ---
 
@@ -797,6 +1149,944 @@ Must-haves: structured JSON logs (pino), OpenTelemetry traces and metrics, healt
 - **What is Express middleware?** A function `(req, res, next)`. It runs in order. Call `next()` to continue, or send a response to stop. Error middleware has 4 arguments.
 - **Why validate at runtime if we use TypeScript?** Types disappear at runtime. A request body is just unknown JSON. Zod or JSON Schema checks the real data.
 - **How do you pass a request id to logs?** With `AsyncLocalStorage`, like MDC in Java.
+
+---
+
+## Validation, API design and rate limiting
+
+**In one line:** One schema validates input and generates docs, errors share one format, and rate limits use a shared store.
+
+**Story:** A railway reservation counter.
+- The clerk checks the form **before** booking: name filled, age is a number, date is in the future. A wrong form goes back at once with a clear note: "age must be a number". That is validation and a good error format.
+- A printed list on the wall shows every form type and its fields. That is OpenAPI.
+- One person cannot book 500 tickets in a minute. The counter counts per person. That is rate limiting.
+
+**How it works:**
+1. **One schema, three jobs.** A schema (Zod, or JSON Schema built with TypeBox) gives you: runtime validation, TypeScript types, and OpenAPI docs.
+2. **Validate at the edge.** Parse `body`, `params`, `query` and `headers` in the route layer. Services get clean, typed data.
+3. **Reject unknown fields** (`z.strictObject` in Zod 4, `additionalProperties: false` in JSON Schema). This also blocks prototype pollution (see [Security in Node](#security-in-node)).
+4. **Coerce carefully.** Query strings are always strings. Use `z.coerce.number()` for `?page=2`.
+5. **One error format.** Use RFC 9457 *Problem Details* (`application/problem+json`): `type`, `title`, `status`, `detail`, plus a list of field errors. Spring returns the same shape with `ProblemDetail`, see [spring-ecosystem.md](spring-ecosystem.md#global-error-handling-with-restcontrolleradvice-and-problemdetail).
+6. **OpenAPI from code.** Fastify: `@fastify/swagger` reads route schemas. Zod 4: `z.toJSONSchema()` is built in; libraries like `zod-openapi` build full specs. NestJS: `@nestjs/swagger`.
+7. **Rate limit** per user or API key, not only per IP. Keep counters in Redis so all pods share one count. Return `429` with a `Retry-After` header.
+
+**Diagram: the request path.**
+
+```mermaid
+flowchart LR
+    C["Client"] --> RL["Rate limit (Redis counter)"]
+    RL -->|"over limit"| E429["429 + Retry-After"]
+    RL -->|"ok"| AUTH["Auth middleware"]
+    AUTH --> VAL["Validate params, query, body (schema)"]
+    VAL -->|"invalid"| E400["400 problem+json with field errors"]
+    VAL -->|"valid, typed"| H["Handler, then service"]
+    H --> OUT["Serialize with response schema"]
+```
+
+**Example: Zod schema, problem details and the same schema as JSON Schema.**
+
+```javascript
+import { z } from 'zod';
+
+const CreateOrder = z.strictObject({                   // unknown keys are rejected
+  productId: z.string().min(1),
+  qty: z.number().int().positive().max(100),
+  coupon: z.string().optional(),
+});
+
+export function validate(schema) {
+  return (req, res, next) => {
+    const r = schema.safeParse(req.body);
+    if (r.success) { req.body = r.data; return next(); } // clean, typed data from here on
+    res.status(400).type('application/problem+json').json({
+      type: 'https://api.example.com/problems/validation',
+      title: 'Invalid request', status: 400,
+      errors: r.error.issues.map((i) => ({ field: i.path.join('.'), message: i.message })),
+    });
+  };
+}
+// app.post('/orders', validate(CreateOrder), createOrderHandler);
+console.log(z.toJSONSchema(CreateOrder));               // feed this into your OpenAPI spec
+```
+
+**Good API habits in Node:**
+- **Pagination:** cursor based (`?after=ord_123&limit=50`) for big lists; cap `limit`.
+- **Idempotency keys** on `POST` that create money or orders: store the key and response in Redis or the DB. See [microservices.md](microservices.md#idempotency).
+- **Response schemas** (Fastify `response`) stop accidental leaks like `passwordHash` and make JSON output faster.
+- **Body size limits:** `express.json({ limit: '100kb' })`; Fastify has `bodyLimit` (1 MB default).
+- **Versioning:** `/v1/...` in the path is the simplest to explain and to route.
+
+**Rate limiting options:**
+| Option | Where the count lives | Note |
+|---|---|---|
+| `express-rate-limit` default store | Memory of one pod | Real limit = limit × number of pods |
+| `express-rate-limit` + a Redis store, or `rate-limiter-flexible` | Redis | One shared count for all pods |
+| `@fastify/rate-limit` with Redis | Redis | Fastify plugin |
+| API gateway / NGINX / cloud WAF | The gateway | Stops abuse before it reaches Node |
+
+The algorithms (token bucket, sliding window) are in [system-design.md](system-design.md#rate-limiting-algorithms). A token bucket you can write in an interview is in [the coding problems](#nodejs-coding-problems-with-answers).
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| One schema gives types, validation and docs | Hand-written `if` checks drift from the docs |
+| `strictObject` blocks unexpected fields | Too strict on responses from other services breaks you when they add a field |
+| Shared rate limit counters in Redis | Every request now does a Redis call; keep it fast or limit at the gateway |
+
+**Say this in the interview:**
+
+> "I validate params, query and body at the edge with one schema, usually Zod or TypeBox with Fastify. The same schema gives TypeScript types and OpenAPI docs, so docs never drift. Unknown fields are rejected. Errors use one format, RFC 9457 problem details, with a list of field errors. Rate limits are per user or API key, counted in Redis so all pods share the count, and I return 429 with Retry-After."
+
+**They may ask next:**
+- **Zod or JSON Schema?** Zod is nicer to write in TypeScript. JSON Schema (via TypeBox) is the native format for Fastify and OpenAPI and is very fast to validate. Both are fine; pick one per service.
+- **Why validate if the frontend already validates?** Anyone can call the API directly with curl. The server is the only place you can trust.
+- **400 or 422 for validation errors?** Both are used. Pick one and be consistent. 400 is the most common.
+- **How do you rate limit login?** Per account and per IP, with a small limit and growing delay, so password guessing is slow. Also log and alert.
+
+---
+
+## Configuration and secrets
+
+**In one line:** Read env vars once at start-up, validate them with a schema, fail fast, and keep secrets in a secret manager.
+
+**Story:** A pilot's pre-flight checklist. Before take-off, the pilot checks fuel, doors and flaps. If one item fails, the plane does not leave the gate. It is much better to find a problem on the ground than in the air. A Node service should check its config the same way, before it takes the first request.
+
+**How it works:**
+1. **Twelve-factor rule:** config that changes between environments (URLs, ports, keys) comes from **environment variables**, not from code.
+2. **Local development:** `node --env-file=.env app.js` (or `--env-file-if-exists`). Both are no longer experimental since Node 24.10 and 22.21. Real environment variables win over the file. `dotenv` is no longer needed for this.
+3. **Validate once, at start-up,** in one `config` module. Use a schema (Zod, or `env-schema` with JSON Schema). Convert types: env vars are always strings.
+4. **Fail fast:** a missing `DATABASE_URL` should stop the process with a clear message and exit code 1, not crash later on the first request.
+5. **The rest of the code imports `config`,** never `process.env` directly. Easy to test, easy to find every setting.
+6. **Secrets in production** come from a secret manager or Kubernetes Secrets. Examples: AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault. They arrive as env vars or mounted files.
+7. **Never log config values.** Log only the names that failed. Redact tokens in logs.
+8. `NODE_ENV=production` changes library behaviour (Express caches views and hides stack traces). Set it in production images.
+
+**Diagram: start-up config check.**
+
+```mermaid
+flowchart LR
+    SM["Secret manager or Kubernetes Secret"] --> ENV["Environment variables"]
+    FILE[".env file (local only)"] --> ENV
+    ENV --> VAL["config.ts: schema validate and convert types"]
+    VAL -->|"invalid"| EXIT["Print which keys failed, exit 1"]
+    VAL -->|"valid"| CFG["Frozen typed config object"]
+    CFG --> APP["Start server, DB pool, consumers"]
+```
+
+**Example: validated config (run with Node 24 and Zod 4).**
+
+```javascript
+// config.mjs   run: node --env-file=.env config.mjs
+import { z } from 'zod';
+
+const Env = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000), // env vars are strings
+  DATABASE_URL: z.url(),                                          // must be a valid URL
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
+  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+});
+
+const parsed = Env.safeParse(process.env);
+if (!parsed.success) {
+  console.error('Invalid config:\n' + z.prettifyError(parsed.error)); // never print the values
+  process.exit(1);                                                   // fail fast at start-up
+}
+export const config = Object.freeze(parsed.data);                    // typed and read-only
+```
+
+Real output with a short secret: `Invalid config: ✖ JWT_SECRET must be at least 32 chars → at JWT_SECRET`, exit code 1. With a good `.env`: `config ok, port 8080`.
+
+**Secrets: good and bad places:**
+| Place | OK? | Why |
+|---|---|---|
+| Hard-coded in source | No | In git history forever |
+| `.env` committed to git | No | Same; add `.env` to `.gitignore`, commit `.env.example` |
+| Baked into the Docker image (`ENV API_KEY=...`) | No | Anyone who pulls the image can read it (`docker history`) |
+| Env var injected at runtime from a secret manager | Yes | Common and simple |
+| Mounted file from Kubernetes Secret or Vault agent | Yes | Can rotate without a new image; not visible in `env` dumps |
+| Fetched by the app from the secret manager at start-up | Yes | Needs cloud credentials (workload identity) and a retry |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Fail fast at start-up gives a clear error in the deploy log | Without validation, a typo in a var name shows up as a strange bug days later |
+| Built-in `--env-file` removes a dependency | `.env` files tend to get copied around and committed |
+| One typed config module is easy to test | Env vars are read once; rotating a secret needs a restart unless you reload it |
+
+**Say this in the interview:**
+
+> "Config comes from environment variables. Locally I load a .env file with node --env-file, which is built in now. At start-up one config module validates everything with Zod and converts types. If something is missing, it exits with a clear message, so a bad deploy fails before it takes traffic. The rest of the code imports that typed config, not process.env. In production, secrets come from a secret manager or Kubernetes Secrets, never from git or the image, and I never log their values."
+
+**They may ask next:**
+- **How do you rotate a secret without downtime?** Support two valid values for a while (old and new key), roll out the new one, then remove the old one. For DB passwords, the secret manager can rotate and the pool reconnects.
+- **Spring equivalent?** `@ConfigurationProperties` with `@Validated`. Same idea: typed, validated at start-up.
+- **Is a Kubernetes Secret encrypted?** Only base64 by default. Turn on encryption at rest in etcd and limit who can read Secrets with RBAC. See [docker-kubernetes.md](docker-kubernetes.md).
+
+---
+
+## Authentication and authorization in Node APIs
+
+**In one line:** Authentication proves who you are (session or JWT); authorization decides what you may do, on every request.
+
+**Story:** A company office.
+- **Session:** at the gate you show your ID. The guard writes your name in a register and gives you a visitor slip with a number. Each time, the guard looks up the number in the register. He can cancel your slip any time.
+- **JWT:** the guard gives you a sealed, signed badge with your name, team and "valid until 6 PM". Any door can check the seal without calling the gate. But if you are fired at 2 PM, the badge still opens doors until 6 PM.
+- **Authorization:** even with a valid badge, only finance people enter the finance room.
+
+The same ideas for Spring are in [Spring Security](spring-ecosystem.md#spring-security), [Authentication vs authorization](spring-ecosystem.md#authentication-vs-authorization) and [JWT and OAuth2 resource server](spring-ecosystem.md#jwt-and-oauth2-resource-server).
+
+**How it works:**
+1. **Passwords:** store only a slow, salted hash. **argon2id** first choice (npm `argon2`; Node 24.7+ also has `crypto.argon2`), **bcrypt** is still fine. Never SHA-256 alone; it is too fast to brute force.
+2. **Sessions:** after login, create a random session id, store `{ userId, roles }` in Redis, send the id as a cookie: `HttpOnly`, `Secure`, `SameSite=Lax`. Logout = delete the Redis key. Libraries: `express-session` with a Redis store, `@fastify/session`.
+3. **JWT access tokens:** a signed JSON token (`header.payload.signature`). The API verifies the signature and claims (`exp`, `iss`, `aud`) with no DB call. Keep them short-lived (5-15 minutes). Library: `jose`.
+4. **Refresh tokens:** a long-lived, random, **opaque** token stored server-side (hashed). Used only to get a new access token. **Rotate** it on every use; if an old one is reused, someone stole it: revoke the whole family.
+5. **Where to keep tokens in a browser:** prefer an `HttpOnly` cookie (JS cannot read it, so XSS cannot steal it). Add CSRF protection (`SameSite` plus a CSRF token for cookie-based APIs). `localStorage` is readable by any injected script.
+6. **OAuth2 / OIDC ("Login with Google", company SSO):** use a library, not your own code.
+   - **Passport:** strategy-based middleware for Express. Old but still common.
+   - **Auth.js** (formerly NextAuth.js): now maintained by the Better Auth team, mainly security fixes.
+   - **Better Auth:** a newer, full auth framework for TypeScript.
+   - A hosted identity provider: Keycloak, Auth0, Cognito, Entra ID.
+7. **Authorization:** check on the server, every request. **RBAC** (role-based: `admin`, `support`) in middleware; **ownership** checks (`order.userId === req.user.id`) in the service. Missing ownership checks cause *IDOR* (insecure direct object reference: user A reads `/orders/123` of user B).
+
+**Diagram: sessions vs JWT.**
+
+```mermaid
+flowchart LR
+    subgraph S["Session (stateful)"]
+        B1["Browser: cookie sid=abc"] --> A1["API"]
+        A1 -->|"lookup sid"| R1["Redis: abc = user 42, roles"]
+    end
+    subgraph J["JWT (stateless)"]
+        B2["Client: Bearer eyJ..."] --> A2["API"]
+        A2 -->|"verify signature and exp, no lookup"| K2["Public key or secret"]
+    end
+```
+
+**Diagram: refresh token rotation.**
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Store
+    Client->>API: POST /login (email, password)
+    API->>Store: save hash of refresh token R1
+    API-->>Client: access token (15 min) + R1 in HttpOnly cookie
+    Client->>API: GET /orders with access token
+    API-->>Client: 200 (verified signature, no DB call)
+    Client->>API: POST /refresh with R1 (access token expired)
+    API->>Store: R1 valid? mark used, save R2
+    API-->>Client: new access token + R2
+    Note over API,Store: R1 used again later? Theft. Revoke the whole family.
+```
+
+**Example: hash, verify JWT, RBAC middleware (logic run with Node 24, `argon2` and `jose`).**
+
+```javascript
+import argon2 from 'argon2';
+import { jwtVerify } from 'jose';
+
+export const hashPassword = (pw) => argon2.hash(pw);           // argon2id + random salt by default
+export const checkPassword = (hash, pw) => argon2.verify(hash, pw);
+
+export function authenticate(key) {
+  return async (req, res, next) => {
+    try {
+      const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');
+      const { payload } = await jwtVerify(token, key, {
+        algorithms: ['HS256'], issuer: 'shop-api', audience: 'shop-web', // pin alg, iss, aud
+      });
+      req.user = { id: payload.sub, roles: payload.roles ?? [] };
+      next();
+    } catch { res.status(401).json({ title: 'Unauthorized', status: 401 }); }
+  };
+}
+
+export const requireRole = (...roles) => (req, res, next) =>
+  roles.some((r) => req.user.roles.includes(r))
+    ? next()
+    : res.status(403).json({ title: 'Forbidden', status: 403 });  // 403: known user, no permission
+
+// app.delete('/orders/:id', authenticate(key), requireRole('admin'), deleteOrder);
+```
+
+Real run: the hash looked like `$argon2id$v=19$m=65536,t=3,p=4$...`, the right password verified `true` and a wrong one `false`, a `support` user got 403 on an `admin` route.
+
+**Sessions vs JWT:**
+| | Server session (cookie + Redis) | JWT access token |
+|---|---|---|
+| Logout / ban right now | Easy: delete the key | Hard: wait for `exp`, or keep a deny list |
+| Lookup per request | Yes (Redis, about 1 ms) | No |
+| Good for | Web apps on one domain | Service-to-service, mobile apps, many APIs trusting one issuer |
+| Size | Small cookie | Grows with claims (sent on every request) |
+| Common mistake | No `HttpOnly`/`Secure` on the cookie | Long `exp`, secrets in the payload, not checking `alg` |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Short access tokens + rotating refresh tokens limit damage | More moving parts than a simple session |
+| argon2id/bcrypt make leaked hashes slow to crack | Hashing is CPU work: it uses the libuv pool; big login spikes need care |
+| Hosted IdP or Passport/Better Auth avoid home-made OAuth bugs | Rolling your own JWT or OAuth code is a classic source of bugs |
+
+**Say this in the interview:**
+
+> "Authentication proves who the user is, authorization decides what they can do. For a web app on one domain I like server sessions in Redis with an HttpOnly, Secure, SameSite cookie, because logout and bans work at once. For APIs and mobile I use short-lived JWT access tokens, verified with pinned algorithm, issuer and audience, plus rotating refresh tokens stored hashed on the server. Passwords are hashed with argon2id or bcrypt. Authorization runs on every request: role checks in middleware and ownership checks in the service, to avoid IDOR."
+
+**They may ask next:**
+- **How do you revoke a JWT?** Keep access tokens short, revoke the refresh token, and for urgent cases keep a small deny list of token ids (`jti`) in Redis until they expire.
+- **HS256 vs RS256?** HS256 uses one shared secret: everyone who verifies can also sign. RS256/ES256 use a private key to sign and a public key (JWKS URL) to verify. Use asymmetric keys when many services verify.
+- **401 vs 403?** 401: we do not know who you are (missing or bad token). 403: we know you, but you are not allowed.
+- **Where does bcrypt run?** The async `bcrypt`/`argon2` npm functions run on a native thread (the libuv pool), not the event loop. The `*Sync` versions block the loop.
+
+---
+
+## Databases from Node
+
+**In one line:** One small pool per process, transactions on one client, the right ORM for the job, no N+1, and versioned migrations.
+
+**Story:** A bank with 10 counters (connections). Customers (requests) queue for a free counter. Opening a new counter for every customer takes minutes (a new TCP + TLS + auth handshake). So the bank keeps 10 counters open all day. If a customer sits at a counter and chats for an hour (a long transaction), the queue grows for everyone.
+
+**How it works:**
+1. **Pool:** `new pg.Pool({ max: 10 })` opens connections lazily and reuses them. `pool.query()` borrows a connection, runs the query and returns it.
+2. **Pool size in Node is small.** One process sends queries without blocking, so 5-20 connections per process is common. Total = pods × pool size. Keep it under the DB limit, or put PgBouncer in front. See [Scaling Node.js](#scaling-nodejs) and the HikariCP math in [spring-ecosystem.md](spring-ecosystem.md#connection-pooling-with-hikaricp).
+3. **Set timeouts:** `connectionTimeoutMillis` (wait for a free connection), `idleTimeoutMillis`, and a `statement_timeout` in Postgres. Without them, a slow DB makes requests wait forever.
+4. **Always parameterize:** `pool.query('SELECT * FROM orders WHERE id = $1', [id])`. Never build SQL with string concatenation (SQL injection).
+5. **Transactions need one client.** `BEGIN`, queries and `COMMIT` must go through the **same** connection. With `pool.query()` each call may get a different connection.
+6. **No `@Transactional` magic.** You pass a transaction object (`tx`) into your functions, or use `AsyncLocalStorage` to carry it.
+7. **N+1:** load 50 orders, then 1 query per order for its items = 51 queries. Fix with a join, `WHERE order_id = ANY($1)`, or the ORM's include/relations loading. Same problem as in [JPA](spring-ecosystem.md#the-n1-problem-and-how-to-fix-it).
+8. **Migrations:** versioned files, run once per deploy, before the new code takes traffic. Tools: Prisma Migrate, Drizzle Kit, TypeORM migrations, Knex migrations, or Flyway/Liquibase if the company already uses them.
+
+**Diagram: pool and transaction.**
+
+```mermaid
+flowchart LR
+    R1["Request A"] --> P["pg.Pool (max 10)"]
+    R2["Request B"] --> P
+    R3["Request C: transfer money"] -->|"pool.connect()"| CL["One dedicated client"]
+    P -->|"borrow, query, return"| DB["PostgreSQL"]
+    CL -->|"BEGIN, UPDATE, UPDATE, COMMIT"| DB
+    CL -->|"release() in finally"| P
+```
+
+**Example: a transaction with `pg` (raw driver).**
+
+```javascript
+import pg from 'pg';
+const pool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 10, connectionTimeoutMillis: 2000 });
+
+export async function transfer(fromId, toId, amount) {
+  const client = await pool.connect();                // one connection for the whole transaction
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      'UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1 RETURNING id',
+      [amount, fromId]);                              // parameters: no SQL injection
+    if (rows.length === 0) throw new Error('insufficient funds');
+    await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [amount, toId]);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();                                 // forget this and the pool slowly runs dry
+  }
+}
+```
+
+**ORMs and query builders (versions as of November 2026):**
+| Tool | Style | Good | Watch out |
+|---|---|---|---|
+| raw `pg` (8.x) | Plain SQL | Full control, fastest, nothing hidden | You write mapping and migrations yourself |
+| Knex (3.x) | Query builder | Mature, many DBs, simple migrations | Weak TypeScript types |
+| Drizzle (0.45 stable, 1.0 in RC) | SQL-like TypeScript builder | Types from your schema, thin, SQL you can predict | Younger; API still moving towards 1.0 |
+| Prisma (7.x) | Schema file + generated client | Great DX, types, Prisma Migrate | Its own query layer; complex SQL needs `$queryRaw`; v7 needs a driver adapter |
+| TypeORM (1.x) | Entities + decorators, like JPA | Familiar to Java devs, works with NestJS | Many old issues; lazy relations and decorators add magic |
+| MikroORM | Unit of work + identity map | Closest to Hibernate ideas | Smaller community |
+
+Prisma 7 (November 2025) moved from a Rust query engine to a TypeScript client that talks to the DB through a driver adapter (for example `@prisma/adapter-pg`). TypeORM reached 1.0 in May 2026.
+
+**Example: N+1 and the fix (Prisma style).**
+
+```javascript
+// N+1: 1 query for orders, then 1 per order
+const orders = await prisma.order.findMany({ take: 50 });
+for (const o of orders) o.items = await prisma.item.findMany({ where: { orderId: o.id } });
+
+// Fix: let the ORM load the relation in one or two queries
+const withItems = await prisma.order.findMany({ take: 50, include: { items: true } });
+```
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| A small pool per process is enough; Node does not block on queries | Pods × pool size can exceed the DB's `max_connections` |
+| Typed builders (Drizzle, Prisma, Kysely) catch column typos at compile time | ORMs hide N+1 and slow SQL; log queries in development |
+| Explicit transactions are easy to read | No `@Transactional`: easy to forget the same client, or `release()` |
+
+**Say this in the interview:**
+
+> "In Node I use one connection pool per process, small, like 10, because one process does not block on queries. I watch the total: pods times pool size must stay under the database limit, or I add PgBouncer. Transactions must use one client from the pool, with BEGIN, COMMIT or ROLLBACK, and release in finally. For tools: raw pg or Drizzle when I want SQL control, Prisma for developer speed, TypeORM when a NestJS team wants JPA-style entities. I watch for N+1 by logging queries, and I change the schema only with versioned migrations."
+
+**They may ask next:**
+- **How do you share a transaction across functions?** Pass `tx` as an argument (Prisma `$transaction(async (tx) => ...)`, Drizzle `db.transaction(async (tx) => ...)`), or keep it in `AsyncLocalStorage`.
+- **How do you do zero-downtime migrations?** Expand and contract: add the new column, deploy code that writes both, backfill, switch reads, then drop the old column later. Never rename in one step.
+- **ORM or raw SQL?** ORM for simple CRUD and team speed; raw SQL (or a builder) for reports, bulk updates and tuned queries. Many teams use both.
+- **MongoDB from Node?** The official `mongodb` driver or Mongoose (schemas on top). See [mongodb.md](mongodb.md).
+
+---
+
+## Caching and Redis from Node
+
+**In one line:** Small in-memory LRU for hot data, Redis for shared data, cache-aside with a TTL on every key, and a stampede guard.
+
+All Redis details (data types, eviction, cluster, locks, persistence) are in [redis.md](redis.md). This section is only the Node side.
+
+**Story:** A tea stall. The most asked items (tea, biscuits) sit on the counter: that is the in-process cache, fastest but only this stall sees it. The shared store room behind three stalls is Redis: a few steps away, but everyone sees the same stock. The warehouse in another town is the database.
+
+**How it works:**
+1. **Clients:** `ioredis` (6.x) and the official `redis` package (node-redis, 6.x). Both are promise-based and support Cluster and Sentinel. Create **one client per process** and reuse it; do not connect per request.
+2. **Cache-aside:** read Redis; on a miss, read the DB, then `SET key value EX 300`. On update, write the DB, then **delete** the key.
+3. **Always set a TTL.** It limits stale data and memory. Add a little random jitter so many keys do not expire at the same second.
+4. **Stampede (thundering herd):** a hot key expires and 1,000 requests hit the DB at once. In one process, share one in-flight promise per key (see the example). Across pods, use a short Redis lock or early refresh.
+5. **Two levels:** `lru-cache` in memory (microseconds) in front of Redis (about 1 ms in the same data centre). Each pod has its own memory copy, so keep the memory TTL short.
+6. **Serialization:** `JSON.stringify` of big objects blocks the loop. Cache small, ready-to-send values.
+7. **Failure:** if Redis is down, fall back to the DB with a timeout. Do not take the whole API down because the cache is down. Set `commandTimeout` and a reconnect strategy.
+8. Other Redis uses from Node: sessions, rate limit counters, BullMQ queues, Socket.IO adapter, idempotency keys, distributed locks.
+
+**Diagram: cache-aside with a stampede guard.**
+
+```mermaid
+sequenceDiagram
+    participant API
+    participant Memory
+    participant Redis
+    participant DB
+    API->>Memory: get product:7 (in-flight promise?)
+    Memory-->>API: miss, start one load
+    API->>Redis: GET product:7
+    Redis-->>API: nil (miss)
+    API->>DB: SELECT product 7
+    DB-->>API: row
+    API->>Redis: SET product:7 json EX 300
+    Note over API,Memory: other requests for product:7 awaited the same promise
+```
+
+**Example: cache-aside with ioredis and request coalescing.**
+
+```javascript
+import Redis from 'ioredis';
+const redis = new Redis(config.REDIS_URL, { commandTimeout: 200, maxRetriesPerRequest: 1 });
+const inFlight = new Map();                         // key -> promise (this process only)
+
+export async function getProduct(id) {
+  const key = `product:${id}`;
+  if (inFlight.has(key)) return inFlight.get(key);  // 1,000 callers share one DB load
+  const p = (async () => {
+    const cached = await redis.get(key).catch(() => null); // Redis down? fall back to DB
+    if (cached) return JSON.parse(cached);
+    const product = await db.findProduct(id);
+    const ttl = 300 + Math.floor(Math.random() * 30); // jitter: keys do not expire together
+    await redis.set(key, JSON.stringify(product), 'EX', ttl).catch(() => {});
+    return product;
+  })().finally(() => inFlight.delete(key));
+  inFlight.set(key, p);
+  return p;
+}
+
+export async function updateProduct(id, data) {
+  await db.updateProduct(id, data);
+  await redis.del(`product:${id}`);                 // delete, do not update: fewer races
+}
+```
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Redis is shared by all pods, survives deploys | Stale data until TTL or delete; DB and cache can disagree |
+| In-memory LRU is very fast | Each pod has its own copy; invalidation is hard; counts toward heap |
+| Promise sharing stops stampedes in one process | Across 20 pods you still get 20 DB loads; use a lock or early refresh if that is too many |
+
+**Say this in the interview:**
+
+> "From Node I use one Redis client per process, ioredis or node-redis, with short command timeouts. The default pattern is cache-aside: read Redis, on a miss read the database and set the key with a TTL plus some jitter. On writes I update the database and delete the key. For hot keys I share one in-flight promise per key, so a thousand requests cause one database read. If Redis is down I fall back to the database, because the cache must never take the API down."
+
+**They may ask next:**
+- **Why delete instead of update the cache on write?** Two writers can update the cache in the wrong order and leave old data. Deleting means the next read loads fresh data. See [redis.md](redis.md).
+- **Where do you not cache?** Data that must be exact right now: balances, stock at checkout. Read those from the database.
+- **How do you cache HTTP responses?** `Cache-Control` and `ETag` headers for clients and CDNs; Redis for server-side results.
+
+---
+
+## Files and uploads
+
+**In one line:** Stream big files and uploads straight to object storage (or use presigned URLs); never hold a whole file in memory.
+
+**Story:** A courier office receiving a truck of boxes. A bad clerk unloads every box onto his own desk first, then carries them to the warehouse. The desk breaks at box 50. A good clerk puts a conveyor belt from the truck straight to the warehouse. Boxes move one by one, and the desk stays empty. Even better: tell the truck driver to drive straight to the warehouse (presigned URL).
+
+**How it works:**
+1. **`node:fs/promises`:** `readFile`, `writeFile`, `readdir`, `stat`, `mkdir({ recursive: true })`, `rm`. Async, runs on the libuv pool. Good for small files (config, templates).
+2. **Big files:** `fs.createReadStream` / `createWriteStream` with `pipeline()`. Memory stays at about the stream buffer size. See [Streams and backpressure](#streams-and-backpressure).
+3. **Never `readFileSync` in a request.** It blocks every user.
+4. **Multipart uploads** (`multipart/form-data`, how browsers send files):
+   - **busboy** (1.x): low-level streaming parser. You get each file as a stream.
+   - **multer** (2.x, for Express): built on busboy. `memoryStorage()` keeps the whole file in RAM (dangerous for big files); `diskStorage()` writes to a temp file. Multer 2 fixed denial-of-service bugs in 1.x; upgrade old apps.
+   - **`@fastify/multipart`** for Fastify, with a stream API.
+5. **Stream to S3:** `@aws-sdk/lib-storage` `Upload` takes a stream and does an **S3 multipart upload** in parts (5 MB minimum part size), a few parts at a time.
+6. **Presigned URLs (best for big files):** the API checks the user and returns a short-lived signed URL. The browser uploads directly to S3. Node never touches the bytes. Then S3 sends an event (or the client calls the API) to confirm.
+7. **Always set limits:** max file size, max number of files, allowed content types. Check the real type from the first bytes (magic numbers), not only the file name.
+8. **Security:** never use the user's file name as a path (`../../etc/passwd`). Generate your own key (`uploads/<uuid>`). Scan files if users share them.
+
+**Diagram: two ways to upload a 2 GB video.**
+
+```mermaid
+flowchart LR
+    B["Browser"] -->|"multipart stream"| N["Node API (busboy)"]
+    N -->|"stream parts, 5 MB each"| S3["S3 bucket"]
+    B -.->|"or: ask for presigned URL"| N2["Node API: auth check, sign URL"]
+    N2 -.->|"URL valid 5 min"| B
+    B -.->|"PUT file directly"| S3
+    S3 -->|"ObjectCreated event"| Q["Queue: virus scan, thumbnails"]
+```
+
+**Example: stream an upload to S3 with busboy (Express, AWS SDK v3).**
+
+```javascript
+import busboy from 'busboy';
+import { randomUUID } from 'node:crypto';
+import { S3Client } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+
+const s3 = new S3Client({});
+app.post('/uploads', authenticate(key), (req, res, next) => {
+  const bb = busboy({ headers: req.headers, limits: { fileSize: 500 * 1024 * 1024, files: 1 } });
+  bb.on('file', (_field, stream, info) => {
+    if (!['video/mp4', 'image/png'].includes(info.mimeType)) { stream.resume(); return res.status(415).end(); }
+    const key = `uploads/${randomUUID()}`;               // our name, never the user's file name
+    const upload = new Upload({                          // S3 multipart upload, part by part
+      client: s3, params: { Bucket: 'shop-media', Key: key, Body: stream, ContentType: info.mimeType },
+      queueSize: 4, partSize: 8 * 1024 * 1024,           // max about 4 x 8 MB in memory
+    });
+    stream.on('limit', () => upload.abort());            // file too big: stop and clean up
+    upload.done().then(() => res.status(201).json({ key }), next);
+  });
+  req.pipe(bb);                                          // request body flows into the parser
+});
+```
+
+Memory stays near `queueSize × partSize` (about 32 MB here) for any file size.
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Streaming keeps memory flat for any file size | Error handling mid-stream is harder (partial uploads, aborts) |
+| Presigned URLs take upload bandwidth and CPU off Node | Needs a second step to confirm and process the file |
+| `multer.diskStorage` is simple for small apps | `multer.memoryStorage` with big files: one upload can use GBs of RAM |
+
+**Say this in the interview:**
+
+> "For small files I use fs/promises. For big files I stream, so memory stays flat. For uploads I parse multipart with busboy, or multer with disk storage. I stream each file straight to S3 with the AWS SDK's Upload class, which uploads part by part. For really large files I prefer presigned URLs: the API only checks permissions and signs a URL, and the browser uploads directly to S3. I always set size and type limits and generate my own object keys."
+
+**They may ask next:**
+- **How do you resume a failed big upload?** S3 multipart upload: the client uploads parts with presigned URLs per part, retries failed parts, then calls complete. Clean up unfinished uploads with a bucket lifecycle rule.
+- **How do you serve a private file?** A presigned GET URL with a short expiry, or stream it through Node with an auth check (`pipeline(s3Body, res)`).
+- **Why not store files in the database?** Large blobs make backups, replication and caching slow. Store files in object storage and keep the key and metadata in the DB.
+
+---
+
+## Background jobs and queues
+
+**In one line:** Put slow or retryable work on a queue, process it in separate workers with retries, and make every job idempotent.
+
+**Story:** A restaurant order slip. The waiter does not cook. He writes a slip, pins it on the kitchen rail, and goes back to customers. Cooks take slips one by one. If the gas runs out, the slip goes back on the rail with a note "try again in 5 minutes". If a slip falls and is picked up twice, the cook checks the order number so the same dish is not cooked twice.
+
+**How it works:**
+1. **Why a queue:** the HTTP request returns fast (`202 Accepted`), and slow work happens later. Spikes are smoothed. Failures get retried.
+2. **BullMQ** (6.x) is the common Node job queue. It stores jobs in **Redis**. Producers call `queue.add()`. Workers (`new Worker(queue, fn, { concurrency })`) process them.
+3. **Retries:** `attempts: 5, backoff: { type: 'exponential', delay: 1000 }`. After the last attempt, the job stays in the **failed** set (a dead-letter list). Alert on it.
+4. **Idempotency:** a job can run twice (worker crashed after doing the work but before marking it done). Give jobs a stable `jobId` (BullMQ ignores a duplicate id while the job exists), and check "already done?" in the DB before side effects. See [microservices.md](microservices.md#idempotency).
+5. **Scheduled and repeating jobs:** `delay` for "in 10 minutes". For cron-like jobs, BullMQ uses **Job Schedulers** (`queue.upsertJobScheduler(id, { pattern: '0 3 * * *' }, template)`). BullMQ 6 removed the old "repeatable jobs" API, so old code must migrate.
+6. **Concurrency:** I/O jobs can use `concurrency: 20` per worker. CPU jobs should use sandboxed processors (a separate process) or worker threads.
+7. **Run workers as separate deployments** from the API, so you scale them and restart them independently. Stop them gracefully: `await worker.close()` waits for running jobs.
+8. **Kafka from Node** for events between services (not a job queue):
+   - **KafkaJS** (2.2.4) was the most popular pure-JS client, but has had **no release since February 2023**. Treat it as unmaintained.
+   - **`@confluentinc/kafka-javascript`** (1.x, GA since late 2024): Confluent's official client, built on librdkafka (native C), with a KafkaJS-style API for easy migration. A good default for new code.
+   - **`@platformatic/kafka`**: a newer pure-JS client.
+   - Consumer rules are the same as in Java: consumer groups, commit after processing, handle duplicates. See [kafka.md](kafka.md).
+
+**Diagram: a job's life in BullMQ.**
+
+```mermaid
+flowchart LR
+    API["API: queue.add (jobId = order id)"] --> W["waiting (Redis list)"]
+    API -->|"delay: 10 min"| D["delayed (Redis sorted set)"]
+    D --> W
+    W --> A["active: worker picked it"]
+    A -->|"success"| C["completed"]
+    A -->|"error, attempts left"| D
+    A -->|"error, no attempts left"| F["failed: alert, inspect, retry by hand"]
+```
+
+**Diagram: states of one job.**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Waiting
+    Waiting --> Active: worker takes it
+    Active --> Completed: done
+    Active --> Delayed: failed, backoff
+    Delayed --> Waiting: delay passed
+    Active --> Failed: attempts used up
+    Completed --> [*]
+    Failed --> Waiting: manual retry
+```
+
+**Example: BullMQ producer and worker.**
+
+```javascript
+import { Queue, Worker } from 'bullmq';
+const connection = { host: 'localhost', port: 6379 };
+
+const emails = new Queue('emails', { connection });
+// In the API handler: return 202 right after this
+await emails.add('order-confirmation', { orderId: 'ord_1' }, {
+  jobId: 'order-confirmation:ord_1',              // same id again = no duplicate job
+  attempts: 5, backoff: { type: 'exponential', delay: 1000 }, // 1 s, 2 s, 4 s, 8 s
+  removeOnComplete: 1000,                         // keep Redis small
+});
+await emails.upsertJobScheduler('daily-report', { pattern: '0 3 * * *' }, { name: 'report', data: {} });
+
+// In a separate worker deployment
+const worker = new Worker('emails', async (job) => {
+  if (await db.emailAlreadySent(job.data.orderId)) return 'skipped'; // idempotent
+  await mailer.send(job.data.orderId);
+  await db.markEmailSent(job.data.orderId);
+}, { connection, concurrency: 10 });
+worker.on('failed', (job, err) => logger.warn({ jobId: job?.id, err }, 'job failed'));
+process.once('SIGTERM', async () => { await worker.close(); process.exit(0); }); // finish active jobs
+```
+
+**Queue choices:**
+| Tool | Good for | Not good for |
+|---|---|---|
+| BullMQ (Redis) | Jobs inside one product: emails, PDFs, webhooks, retries, delays, cron | Long-term event history, replay by many teams |
+| Kafka | Events between many services, replay, high volume, ordering per key | Per-job delays and retries (you build them) |
+| RabbitMQ / SQS | Work queues with routing (RabbitMQ) or zero ops (SQS) | Replay of old messages |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| API stays fast; work is retried automatically | Eventual: the user sees "processing" first |
+| Workers scale separately from the API | Jobs can run twice: everything must be idempotent |
+| Failed set gives you a dead-letter list for free | Redis memory and persistence now matter (use AOF, `noeviction` for BullMQ) |
+
+**Say this in the interview:**
+
+> "Anything slow or retryable leaves the request path. In Node I usually use BullMQ on Redis: the API adds a job and returns 202, and a separate worker deployment processes it with retries and exponential backoff. Failed jobs stay in a failed list that we alert on. Because a job can run twice, I give it a stable job id and check in the database before side effects. For cron I use BullMQ job schedulers. For events between services I use Kafka; in Node I pick Confluent's JavaScript client today, because KafkaJS has not been released since 2023."
+
+**They may ask next:**
+- **How do you avoid a job running on every pod for cron?** Use the queue's scheduler (one job per time slot in Redis), not `setInterval` in every pod. Or a Kubernetes CronJob.
+- **What Redis settings does BullMQ need?** `maxmemory-policy noeviction` (evicting job keys breaks queues) and persistence turned on. See [redis.md](redis.md).
+- **How do you send an event and save to the DB safely?** Transactional outbox: write the event to an outbox table in the same DB transaction, then publish it. See [microservices.md](microservices.md#transactional-outbox-pattern).
+- **How do you design a job scheduler at scale?** See [system design: job scheduler](system-design/job-scheduler.md).
+
+---
+
+## Real-time: WebSockets and Server-Sent Events
+
+**In one line:** SSE for server-to-client updates, WebSockets for two-way traffic, and Redis pub/sub so messages reach users on every pod.
+
+The general comparison (polling vs long polling vs WebSockets vs SSE) is in [system-design.md](system-design.md#long-polling-vs-websockets-vs-server-sent-events).
+
+**Story:** A cricket stadium.
+- **SSE** is the stadium loudspeaker: it talks, you listen. Cheap and simple.
+- **WebSocket** is a walkie-talkie: both sides talk any time.
+- **Many pods** are many stands with their own loudspeaker. When a wicket falls, the control room (Redis pub/sub) tells **every** stand's speaker, not only one.
+
+**How it works:**
+1. **SSE:** a normal HTTP response with `Content-Type: text/event-stream` that never ends. The server writes `data: ...\n\n` blocks. The browser's `EventSource` reconnects by itself and sends `Last-Event-ID`. One direction only. Works through most proxies. No extra library needed in Node.
+2. **WebSocket:** starts as HTTP, then *upgrades* to a two-way TCP channel. In Node: **`ws`** (8.x, low-level, fast) or **Socket.IO** (4.x: rooms, auto-reconnect, acknowledgements, fallback to HTTP long-polling; it has its own protocol, so you need its client).
+3. **Node is good at this:** each open connection is a small object, not a thread. One process can hold tens of thousands of idle connections if memory and file descriptor limits allow (`ulimit -n`).
+4. **Heartbeats:** send ping/pong every 20-30 s. It detects dead clients and keeps load balancers from closing idle connections.
+5. **Scaling to many pods:**
+   - A user on pod 1 sends a message to a room. Users of that room on pod 2 must get it.
+   - **Socket.IO Redis adapter** (`@socket.io/redis-adapter`, Redis pub/sub) or the **Redis Streams adapter** (survives short Redis disconnects) forwards messages between pods.
+   - With plain `ws`, you publish to Redis pub/sub (or NATS, Kafka) yourself and each pod sends to its local sockets.
+   - **Sticky sessions** are needed for Socket.IO when HTTP long-polling is on (several HTTP requests must hit the same pod). With WebSocket-only transport you can skip them.
+6. **Auth:** check the token during the HTTP upgrade (or the first message). Re-check permissions when joining a room.
+7. **Backpressure:** a slow client fills `socket.bufferedAmount`. Drop or disconnect slow clients instead of buffering forever.
+8. **Deploys:** every deploy disconnects everyone. Clients must reconnect with jittered backoff, or 100,000 clients reconnect in the same second.
+
+**Diagram: WebSockets across pods.**
+
+```mermaid
+flowchart LR
+    U1["User A (room: match-42)"] -->|"WebSocket"| P1["Pod 1: Socket.IO"]
+    U2["User B (room: match-42)"] -->|"WebSocket"| P2["Pod 2: Socket.IO"]
+    LB["Load balancer (sticky if long-polling)"] --> P1
+    LB --> P2
+    P1 -->|"publish room message"| R["Redis pub/sub (adapter)"]
+    R -->|"deliver"| P2
+    R -->|"deliver"| P1
+    K["Kafka: score events"] --> P1
+    K --> P2
+```
+
+**Example 1: SSE with only `node:http` (run with Node 24).**
+
+```javascript
+const http = require('node:http');
+
+http.createServer((req, res) => {
+  if (req.url !== '/orders/7/status') return res.writeHead(404).end();
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',          // this makes it SSE
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  const steps = ['PAID', 'PACKED', 'SHIPPED'];
+  let i = 0;
+  const timer = setInterval(() => {
+    res.write(`id: ${i}\nevent: status\ndata: ${JSON.stringify({ status: steps[i] })}\n\n`); // blank line ends one event
+    if (++i === steps.length) { clearInterval(timer); res.end(); }
+  }, 100);
+  req.on('close', () => clearInterval(timer));     // client left: stop work, no leak
+}).listen(3703);
+```
+
+Real output from `fetch` reading the stream: three events, `id: 0 ... PAID`, `id: 1 ... PACKED`, `id: 2 ... SHIPPED`.
+
+**Example 2: WebSocket server with `ws`, broadcast and heartbeat (run with Node 24, ws 8).**
+
+```javascript
+import { WebSocketServer, WebSocket } from 'ws';
+
+const wss = new WebSocketServer({ port: 3704 });
+wss.on('connection', (socket) => {
+  socket.isAlive = true;
+  socket.on('pong', () => { socket.isAlive = true; });  // heartbeat answer
+  socket.on('message', (data) => {
+    for (const client of wss.clients) {                 // broadcast to everyone on THIS pod only
+      if (client.readyState === WebSocket.OPEN) client.send(`echo: ${data}`);
+    }
+  });
+});
+setInterval(() => {                                     // drop dead connections every 30 s
+  for (const s of wss.clients) { if (!s.isAlive) s.terminate(); else { s.isAlive = false; s.ping(); } }
+}, 30_000).unref();
+```
+
+A test client sent `hello` and got `echo: hello`. With more pods, publish to Redis instead of looping over local clients only.
+
+**SSE vs WebSocket:**
+| | SSE | WebSocket |
+|---|---|---|
+| Direction | Server to client | Both ways |
+| Protocol | Plain HTTP; works with HTTP/2 | Upgrade to `ws://` / `wss://` |
+| Reconnect | Built into `EventSource` | You (or Socket.IO) build it |
+| Data | Text (UTF-8) | Text and binary |
+| Good for | Notifications, order status, live dashboards, LLM token streaming | Chat, games, collaborative editing |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Node holds many idle connections cheaply | Long-lived connections make deploys and graceful shutdown harder |
+| SSE needs no library and passes most proxies | With HTTP/1.1, browsers allow only about 6 connections per domain (HTTP/2 fixes this) |
+| Socket.IO gives rooms, acks and reconnect | Socket.IO clients must use the Socket.IO protocol; not plain WebSocket |
+
+**Say this in the interview:**
+
+> "If only the server pushes, like order status or notifications, I use Server-Sent Events: plain HTTP, built-in reconnect, no library. For two-way traffic like chat I use WebSockets, with ws or Socket.IO. Node is a good fit because each connection is a small object, not a thread. To scale to many pods, I add the Socket.IO Redis adapter or publish to Redis myself, so a message reaches users on every pod. I add heartbeats, check auth on connect, and make clients reconnect with jitter after deploys."
+
+**They may ask next:**
+- **Why sticky sessions?** Socket.IO's long-polling sends several HTTP requests for one session; they must reach the same pod. WebSocket-only connections stay on one pod anyway.
+- **How many connections per pod?** Measure. Limits are memory per socket, file descriptors, and CPU for broadcasts. Tens of thousands per pod is common for mostly idle connections.
+- **How do you close them on shutdown?** Stop accepting, send a close frame (code 1001 "going away"), let clients reconnect elsewhere, then exit. See [Graceful shutdown](#graceful-shutdown).
+- **Design a chat app?** See [system design: WhatsApp](system-design/whatsapp.md).
+
+---
+
+## Logging and observability in Node
+
+**In one line:** JSON logs with pino, a request id via AsyncLocalStorage, and OpenTelemetry auto-instrumentation to join logs and traces.
+
+The general ideas (three pillars, log levels, ELK vs Loki, Prometheus, tracing, alerts) are in [production-ready.md](production-ready.md#the-three-pillars-logs-metrics-traces-plus-profiles), [Logging done right](production-ready.md#logging-done-right) and [Distributed tracing with OpenTelemetry](production-ready.md#distributed-tracing-with-opentelemetry). Spring's version is in [spring-ecosystem.md](spring-ecosystem.md#observability-with-actuator-micrometer-and-opentelemetry).
+
+**Story:** A parcel with a tracking number. Every hub that touches the parcel writes a line: "hub, time, tracking number, what happened". When a customer complains, you search one number and see the whole journey. The tracking number is the request id / trace id. The neat one-line entries are structured logs.
+
+**How it works:**
+1. **pino** (10.x) writes one JSON object per line, very fast. Fastify uses it by default. Pretty printing (`pino-pretty`) only in development.
+2. **Structured fields, not string building:** `logger.info({ orderId, amountPaise }, 'order paid')`. Then you can search `orderId = "ord_1"`.
+3. **Log to stdout.** The platform (Kubernetes + Fluent Bit, Vector, the OTel Collector) ships the logs. The app does not manage files.
+4. **Correlation id with `AsyncLocalStorage`:** store `{ requestId, userId }` at the start of each request. pino's `mixin` reads it and adds it to every log line, even deep inside services. This is Node's MDC. Accept an incoming `x-request-id` or `traceparent` header, and send it on outgoing calls.
+5. **Redact secrets:** pino `redact: ['req.headers.authorization', '*.password']`.
+6. **OpenTelemetry auto-instrumentation:** start Node with `--import @opentelemetry/auto-instrumentations-node/register`. It patches `http`, `undici`/`fetch`, Express, Fastify, `pg`, `ioredis`, Kafka clients and more. You get traces with no code change. Configure with `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`.
+7. **Trace id in logs:** the pino instrumentation adds `trace_id` and `span_id` to log lines, so you can jump from a log to its trace.
+8. **Node-specific metrics:** event loop lag (p99), event loop utilization, heap used, GC pauses, active handles, libuv pool queue (indirectly via latency). `prom-client` default metrics or OTel runtime metrics give most of these.
+
+**Diagram: one request, three signals.**
+
+```mermaid
+flowchart LR
+    REQ["Request with traceparent header"] --> MW["Middleware: AsyncLocalStorage.run with requestId"]
+    MW --> APP["Handlers and services"]
+    APP --> LOG["pino JSON logs to stdout (requestId, trace_id)"]
+    APP --> OT["OTel SDK: spans and metrics"]
+    LOG --> COL["Collector or agent (Fluent Bit, OTel Collector)"]
+    OT --> COL
+    COL --> BK["Backends: Loki or Elastic, Tempo or Jaeger, Prometheus, or an APM"]
+```
+
+**Example: request id in every log line (run with Node 24, pino 10).**
+
+```javascript
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
+import http from 'node:http';
+import pino from 'pino';
+
+const als = new AsyncLocalStorage();
+const logger = pino({
+  mixin: () => als.getStore() ?? {},            // adds requestId to every log line
+  redact: ['req.headers.authorization'],        // never log tokens
+});
+
+async function loadOrder(id) {                  // deep inside: no req object passed in
+  await new Promise((r) => setTimeout(r, 10));
+  logger.info({ orderId: id }, 'order loaded');
+}
+
+http.createServer((req, res) => {
+  const requestId = req.headers['x-request-id'] ?? randomUUID(); // reuse the caller's id
+  als.run({ requestId }, async () => {          // everything awaited inside sees this store
+    await loadOrder(42);
+    res.setHeader('x-request-id', requestId).end('ok');
+  });
+}).listen(3702);
+```
+
+Real log line after a call with `x-request-id: req-abc`:
+
+```text
+{"level":30,"time":1794839920312,"pid":33344,"hostname":"...","requestId":"req-abc","orderId":42,"msg":"order loaded"}
+```
+
+**Example: turn on OpenTelemetry without code changes.**
+
+```bash
+npm i @opentelemetry/api @opentelemetry/auto-instrumentations-node
+export OTEL_SERVICE_NAME=order-api
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+export OTEL_TRACES_EXPORTER=otlp OTEL_METRICS_EXPORTER=otlp
+node --import @opentelemetry/auto-instrumentations-node/register dist/server.js  # loads before the app
+```
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| JSON logs are searchable by any field | `console.log` of objects is slow and unstructured; avoid it in services |
+| AsyncLocalStorage gives MDC-like context with no extra parameters | Logging huge objects blocks the event loop; log ids, not whole payloads |
+| OTel auto-instrumentation gives traces in minutes | Auto-instrumentation adds some overhead and many spans; sample in production |
+
+**Say this in the interview:**
+
+> "In Node I log JSON to stdout with pino, with fields like orderId instead of string messages, and I redact tokens. A middleware stores the request id in AsyncLocalStorage, and pino's mixin adds it to every log line, which is Node's version of MDC. For tracing I start the app with the OpenTelemetry auto-instrumentation register hook. Then HTTP, Express, pg, Redis and Kafka calls become spans, and logs carry the trace id. On top of the usual RED metrics I watch event loop lag and heap, because they are the Node-specific warning signs."
+
+**They may ask next:**
+- **Why not `console.log`?** It is not structured, has no levels, and writes synchronously to a terminal or file. pino is async-friendly and much faster.
+- **How does the trace id reach the next service?** OTel adds the W3C `traceparent` header to outgoing HTTP and Kafka calls. The next service continues the same trace.
+- **What do you alert on?** Error rate, p99 latency, event loop lag p99 above about 100 ms, restarts and OOMKills. See [production-ready.md](production-ready.md#alerts-slos-and-on-call).
+
+---
+
+## Microservices with Node
+
+**In one line:** Node services use REST, gRPC and brokers like Java ones; Node is best as a BFF that calls many services in parallel.
+
+The patterns (sync vs async, saga, outbox, timeouts, retries, circuit breakers) are the same as in Java. See [microservices.md](microservices.md#sync-vs-async-communication) and [API gateway and BFF](microservices.md#api-gateway-and-bff).
+
+**Story:** A wedding planner. The family talks only to the planner. The planner calls the caterer, the decorator and the photographer **at the same time**, collects their answers, and gives the family one simple plan. The planner does not cook or take photos. That is a BFF (backend for frontend).
+
+**How it works:**
+1. **REST** between services: built-in `fetch` (undici) with keep-alive, a timeout (`AbortSignal.timeout`) and limited retries. For high traffic, an undici `Agent` or `Pool` gives more control over connections.
+2. **gRPC:** `@grpc/grpc-js` (pure JS, 1.x) with `@grpc/proto-loader`, or generated TypeScript code (`ts-proto`, `protobuf-es` with Connect). HTTP/2, binary Protobuf, strict contracts, streaming, and **deadlines** that pass down the call chain.
+3. **Events:** Kafka (`@confluentinc/kafka-javascript`), RabbitMQ (`amqplib`), NATS (`nats`), or cloud queues (SQS, Pub/Sub). Same rules: idempotent consumers, outbox for publishing.
+4. **NestJS microservices** (`@nestjs/microservices`): one programming model with *transports* (TCP, Redis, NATS, MQTT, gRPC, RabbitMQ, Kafka). `@MessagePattern` for request-reply and `@EventPattern` for events. Handy, but it hides the broker; check what it does on errors and retries.
+5. **Resilience:** circuit breaker with `opossum`, retries with jitter (see the [coding problem](#nodejs-coding-problems-with-answers)), bulkheads by limiting concurrency per downstream (`p-limit` or the async pool).
+6. **Why Node is a good BFF:**
+   - Fan-out is just `Promise.all` over a few `fetch` calls. No thread per call.
+   - The frontend team writes it in the same language (TypeScript), often with shared types.
+   - It can do server-side rendering and GraphQL (Apollo Server, Mercurius, GraphQL Yoga) close to the UI.
+7. **Where Node is weaker:** heavy CPU (big reports, crypto at scale), long transactions in a complex domain. Keep those in Java/Spring or Go services. See [Node vs Java/Spring](#node-vs-javaspring-how-to-choose).
+
+**Diagram: a Node BFF fanning out.**
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant BFF
+    participant Orders
+    participant Payments
+    participant Reviews
+    App->>BFF: GET /screens/order/42
+    par in parallel, each with a timeout
+        BFF->>Orders: gRPC GetOrder (deadline 300 ms)
+        BFF->>Payments: GET /payments?order=42
+        BFF->>Reviews: GET /reviews?order=42
+    end
+    Orders-->>BFF: order
+    Payments-->>BFF: payment status
+    Reviews-->>BFF: timeout
+    BFF-->>App: one JSON for the screen, reviews section empty
+```
+
+**Example: BFF fan-out with timeouts and a soft dependency.**
+
+```javascript
+const get = (url, ms) =>
+  fetch(url, { signal: AbortSignal.timeout(ms) }).then((r) => {
+    if (!r.ok) throw new Error(`${url} -> ${r.status}`);
+    return r.json();
+  });
+
+export async function orderScreen(orderId) {
+  const [order, payment, reviews] = await Promise.allSettled([
+    get(`${ORDERS}/orders/${orderId}`, 300),      // must have
+    get(`${PAYMENTS}/payments?order=${orderId}`, 300),
+    get(`${REVIEWS}/reviews?order=${orderId}`, 200), // nice to have
+  ]);
+  if (order.status === 'rejected') throw order.reason; // no order: the screen makes no sense
+  return {
+    order: order.value,
+    paymentStatus: payment.status === 'fulfilled' ? payment.value.status : 'UNKNOWN',
+    reviews: reviews.status === 'fulfilled' ? reviews.value : [],   // degrade, do not fail
+  };
+}
+```
+
+**REST vs gRPC vs events from Node:**
+| | REST + JSON | gRPC | Events (Kafka, NATS, RabbitMQ) |
+|---|---|---|---|
+| Node library | `fetch` / undici | `@grpc/grpc-js` | `@confluentinc/kafka-javascript`, `nats`, `amqplib` |
+| Contract | OpenAPI | `.proto` file | Schema registry (Avro, Protobuf, JSON Schema) |
+| Good for | Public APIs, browsers, simple calls | Internal, high-traffic, streaming, strict types | Decoupling, fan-out to many consumers |
+| Watch out | Over-fetching, no deadlines by default | Browsers need gRPC-Web or Connect | Duplicates, ordering, eventual consistency |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Parallel calls are cheap in Node | Easy to create long chains of sync calls; each adds failure risk |
+| Shared TypeScript types between UI and BFF | A BFF that grows business logic becomes a second monolith |
+| NestJS gives one model for many transports | Transport abstraction hides broker details you must still understand |
+
+**Say this in the interview:**
+
+> "Node services use the same patterns as Java services: REST or gRPC for requests, Kafka or another broker for events, with timeouts, limited retries and circuit breakers. Node is my favourite for a BFF. It fans out to several services in parallel with Promise.allSettled, gives each call a timeout, and degrades when a soft dependency fails. For gRPC I use grpc-js with deadlines. NestJS microservices give one model over many transports, but I keep business logic in the domain services, not in the BFF."
+
+**They may ask next:**
+- **`Promise.all` or `Promise.allSettled` in a BFF?** `allSettled` when some parts are optional, so one slow service does not fail the whole screen. `all` when every part is required.
+- **GraphQL or REST for a BFF?** GraphQL lets each screen ask for exactly what it needs. It adds caching and N+1 challenges (use DataLoader to batch). REST per screen is simpler for small teams.
+- **How do you do a circuit breaker in Node?** `opossum` wraps a function: after many failures it opens and fails fast, then tries again after a cool-down. See [microservices.md](microservices.md#circuit-breaker).
 
 ---
 
@@ -1048,6 +2338,178 @@ Real test: start a 2-second request, send SIGTERM 0.3 s later. Output: `SIGTERM:
 
 ---
 
+## Deploying Node: PM2, Docker and Kubernetes
+
+**In one line:** PM2 on a plain VM; on Kubernetes, one `node` process per small, non-root container, with probes and graceful shutdown.
+
+The full Dockerfile walk-through is in [docker-kubernetes.md](docker-kubernetes.md) (sections "A Dockerfile for Node.js", "Liveness, readiness and startup probes" and "Graceful shutdown in Kubernetes"). Node's shutdown code is in [Graceful shutdown](#graceful-shutdown).
+
+**Story:** Two ways to run food stalls. On your own land (a VM), you hire a manager (PM2) who opens one counter per helper and replaces a helper who faints. In a food court (Kubernetes), the food court management does that for you. You just bring one standard counter (a container) and they decide how many copies to open.
+
+**How it works:**
+1. **PM2 (7.x) on a VM:** `pm2 start dist/server.js -i max` runs one process per core in cluster mode, restarts on crash, rotates logs, and `pm2 reload` restarts processes one by one with no downtime. `pm2 startup` survives server reboots.
+2. **Containers:** one Node process per container. Kubernetes restarts it, scales it and balances traffic. No PM2 or cluster inside the container (it would hide crashes from Kubernetes).
+3. **Docker image rules:**
+   - **Multi-stage build:** build stage has dev dependencies and TypeScript; final stage has only `dist/` and production `node_modules`.
+   - **`npm ci`** (exact lockfile versions), `--omit=dev` for the runtime stage.
+   - **`ENV NODE_ENV=production`.**
+   - **`USER node`:** the official image has a non-root `node` user.
+   - **`CMD ["node", "dist/server.js"]`** in exec form, not `npm start`, so SIGTERM reaches Node.
+   - **Base image:** `node:24-slim` (Debian) is the safe default. Alpine is smaller but uses musl, so some native modules need rebuilds. Distroless is smallest, with no shell.
+   - **`.dockerignore`** for `node_modules`, `.env`, `.git`.
+4. **Memory:** set `--max-old-space-size` to about 75% of the container memory limit, so V8 collects garbage before the kernel kills the pod (`OOMKilled`).
+5. **Probes:**
+   - **Liveness** `/live`: "is the process stuck?" Keep it trivial; do **not** check the DB here, or a DB outage restarts every pod.
+   - **Readiness** `/ready`: "can I take traffic?" Return 503 during start-up and shutdown, and when critical dependencies are down.
+   - **Startup probe:** for slow starts (migrations, cache warm-up), so liveness does not kill the pod too early.
+6. **Graceful shutdown:** handle SIGTERM, fail readiness, wait, `server.close()`, close DB and consumers. Add a `preStop` sleep of a few seconds. Fit everything in `terminationGracePeriodSeconds` (30 s default).
+7. **Resources:** request about 1 CPU per pod (one JS thread), and a memory limit with headroom. Autoscale on CPU or, better, latency or event loop lag.
+
+**Diagram: a rolling deploy of a Node pod.**
+
+```mermaid
+sequenceDiagram
+    participant K8s
+    participant NewPod
+    participant OldPod
+    participant LB
+    K8s->>NewPod: start container (node dist/server.js)
+    K8s->>NewPod: startup probe, then readiness /ready
+    NewPod-->>K8s: 200 ready
+    K8s->>LB: add NewPod
+    K8s->>OldPod: preStop sleep, then SIGTERM
+    K8s->>LB: remove OldPod
+    OldPod->>OldPod: readiness 503, server.close(), finish requests
+    OldPod->>OldPod: close DB pool and consumers
+    OldPod-->>K8s: exit 0 (before 30 s, else SIGKILL)
+```
+
+**Example: the Node parts of a Deployment.**
+
+```yaml
+containers:
+  - name: order-api
+    image: registry.example.com/order-api:1.4.2       # immutable tag, not :latest
+    env:
+      - { name: NODE_OPTIONS, value: "--max-old-space-size=384" } # about 75% of 512Mi
+    resources:
+      requests: { cpu: "500m", memory: "512Mi" }
+      limits: { memory: "512Mi" }                    # no CPU limit avoids throttling the one JS thread
+    startupProbe:   { httpGet: { path: /live, port: 3000 }, failureThreshold: 30, periodSeconds: 2 }
+    livenessProbe:  { httpGet: { path: /live, port: 3000 }, periodSeconds: 10 }
+    readinessProbe: { httpGet: { path: /ready, port: 3000 }, periodSeconds: 5 }
+    lifecycle:
+      preStop: { sleep: { seconds: 5 } }             # let the LB stop sending traffic first
+terminationGracePeriodSeconds: 30
+```
+
+The `sleep` preStop action is built into Kubernetes (beta and on by default since 1.30, stable now). On older clusters use `exec: { command: ["sleep", "5"] }`, which needs a `sleep` binary in the image.
+
+**PM2 vs containers:**
+| | PM2 on a VM | Containers on Kubernetes |
+|---|---|---|
+| Use all cores | `-i max` (cluster mode) | More pods |
+| Restart on crash | PM2 | Kubernetes |
+| Zero-downtime reload | `pm2 reload` | Rolling update with readiness |
+| Logs | PM2 log files (rotate them) | stdout, collected by the platform |
+| Best for | Small setups, one or two servers | Teams already on Kubernetes or a container platform |
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Small images start in about a second; scale out fast | Wrong `CMD` (npm start) loses SIGTERM: requests fail on every deploy |
+| One process per container gives clear metrics and restarts | Heavy liveness checks (DB) cause restart storms |
+| PM2 is simple on VMs | PM2 or cluster inside a container hides crashes and confuses metrics |
+
+**Say this in the interview:**
+
+> "On a VM I run Node with PM2 in cluster mode, one process per core, with pm2 reload for zero-downtime deploys. In containers I run one node process per container. The image is multi-stage, built with npm ci, with NODE_ENV production. It runs as the non-root node user, with CMD node in exec form so SIGTERM arrives. I set max-old-space-size to about 75% of the memory limit. Liveness stays trivial, readiness turns 503 during shutdown, and a preStop sleep plus graceful shutdown means no failed requests during rolling deploys."
+
+**They may ask next:**
+- **Why no CPU limit?** Node's main thread is one thread; CPU throttling under a limit causes latency spikes and event loop lag. Many teams set a CPU request and only a memory limit. Measure in your cluster.
+- **How do you run DB migrations on deploy?** A separate Kubernetes Job or a pipeline step before the rollout, not in every pod's start-up (many pods would race).
+- **Serverless (Lambda) for Node?** Good for spiky, event-driven work. Watch cold starts, DB connection storms (use a proxy like RDS Proxy), and the time limit.
+
+---
+
+## Testing Node services
+
+**In one line:** Unit tests with fakes, API tests against the real server on a random port, and Testcontainers for real databases.
+
+Tools, mocking, MSW and CI tips are in [js-testing.md](js-testing.md) (see "Node.js API tests: node:test, Vitest, Supertest and Testcontainers"). This is the short Node backend view.
+
+**Story:** Testing a new car. You test the brakes alone on a bench (unit test). Then you drive the whole car on a closed track (API test). Then you drive it on a real road with real traffic (integration test with a real database). Each catches different problems.
+
+**How it works:**
+1. **Runner:** built-in `node --test` (stable, with mocks, fake timers, coverage), or **Vitest** (fast, Jest-compatible API, great with TypeScript and ESM). Jest is still common in older code.
+2. **Design for tests:** pass dependencies in (DB repository, HTTP clients) instead of importing singletons. Then tests pass fakes.
+3. **HTTP tests:** start the app on port `0` (any free port) and call it with `fetch`, or use **Supertest** with Express. Fastify has `app.inject()` (no network at all).
+4. **Real dependencies:** **Testcontainers** for Node starts PostgreSQL, Redis or Kafka in Docker for the test run. Mocks of SQL hide real bugs (constraints, transactions, JSON columns).
+5. **Outgoing HTTP:** mock at the network level (MSW, or undici's `MockAgent`) instead of mocking your own client functions.
+6. **Fake timers** for retries, TTLs and backoff, so tests do not sleep.
+7. **Contract tests** (Pact) between a Node BFF and its backends catch breaking API changes.
+
+**Diagram: what each level catches.**
+
+```mermaid
+flowchart TD
+    U["Unit: services with fakes (ms each, many)"] --> A["API: real server on port 0, fake outside services"]
+    A --> I["Integration: Testcontainers Postgres, Redis, Kafka"]
+    I --> C["Contract: Pact between BFF and backends"]
+    C --> E["Few end-to-end tests in staging"]
+```
+
+**Example: API test with only built-ins (run with Node 24: `node --test`).**
+
+```javascript
+import { test, before, after, mock } from 'node:test';
+import assert from 'node:assert/strict';
+import http from 'node:http';
+
+function createApp({ paymentClient }) {               // dependencies passed in: easy to fake
+  return http.createServer(async (req, res) => {
+    const status = await paymentClient.status(req.url.split('/').pop());
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ status }));
+  });
+}
+
+const paymentClient = { status: mock.fn(async () => 'PAID') }; // fake the outside service
+let server, base;
+before(async () => {
+  server = createApp({ paymentClient }).listen(0);      // port 0: any free port
+  await new Promise((r) => server.once('listening', r));
+  base = `http://localhost:${server.address().port}`;
+});
+after(() => server.close());
+
+test('GET /orders/:id returns the payment status', async () => {
+  const res = await fetch(`${base}/orders/42`);
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { status: 'PAID' });
+  assert.equal(paymentClient.status.mock.calls[0].arguments[0], '42'); // called with the id
+});
+```
+
+Real result: `✔ GET /orders/:id returns the payment status`, 1 pass, 0 fail.
+
+**Good and bad:**
+| Good | Bad |
+|---|---|
+| Built-in runner: no dependencies, fast start | Fewer plugins and reporters than Vitest/Jest |
+| Testcontainers tests real SQL, Redis and Kafka behaviour | Needs Docker in CI; slower than unit tests |
+| Port 0 avoids port clashes in parallel test runs | Forgetting `server.close()` keeps the test process alive |
+
+**Say this in the interview:**
+
+> "I pass dependencies into services so unit tests can use fakes. For the HTTP layer I start the real app on port zero and call it with fetch or Supertest, or use Fastify's inject. For the database, Redis and Kafka I use Testcontainers, because mocked SQL hides real bugs. I mock outgoing HTTP at the network level with MSW or undici's MockAgent, and use fake timers for retries. The runner is node:test for small services or Vitest for bigger TypeScript projects."
+
+**They may ask next:**
+- **How do you test code that uses `Date.now()` or `setTimeout`?** Fake timers: `mock.timers.enable()` in `node:test`, `vi.useFakeTimers()` in Vitest.
+- **How do you keep integration tests fast?** One container per test run (not per test), transactions rolled back after each test, or truncate tables between tests.
+- **How do you find open handles that keep tests hanging?** Close servers, pools and Redis clients in `after()`. `node --test --test-force-exit` is a last resort.
+
+---
+
 ## Security in Node
 
 **In one line:** The biggest Node risks are npm dependencies, unvalidated input, and JS-specific bugs like prototype pollution and ReDoS.
@@ -1101,13 +2563,14 @@ Real output: `isAdmin? true`. Fixes: validate input with a schema that rejects u
 | Runtime | Run as non-root. Stay on a supported LTS version. |
 
 **Node permission model:**
-- Start Node with `--permission`. Then file system, child processes, workers, native addons and more are **denied** unless allowed.
-- Allow with flags like `--allow-fs-read=/srv/app`, `--allow-fs-write=/tmp/out`, `--allow-child-process`, `--allow-net`.
-- A denied call throws `ERR_ACCESS_DENIED`. `--permission-audit` only logs.
+- Start Node with `--permission`. Then file system, child processes, workers, native addons and more are **denied** unless allowed. From Node 25, network access is denied too.
+- Allow with flags like `--allow-fs-read=/srv/app`, `--allow-fs-write=/tmp/out`, `--allow-child-process`, and (Node 25+) `--allow-net`.
+- A denied call throws `ERR_ACCESS_DENIED`. `--permission-audit` (Node 25.8+) only logs.
 - **Status:** added in Node 20, **stable since 22.13.0 and 23.5.0**.
 - **Limit:** the docs call it a "seat belt" for trusted code. It is **not** a security boundary against malicious code. Symlinks and already-open file descriptors can get around it. Use containers and OS limits too.
 
 ```bash
+# Node 26 (on Node 24, leave out --allow-net: network is not covered there)
 node --permission --allow-fs-read=/srv/app --allow-fs-write=/tmp/out --allow-net index.js
 ```
 
@@ -1278,6 +2741,632 @@ flowchart LR
 
 ---
 
+## Node.js coding problems (with answers)
+
+**In one line:** Twelve live-coding problems from senior Node interviews, each answer run on Node 24 with real output.
+
+**Story:** A driving test is not a theory exam. The examiner sits next to you and says "park here". These problems are the "park here" of Node interviews. They check that you really understand promises, streams, events and the event loop, not only the words.
+
+**How to use this section:**
+- Try each problem yourself for 15 minutes first. Then compare.
+- Say your plan out loud before typing: inputs, outputs, edge cases, what can fail.
+- Mention production versions (the npm library you would really use) at the end. Interviewers like that.
+
+**Diagram: what each problem tests.**
+
+```mermaid
+flowchart LR
+    EV["Events: EventEmitter, pub/sub"] --> CORE["Core Node skills"]
+    PR["Promises: promisify, retry, pool, timeout"] --> CORE
+    ST["Streams: CSV to JSON lines"] --> CORE
+    MW["HTTP: middleware runner, rate limiter"] --> CORE
+    DS["Data structures: LRU with TTL"] --> CORE
+    OPS["Operations: graceful shutdown, worker threads"] --> CORE
+```
+
+### 1. Implement an EventEmitter with on, once, off and emit
+
+**Asked as:** "Write your own EventEmitter. `once` listeners must run only one time. `off` must also remove a `once` listener."
+
+```javascript
+class MyEmitter {
+  #listeners = new Map();                       // event name -> array of functions
+
+  on(event, fn) {
+    if (!this.#listeners.has(event)) this.#listeners.set(event, []);
+    this.#listeners.get(event).push(fn);
+    return this;                                // allow chaining
+  }
+  off(event, fn) {
+    const list = this.#listeners.get(event) ?? [];
+    this.#listeners.set(event, list.filter((l) => l !== fn && l.original !== fn));
+    return this;
+  }
+  once(event, fn) {
+    const wrapper = (...args) => { this.off(event, wrapper); fn(...args); };
+    wrapper.original = fn;                      // so off(event, fn) also removes it
+    return this.on(event, wrapper);
+  }
+  emit(event, ...args) {
+    const list = this.#listeners.get(event);
+    if (event === 'error' && !list?.length) throw args[0]; // same rule as Node
+    if (!list?.length) return false;
+    for (const fn of [...list]) fn(...args);    // copy: once() changes the list while we loop
+    return true;
+  }
+}
+```
+
+Usage:
+
+```javascript
+const e = new MyEmitter();
+const log = (x) => console.log('on:', x);
+e.on('order', log).once('order', (x) => console.log('once:', x));
+e.emit('order', 1); e.emit('order', 2); e.off('order', log);
+console.log('after off, had listeners?', e.emit('order', 3));
+```
+
+Real output:
+
+```text
+on: 1
+once: 1
+on: 2
+after off, had listeners? false
+```
+
+**Key points:**
+- Copy the listener list before looping. `once` removes itself during the loop; without the copy you skip a listener.
+- Keep the original function on the wrapper (`wrapper.original`), so `off(event, fn)` works for `once` listeners. Node does the same.
+- Throw on `'error'` with no listener, like Node. Listeners run synchronously.
+
+### 2. Implement promisify
+
+**Asked as:** "Turn an error-first callback function into one that returns a promise."
+
+```javascript
+function promisify(fn) {
+  return function (...args) {
+    return new Promise((resolve, reject) => {
+      fn.call(this, ...args, (err, value) => {   // add our callback as the last argument
+        if (err) reject(err);                    // Node rule: error first
+        else resolve(value);
+      });
+    });
+  };
+}
+
+// An old callback-style function
+function readConfig(name, cb) {
+  setTimeout(() => (name ? cb(null, { name, port: 3000 }) : cb(new Error('no name'))), 10);
+}
+
+const readConfigAsync = promisify(readConfig);
+(async () => {
+  console.log(await readConfigAsync('orders'));
+  try { await readConfigAsync(''); } catch (err) { console.log('rejected:', err.message); }
+})();
+```
+
+Real output:
+
+```text
+{ name: 'orders', port: 3000 }
+rejected: no name
+```
+
+**Key points:**
+- Error-first rule: `cb(err, value)`. Reject on `err`, resolve on value.
+- `fn.call(this, ...)` keeps `this`, so methods still work.
+- In real code use `util.promisify`, or the built-in promise APIs (`fs/promises`, `timers/promises`, `stream/promises`).
+
+### 3. Retry with exponential backoff and jitter
+
+**Asked as:** "Retry a flaky async call up to N times. Wait longer each time. Do not retry errors that will never succeed."
+
+```javascript
+const { setTimeout: sleep } = require('node:timers/promises');
+
+async function retry(fn, { retries = 4, baseMs = 100, maxMs = 2000, isRetryable = () => true } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (err) {
+      if (attempt >= retries || !isRetryable(err)) throw err;  // give up
+      const cap = Math.min(maxMs, baseMs * 2 ** attempt);       // 100, 200, 400, 800...
+      const wait = Math.random() * cap;                         // "full jitter"
+      console.log(`attempt ${attempt} failed (${err.message}), waiting ${Math.round(wait)} ms`);
+      await sleep(wait);
+    }
+  }
+}
+
+let calls = 0;
+const flaky = async () => {                    // fails twice, then works
+  if (++calls < 3) throw Object.assign(new Error('503'), { status: 503 });
+  return 'ok';
+};
+retry(flaky, { isRetryable: (e) => e.status >= 500 }) // never retry a 400
+  .then((r) => console.log('result:', r, 'after', calls, 'calls'));
+```
+
+Real output (wait times are random):
+
+```text
+attempt 0 failed (503), waiting 84 ms
+attempt 1 failed (503), waiting 43 ms
+result: ok after 3 calls
+```
+
+**Key points:**
+- **Full jitter** (random between 0 and the cap) stops all clients retrying at the same moment.
+- Retry only retryable errors: 5xx, timeouts, connection resets. Never 400 or 401.
+- Only retry idempotent operations, or use an idempotency key. More in [microservices.md](microservices.md#retry-with-exponential-backoff-and-jitter).
+- Follow-up: add an `AbortSignal` so a caller can cancel the whole retry loop.
+
+### 4. Concurrency-limited async pool
+
+**Asked as:** "Call an API for 10,000 user ids, but never more than 3 calls at the same time. Keep results in input order."
+
+```javascript
+const { setTimeout: sleep } = require('node:timers/promises');
+
+async function mapWithLimit(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;                         // safe: JS is single-threaded between awaits
+      results[i] = await fn(items[i], i);       // keep the input order in the output
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, items.length) }, worker);
+  await Promise.all(workers);                   // first error rejects (like Promise.all)
+  return results;
+}
+
+let running = 0, maxRunning = 0;
+const fetchUser = async (id) => {
+  running++; maxRunning = Math.max(maxRunning, running);
+  await sleep(50);                              // pretend: an HTTP call
+  running--;
+  return `user-${id}`;
+};
+
+const t = Date.now();
+mapWithLimit([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 3, fetchUser).then((r) => {
+  console.log(r.join(','));
+  console.log('max in flight:', maxRunning, 'took ~', Math.round((Date.now() - t) / 50) * 50, 'ms');
+});
+```
+
+Real output:
+
+```text
+user-1,user-2,user-3,user-4,user-5,user-6,user-7,user-8,user-9,user-10
+max in flight: 3 took ~ 200 ms
+```
+
+**Key points:**
+- `limit` workers pull the next index from a shared counter. `next++` is safe because JS runs one piece of code at a time between `await`s.
+- 10 items, 3 at a time, 50 ms each = 4 rounds = about 200 ms.
+- `Promise.all(items.map(fn))` with 10,000 items starts 10,000 calls at once and can overload the other service or your sockets.
+- Production: `p-limit` or `p-map` with a `concurrency` option.
+
+### 5. Token bucket rate limiter middleware
+
+**Asked as:** "Write an Express-style middleware that allows bursts of 5 requests, then 1 request per second per client. Return 429 when the limit is hit."
+
+```javascript
+const http = require('node:http');
+
+function tokenBucket({ capacity, refillPerSec }) {
+  const buckets = new Map();                   // key (ip or user id) -> { tokens, last }
+  return (req, res, next) => {
+    const key = req.socket.remoteAddress;
+    const now = Date.now();
+    const b = buckets.get(key) ?? { tokens: capacity, last: now };
+    b.tokens = Math.min(capacity, b.tokens + ((now - b.last) / 1000) * refillPerSec); // refill
+    b.last = now;
+    buckets.set(key, b);
+    if (b.tokens < 1) {
+      res.writeHead(429, { 'Retry-After': Math.ceil((1 - b.tokens) / refillPerSec) });
+      return res.end('too many requests\n');
+    }
+    b.tokens -= 1;                               // spend one token
+    next();
+  };
+}
+
+const limit = tokenBucket({ capacity: 5, refillPerSec: 1 }); // burst 5, then 1 per second
+const server = http.createServer((req, res) => limit(req, res, () => res.end('ok\n')));
+server.listen(3701, async () => {
+  const codes = [];
+  for (let i = 0; i < 7; i++) codes.push((await fetch('http://localhost:3701/')).status);
+  console.log(codes.join(' '));               // 5 x 200, then 429
+  server.close();
+});
+```
+
+Real output:
+
+```text
+200 200 200 200 200 429 429
+```
+
+**Key points:**
+- Refill lazily on each request from the elapsed time. No timers needed.
+- Send `Retry-After` with the 429.
+- This map lives in one process: with 10 pods the real limit is 10x. For production, keep the bucket in Redis (a Lua script makes the read-and-update atomic), or use `rate-limiter-flexible`. See [redis.md](redis.md).
+- The map also needs cleanup of old keys, or it is a memory leak.
+
+### 6. LRU cache with TTL
+
+**Asked as:** "Build a cache with a max size. When full, remove the least recently used entry. Entries also expire after a TTL."
+
+```javascript
+class LruCache {
+  #map = new Map();                             // a Map remembers insertion order
+  constructor({ max, ttlMs }) { this.max = max; this.ttlMs = ttlMs; }
+
+  get(key) {
+    const hit = this.#map.get(key);
+    if (!hit) return undefined;
+    if (Date.now() > hit.expiresAt) { this.#map.delete(key); return undefined; } // expired
+    this.#map.delete(key);                      // move to the "newest" end
+    this.#map.set(key, hit);
+    return hit.value;
+  }
+  set(key, value) {
+    this.#map.delete(key);
+    this.#map.set(key, { value, expiresAt: Date.now() + this.ttlMs });
+    if (this.#map.size > this.max) {
+      const oldest = this.#map.keys().next().value; // first key = least recently used
+      this.#map.delete(oldest);
+    }
+  }
+  get size() { return this.#map.size; }
+}
+
+const cache = new LruCache({ max: 2, ttlMs: 100 });
+cache.set('a', 1); cache.set('b', 2);
+cache.get('a');                                 // a is now newest
+cache.set('c', 3);                              // evicts b (least recently used)
+console.log('a', cache.get('a'), 'b', cache.get('b'), 'c', cache.get('c'));
+setTimeout(() => console.log('after 150 ms, a =', cache.get('a')), 150);
+```
+
+Real output:
+
+```text
+a 1 b undefined c 3
+after 150 ms, a = undefined
+```
+
+**Key points:**
+- A JS `Map` keeps insertion order. Delete and re-insert on `get` moves a key to the newest end. The first key is the oldest. All operations are O(1).
+- Expired entries are removed lazily on `get`. A real cache also sweeps from time to time, or memory holds dead entries.
+- Production: the `lru-cache` package (`max`, `ttl`, `maxSize` options).
+
+### 7. Stream transform: CSV to JSON lines with backpressure
+
+**Asked as:** "Convert a huge CSV (bigger than memory) into newline-delimited JSON. Chunks can split a line anywhere."
+
+```javascript
+import { Readable, Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+
+function csvToJsonLines() {
+  let header = null, rest = '';
+  function handle(stream, line) {
+    if (!line.trim()) return;
+    const cells = line.split(',');             // simple CSV: no quoted commas
+    if (!header) { header = cells; return; }
+    const row = Object.fromEntries(header.map((h, i) => [h, cells[i]]));
+    stream.push(JSON.stringify(row) + '\n');
+  }
+  return new Transform({
+    transform(chunk, _enc, done) {
+      const lines = (rest + chunk).split('\n');
+      rest = lines.pop();                      // last piece may be half a line: keep it
+      for (const line of lines) handle(this, line);
+      done();                                  // ask for the next chunk only now
+    },
+    flush(done) { handle(this, rest); done(); }, // the last line has no '\n'
+  });
+}
+
+// Chunks split in odd places on purpose, like real network data
+const input = Readable.from(['id,name,amo', 'unt\n1,Asha,10\n2,Ravi', ',20\n3,Meera,30']);
+await pipeline(input, csvToJsonLines(), process.stdout); // backpressure + errors handled
+```
+
+Real output:
+
+```text
+{"id":"1","name":"Asha","amount":"10"}
+{"id":"2","name":"Ravi","amount":"20"}
+{"id":"3","name":"Meera","amount":"30"}
+```
+
+**Key points:**
+- Keep the last half line in `rest` and glue it to the next chunk. Handle it in `flush` at the end.
+- `pipeline` handles backpressure: `done()` is only called when the downstream can take more, and errors destroy all streams.
+- Real CSV has quotes and commas inside fields: use `csv-parse` or `papaparse` in production.
+- For a file: `pipeline(fs.createReadStream('in.csv'), csvToJsonLines(), fs.createWriteStream('out.ndjson'))`.
+
+### 8. Graceful shutdown handler
+
+**Asked as:** "Write a reusable shutdown helper. Modules register cleanup steps. On SIGTERM, run them in reverse order with a hard timeout."
+
+```javascript
+function createShutdown({ timeoutMs = 10_000, log = console.log } = {}) {
+  const tasks = [];                            // cleanup steps, in start-up order
+  let started = false;
+
+  async function run(signal) {
+    if (started) return;                       // second Ctrl+C: ignore
+    started = true;
+    log(`${signal} received, shutting down`);
+    setTimeout(() => { log('timeout, forcing exit'); process.exit(1); }, timeoutMs).unref();
+    let code = 0;
+    for (const { name, fn } of [...tasks].reverse()) { // close in reverse order
+      try { await fn(); log(`closed ${name}`); }
+      catch (err) { code = 1; log(`failed to close ${name}: ${err.message}`); }
+    }
+    process.exit(code);
+  }
+  for (const s of ['SIGTERM', 'SIGINT']) process.on(s, () => run(s));
+  return { register: (name, fn) => tasks.push({ name, fn }) };
+}
+
+const shutdown = createShutdown({ timeoutMs: 3000 });
+shutdown.register('db pool', async () => {});          // opened first, closed last
+shutdown.register('kafka consumer', async () => {});
+shutdown.register('http server', async () => {});      // opened last, closed first
+setTimeout(() => process.kill(process.pid, 'SIGTERM'), 50); // simulate Kubernetes
+setInterval(() => {}, 1000);                           // keep the process alive
+```
+
+Real output (exit code 0):
+
+```text
+SIGTERM received, shutting down
+closed http server
+closed kafka consumer
+closed db pool
+```
+
+**Key points:**
+- Reverse order: close what you opened last first. The HTTP server stops before the DB pool it needs.
+- Hard timeout with `.unref()` (so the timer itself does not keep the process alive).
+- Guard against a second signal. One failing step must not stop the others.
+- The full HTTP version with readiness is in [Graceful shutdown](#graceful-shutdown).
+
+### 9. Request timeout with AbortController
+
+**Asked as:** "Wrap any async call with a timeout. The slow work must really stop, not only be ignored. Also support a cancel from the caller."
+
+```javascript
+const { setTimeout: sleep } = require('node:timers/promises');
+
+async function withTimeout(fn, ms, parentSignal) {
+  const timeout = AbortSignal.timeout(ms);
+  const signal = parentSignal ? AbortSignal.any([parentSignal, timeout]) : timeout;
+  try {
+    return await fn(signal);                   // fn must pass the signal down (fetch, db, sleep)
+  } catch (err) {
+    if (timeout.aborted) throw Object.assign(new Error(`timed out after ${ms} ms`), { code: 'ETIMEDOUT' });
+    throw err;                                 // a real error or a user cancel
+  }
+}
+
+const slowCall = (signal) => sleep(500, 'data', { signal }); // stops early when aborted
+const fastCall = (signal) => sleep(20, 'data', { signal });
+
+(async () => {
+  console.log('fast:', await withTimeout(fastCall, 100));
+  const t = Date.now();
+  try { await withTimeout(slowCall, 100); }
+  catch (err) { console.log('slow:', err.message, err.code, `after ~${Math.round((Date.now() - t) / 10) * 10} ms`); }
+
+  const user = new AbortController();          // e.g. the client closed the connection
+  setTimeout(() => user.abort(), 30);
+  try { await withTimeout(slowCall, 100, user.signal); }
+  catch (err) { console.log('cancelled:', err.name); }
+})();
+```
+
+Real output:
+
+```text
+fast: data
+slow: timed out after 100 ms ETIMEDOUT after ~100 ms
+cancelled: AbortError
+```
+
+**Key points:**
+- `Promise.race` with a timer only **ignores** the slow call; the work keeps running. Passing a signal lets `fetch`, `timers/promises`, many DB drivers and streams **stop** the work.
+- `AbortSignal.any([a, b])` combines the user cancel (client disconnected) with the timeout.
+- Tell timeout apart from cancel by checking `timeout.aborted`.
+
+### 10. Simple in-memory pub/sub
+
+**Asked as:** "Build a pub/sub with topics. Subscribing returns an unsubscribe function. A failing subscriber must not affect others or the publisher."
+
+```javascript
+class PubSub {
+  #topics = new Map();                         // topic -> Set of handlers
+
+  subscribe(topic, handler) {
+    if (!this.#topics.has(topic)) this.#topics.set(topic, new Set());
+    this.#topics.get(topic).add(handler);
+    return () => this.#topics.get(topic)?.delete(handler); // call to unsubscribe
+  }
+  publish(topic, message) {
+    const handlers = this.#topics.get(topic) ?? new Set();
+    for (const h of handlers) {
+      queueMicrotask(async () => {             // async: publisher never waits for subscribers
+        try { await h(structuredClone(message)); } // copy: a subscriber cannot change others' data
+        catch (err) { console.log(`handler failed on ${topic}: ${err.message}`); } // one bad handler does not stop others
+      });
+    }
+    return handlers.size;                      // how many got it
+  }
+}
+
+const bus = new PubSub();
+const stop = bus.subscribe('order.created', (m) => console.log('email service got', m.id));
+bus.subscribe('order.created', () => { throw new Error('boom'); });
+bus.subscribe('order.created', (m) => console.log('stock service got', m.id));
+console.log('delivered to', bus.publish('order.created', { id: 'ord_1' }));
+stop();
+setTimeout(() => console.log('delivered to', bus.publish('order.created', { id: 'ord_2' })), 10);
+```
+
+Real output:
+
+```text
+delivered to 3
+email service got ord_1
+handler failed on order.created: boom
+stock service got ord_1
+delivered to 2
+handler failed on order.created: boom
+stock service got ord_2
+```
+
+**Key points:**
+- Different from EventEmitter: delivery is **async** (microtask), so the publisher is never blocked, and each handler is isolated with its own `try/catch`.
+- `structuredClone` gives each subscriber its own copy of the message.
+- In-memory only: lost on restart and not shared across pods. Across pods use Redis pub/sub, NATS or Kafka.
+- Follow-ups: wildcard topics (`order.*`), at-least-once delivery, backpressure for slow subscribers.
+
+### 11. Parallel file processing with worker_threads
+
+**Asked as:** "Hash many large files using all CPU cores without blocking the main event loop."
+
+```javascript
+const { Worker, isMainThread, parentPort, workerData } = require('node:worker_threads');
+const fs = require('node:fs');
+const os = require('node:os');
+const crypto = require('node:crypto');
+
+if (isMainThread) {
+  const files = Array.from({ length: 8 }, (_, i) => {   // demo: make 8 files of 5 MB
+    const p = `${os.tmpdir()}/part-${i}.bin`;
+    fs.writeFileSync(p, crypto.randomBytes(5e6));
+    return p;
+  });
+  const n = Math.min(4, os.availableParallelism());      // one worker per core, max 4
+  const chunks = Array.from({ length: n }, (_, w) => files.filter((_, i) => i % n === w));
+  const t = Date.now();
+  Promise.all(chunks.map((list) => new Promise((resolve, reject) => {
+    const w = new Worker(__filename, { workerData: list }); // each worker gets a slice
+    w.once('message', resolve).once('error', reject);
+  }))).then((parts) => {
+    console.log(`${parts.flat().length} files hashed by ${n} workers in ${Date.now() - t} ms`);
+    console.log(parts.flat()[0]);
+  });
+} else {
+  const out = workerData.map((p) => {                  // CPU work runs off the main thread
+    let h = fs.readFileSync(p);
+    for (let i = 0; i < 50; i++) h = crypto.createHash('sha256').update(h).digest(); // heavy on purpose
+    return { file: p.split('/').pop(), sha: h.toString('hex').slice(0, 12) };
+  });
+  parentPort.postMessage(out);
+}
+```
+
+Real output (fast laptop):
+
+```text
+8 files hashed by 4 workers in 19 ms
+{ file: 'part-0.bin', sha: '104e9d5edc97' }
+```
+
+**Key points:**
+- Split work into one slice per worker. Each worker has its own event loop, so `readFileSync` there blocks only that worker.
+- Send back small results, not big buffers (messages are copied). For big data, pass file paths or transfer an `ArrayBuffer`.
+- Real apps keep a pool of long-lived workers (Piscina) instead of starting new ones per task. See [Worker threads](#worker-threads-child-processes-and-cluster).
+
+### 12. A minimal middleware runner (compose)
+
+**Asked as:** "Write `compose(middlewares)` like Koa: each middleware gets `(ctx, next)`, can run code before and after `next()`, and can stop the chain."
+
+```javascript
+function compose(middlewares) {
+  return function run(ctx) {
+    let lastIndex = -1;
+    function dispatch(i) {
+      if (i <= lastIndex) return Promise.reject(new Error('next() called twice'));
+      lastIndex = i;
+      const fn = middlewares[i];
+      if (!fn) return Promise.resolve();       // past the last one: done
+      try {
+        return Promise.resolve(fn(ctx, () => dispatch(i + 1))); // next = run the following one
+      } catch (err) {
+        return Promise.reject(err);            // sync throw becomes a rejection
+      }
+    }
+    return dispatch(0);
+  };
+}
+```
+
+Usage:
+
+```javascript
+const app = compose([
+  async (ctx, next) => {                       // error handler: wraps everything below
+    try { await next(); } catch (err) { ctx.status = 500; ctx.body = err.message; }
+  },
+  async (ctx, next) => {                       // timer: code before and after next()
+    const t = performance.now(); await next();
+    ctx.log.push(`took ${Math.round(performance.now() - t)} ms`);
+  },
+  async (ctx, next) => { if (!ctx.user) { ctx.status = 401; return; } await next(); }, // auth: stops the chain
+  async (ctx) => { ctx.status = 200; ctx.body = `hello ${ctx.user}`; },
+]);
+
+for (const user of ['asha', null]) {
+  const ctx = { user, log: [] };
+  app(ctx).then(() => console.log(ctx.status, ctx.body ?? '', ctx.log.join()));
+}
+```
+
+Real output:
+
+```text
+401  took 0 ms
+200 hello asha took 0 ms
+```
+
+**Key points:**
+- `next` is just `dispatch(i + 1)`. Awaiting it gives the "onion": code before `next()` runs on the way in, code after runs on the way out.
+- Wrap sync throws into rejections, so the error middleware at the top catches everything.
+- Guard against calling `next()` twice; it would run the rest of the chain again.
+- Express 5 works the same way but with `(req, res, next)` and a separate 4-argument error middleware.
+
+**Good and bad (in a live coding round):**
+| Good | Bad |
+|---|---|
+| Say the plan and edge cases before typing | Silent typing for 20 minutes |
+| Small, runnable code, then improve | Trying to write the production library at once |
+| Name the real library at the end (`p-limit`, `lru-cache`, `opossum`) | Claiming you would always write it yourself |
+
+**Say this in the interview:**
+
+> "For a coding round in Node, I first say the plan and the edge cases, then write the smallest working version and run it. I always think about the event loop: what is synchronous, what can block, what happens on error, and how work is cancelled with AbortSignal. Then I mention the production library I would use, like p-limit for pools or lru-cache, and what changes with many pods, like moving a rate limiter's counters to Redis."
+
+**They may ask next:**
+- **How would you test these?** `node:test` with fake timers for retry, TTL and rate limits, so tests run in milliseconds.
+- **What changes when this runs on 20 pods?** Anything in memory (rate limits, caches, pub/sub) is per pod. Move shared state to Redis or a broker.
+- **Which one is most common?** The async pool, retry with backoff, and the EventEmitter. Practise those three until you can write them in ten minutes.
+
+---
+
 ## Interview questions
 
 **1. What is the event loop?**
@@ -1366,3 +3455,45 @@ Node: one thread, you write async code with `await`. Virtual threads: many cheap
 
 **29. When would you not choose Node?**
 For CPU-heavy work in the request path, complex transactional domains, or when the team is mostly Java. See [Node vs Java/Spring](#node-vs-javaspring-how-to-choose).
+
+**30. What uses the libuv thread pool, and what does not?**
+The pool runs async `fs`, `dns.lookup`, async crypto (`pbkdf2`, `scrypt`, `randomBytes`) and `zlib`. Network sockets do not use it; they use epoll, kqueue or IOCP. Slow hashing can make file reads and DNS slow, because they share 4 threads. See [Inside Node](#inside-node-v8-libuv-bindings-and-the-thread-pool).
+
+**31. Is `EventEmitter.emit` synchronous?**
+Yes. All listeners run in order before `emit` returns. An `'error'` event with no listener crashes the process. More than 10 listeners on one event prints a leak warning. See [EventEmitter in depth](#eventemitter-in-depth).
+
+**32. How does `require` find and cache a module?**
+Core module first, then a relative path (with `.js`, `.json`, `.node`, folder index), then `node_modules` folders up the tree, honouring `package.json` `exports`. The file runs once and `module.exports` is cached by full path. See [Modules](#modules-commonjs-es-modules-and-packagejson).
+
+**33. What is the `exports` field in package.json?**
+It lists the public entry points of a package, with conditions like `import` and `require`. Any path not listed fails with `ERR_PACKAGE_PATH_NOT_EXPORTED`. The `imports` field adds private `#` aliases.
+
+**34. How do you validate config in a Node service?**
+Read env vars once in a config module, validate with Zod, convert types, and exit with a clear error if anything is missing. Secrets come from a secret manager, never from git or the image. See [Configuration and secrets](#configuration-and-secrets).
+
+**35. Sessions or JWT for a Node API?**
+Sessions in Redis with an HttpOnly cookie for a web app on one domain: instant logout. Short-lived JWT access tokens plus rotating refresh tokens for mobile and many services. Hash passwords with argon2id or bcrypt. See [Authentication and authorization](#authentication-and-authorization-in-node-apis).
+
+**36. How do you run a transaction with `pg`?**
+Get one client with `pool.connect()`, run `BEGIN`, the queries and `COMMIT` on that client, `ROLLBACK` on error, and `release()` in `finally`. `pool.query()` may use a different connection each time. See [Databases from Node](#databases-from-node).
+
+**37. Prisma, Drizzle, TypeORM or raw SQL?**
+Raw `pg` or Drizzle for SQL control, Prisma for developer speed and migrations, TypeORM for JPA-style entities with NestJS. Whatever you pick, log queries and watch for N+1.
+
+**38. How do you upload a 2 GB file through Node?**
+Stream it: parse multipart with busboy and pipe each file into an S3 multipart upload. Better: give the browser a presigned URL and let it upload straight to S3. Never buffer the whole file. See [Files and uploads](#files-and-uploads).
+
+**39. BullMQ or Kafka?**
+BullMQ (on Redis) for jobs inside one product: retries, delays, cron, a failed list. Kafka for events between many services with replay. Jobs must be idempotent in both. For Kafka from Node, prefer Confluent's client; KafkaJS has had no release since 2023. See [Background jobs and queues](#background-jobs-and-queues).
+
+**40. How do you scale WebSockets across pods?**
+Each pod holds its own sockets. Use the Socket.IO Redis adapter (or your own Redis pub/sub) so a room message reaches all pods. Sticky sessions only if long-polling is on. Add heartbeats and jittered reconnects. See [Real-time](#real-time-websockets-and-server-sent-events).
+
+**41. How do you get a request id into every log line?**
+A middleware stores it in `AsyncLocalStorage`, and pino's `mixin` adds it to each log. OpenTelemetry auto-instrumentation adds `trace_id` too. See [Logging and observability](#logging-and-observability-in-node).
+
+**42. What makes a good Node Docker image?**
+Multi-stage build, `npm ci`, only production deps, `NODE_ENV=production`, `USER node`, `CMD ["node", "dist/server.js"]` in exec form, and `--max-old-space-size` near 75% of the memory limit. See [Deploying Node](#deploying-node-pm2-docker-and-kubernetes).
+
+**43. Why is Node a good BFF?**
+Fan-out is cheap: `Promise.allSettled` over a few `fetch` calls, each with a timeout, with no thread per call. The frontend team shares the language and types. See [Microservices with Node](#microservices-with-node).

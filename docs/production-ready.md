@@ -177,10 +177,12 @@ flowchart LR
 **Example (Spring Boot):** structured logging is built in since Boot 3.4 (`ecs`, `logstash`, `gelf` formats). Full config is in [spring-ecosystem.md](spring-ecosystem.md#observability-with-actuator-micrometer-and-opentelemetry).
 
 ```properties
-logging.structured.format.console=ecs          # JSON lines on stdout
+# JSON lines on stdout
+logging.structured.format.console=ecs
 logging.structured.ecs.service.name=order-service
 logging.level.root=INFO
-logging.level.com.shop.payment=INFO           # can change at runtime via /actuator/loggers
+# can change at runtime via /actuator/loggers
+logging.level.com.shop.payment=INFO
 ```
 
 Add business keys to the MDC for one request, and always clean up:

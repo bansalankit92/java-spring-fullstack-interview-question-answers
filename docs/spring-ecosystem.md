@@ -2888,7 +2888,8 @@ OrderDto get(@PathVariable long id) { return service.find(id); }
 ```
 
 ```properties
-springdoc.swagger-ui.enabled=false   # often turned off in production
+# often turned off in production
+springdoc.swagger-ui.enabled=false
 ```
 
 **Code-first or contract-first?**
