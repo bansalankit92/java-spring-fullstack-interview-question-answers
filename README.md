@@ -1,6 +1,6 @@
 # Java, Spring, Microservices & System Design Interview Guide (Junior to Senior)
 
-One place to prepare for backend and full-stack interviews: **system design (HLD and LLD), microservices, Java (8 to 25), OOP and design patterns, Spring Boot (2 to 4), Hibernate, SQL, Redis, MongoDB, Kafka, REST, Docker, Kubernetes, cloud (AWS, GCP, Azure), React, Next.js, Node.js, testing and AI/LLMs.**
+One place to prepare for backend and full-stack interviews: **system design (HLD and LLD), distributed systems, DSA, microservices, Java (8 to 25), OOP and design patterns, Spring Boot (2 to 4), Hibernate, SQL, Redis, MongoDB, Kafka, REST, gRPC, GraphQL, Docker, Kubernetes, cloud (AWS, GCP, Azure), React, Next.js, Node.js, testing, senior/staff leadership and AI/LLMs.**
 
 Answers are written in **simple English**, with a real-life story first, a small example, a simple diagram where it helps, and a **"Say this in the interview"** line you can use as it is.
 
@@ -85,7 +85,7 @@ Every answer follows the same shape:
 ## Study plans
 
 **Every day, in every plan:**
-- **Coding:** solve 2 problems (pattern of the week below). Time-box 40 minutes each.
+- **Coding:** solve 2 problems (pattern of the week below). Time-box 40 minutes each. Use the [16 patterns and 47 problems](docs/dsa-coding-round.md) and its [4-week DSA plan](docs/dsa-coding-round.md#a-4-week-dsa-plan).
 - **Speak:** explain today's topic out loud for 2 minutes. Record yourself on the phone if you can.
 - **Revise:** read yesterday's "Say this in the interview" lines once more (10 minutes).
 - **Commit:** tick the day (✅) in the plan table and push. Commit message: `day-07: caching`.
@@ -222,7 +222,7 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 | 29 | [Java concurrency story](docs/java-concurrency.md) | Executors, CompletableFuture answers |
 | 30 | Collections: HashMap, ConcurrentHashMap internals | Update old collection answers |
 | 31 | [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed) | Update old [Java](#java) answers |
-| 32 | [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Memory leak and high GC debugging story |
+| 32 | [Core Java deep dive](docs/java-core.md) (HashMap, generics, JVM), [JVM memory](docs/java.md#jvm-memory-basics), [G1 vs ZGC](docs/java.md#g1-vs-zgc) | Memory leak and high GC debugging story |
 | 33 | [Virtual threads](docs/java.md#virtual-threads), [streams](docs/java-streams.md) | Solve 15 [stream problems](docs/java-streams.md#stream-coding-problems-with-answers) |
 | 34 | [OOP, SOLID, design patterns](docs/oop-clean-code.md) | Self-test with [OOPS](#oops) and [Design Patterns](#design-patterns) questions |
 | 35 | **Mock:** Java deep dive. Revise. | Fix gaps |
@@ -258,7 +258,7 @@ For: building strong depth while applying for jobs. About **3–4 hours a day**.
 | 50 | Multi-tenant SaaS, multi-region | Case studies |
 | 51 | Leaderboard, top-K trending, ad click counting | Case studies |
 | 52 | [AI and LLMs](#ai-and-llms): LLM basics and RAG | Build a small RAG demo |
-| 53 | [Behavioral questions](#behavioral-questions) | Write your 8 STAR stories (keep them private if you want) |
+| 53 | [Behavioral questions](#behavioral-questions), [staff-level stories](docs/senior-engineering.md) | Write your 8 STAR stories (keep them private if you want) |
 | 54 | Weak areas from your mock notes | Fix gaps |
 | 55 | **Full mock loop:** coding + system design + behavioral | Fix gaps |
 | 56 | [Crash course](#crash-course-last-minute-preparation) + rest | Final commit |
@@ -275,7 +275,7 @@ You don't have time to learn new things now. Your goal is to **remember** and **
 | 1 hour | Read [How to answer a system design question](docs/system-design.md#how-to-answer-a-system-design-question) and [Capacity estimation](docs/system-design.md#capacity-estimation). Do one estimate on paper. |
 | 1.5 hours | One full mock design out loud, with a timer: [Amazon order processing](docs/system-design/amazon-order-processing.md) or the system the company is famous for. |
 | 1 hour | Java + Spring: [concurrency](docs/java.md#java-concurrency-and-shared-data), [Java 8 to 25](docs/java.md#java-8-to-17-to-21-to-25-what-changed), [virtual threads](docs/java.md#virtual-threads), [Spring Boot 2 to 4](docs/spring.md#spring-boot-2-to-3-to-4-what-changed). |
-| 1 hour | 2 easy-medium coding problems. Only to warm up, not to learn. |
+| 1 hour | 2 easy-medium [coding problems](docs/dsa-coding-round.md#problems-with-answers). Only to warm up, not to learn. |
 | 30 min | Read your [STAR stories](#behavioral-questions). Practice "tell me about yourself". Read about the company. |
 | Night | Stop. Sleep 7–8 hours. A tired brain cannot design systems. |
 
@@ -353,6 +353,8 @@ If you only have little time, master these. Each link goes to the full answer.
 
 Senior interviews always have a behavioral round. Prepare **8 real stories** from your work. One story can answer many questions.
 
+For senior and staff topics (design docs, tech debt, leading incidents, mentoring, influence) and 15 sample staff-level answers, see [Senior and staff engineering](docs/senior-engineering.md).
+
 **Use STAR to tell a story:**
 
 | Letter | Meaning | How long |
@@ -407,31 +409,35 @@ Then stop. Do not over-explain.
 - **Location, files, platform:** [Uber / Ola](docs/system-design/uber-ride-hailing.md) · [Dropbox / Google Drive](docs/system-design/dropbox-file-storage.md) · [Notification service](docs/system-design/notification-service.md) · [Distributed job scheduler](docs/system-design/job-scheduler.md)
 - Coming next: web crawler, key-value store, distributed cache, leaderboard, top-K trending, ad click counting, Google Docs, multi-tenant SaaS, metrics and logging.
 
+**Distributed systems fundamentals:** [docs/distributed-systems.md](docs/distributed-systems.md): clocks, Raft, quorums, consistency models, 2PC, CRDTs, Elasticsearch and RabbitMQ.
+
 **Low-level design (LLD / object-oriented design):** [docs/lld-case-studies.md](docs/lld-case-studies.md): UML basics, a repeatable method and 20 case studies (parking lot, BookMyShow, elevator, vending machine, Splitwise, ATM, chess…).
 
 **Older practice list** (from 2019, still good): full-text search, elevator, coffee vending machine, parking system, Quartz scheduler, web crawler, Pastebin, push notifications, Instagram, Dropbox, Messenger, Twitter, Netflix, BookMyShow, typeahead, rate limiter, event management, Twitter search, news feed, Yelp / nearby friends, Uber, Quora, UberEats, Reddit, HackerRank.
 
 ## General Topics
 ### DS Algo
+Answers: [dsa-coding-round.md](docs/dsa-coding-round.md#questions-from-the-readme-list)
+
 [Codechef DS certification and preparation path with required links](https://www.codechef.com/certification/data-structures-and-algorithms/prepare#foundation) 
-* Asymptotic analysis (Big-O notation)
+* [Asymptotic analysis (Big-O notation)](docs/dsa-coding-round.md#asymptotic-analysis-big-o-notation)
   Basic Data Structures: 
-  * Arrays, 
-  * Strings, 
-  * Stacks, 
-  * Queues,
-  * Trees,
-  * Graphs
-* Basic math operations (addition, subtraction, multiplication, division, exponentiation)
-* Sqrt(n) primality testing
-* Euclid’s GCD Algorithm
-* Basic Recursion
-* Greedy Algorithms
-* Basic Dynamic Programming
-* Naive string searching
-* O(n logn) Sorting
-* Binary Searching
-* Divide and Conquer
+  * [Arrays,](docs/dsa-coding-round.md#arrays)
+  * [Strings,](docs/dsa-coding-round.md#strings)
+  * [Stacks,](docs/dsa-coding-round.md#stacks)
+  * [Queues,](docs/dsa-coding-round.md#queues)
+  * [Trees,](docs/dsa-coding-round.md#trees)
+  * [Graphs](docs/dsa-coding-round.md#graphs)
+* [Basic math operations (addition, subtraction, multiplication, division, exponentiation)](docs/dsa-coding-round.md#basic-math-operations-addition-subtraction-multiplication-division-exponentiation)
+* [Sqrt(n) primality testing](docs/dsa-coding-round.md#sqrtn-primality-testing)
+* [Euclid’s GCD Algorithm](docs/dsa-coding-round.md#euclids-gcd-algorithm)
+* [Basic Recursion](docs/dsa-coding-round.md#basic-recursion)
+* [Greedy Algorithms](docs/dsa-coding-round.md#greedy-algorithms)
+* [Basic Dynamic Programming](docs/dsa-coding-round.md#basic-dynamic-programming)
+* [Naive string searching](docs/dsa-coding-round.md#naive-string-searching)
+* [O(n logn) Sorting](docs/dsa-coding-round.md#on-logn-sorting)
+* [Binary Searching](docs/dsa-coding-round.md#binary-searching)
+* [Divide and Conquer](docs/dsa-coding-round.md#divide-and-conquer)
 
 [Standford Algorithms Playlist 1](https://www.youtube.com/playlist?list=PLXFMmlk03Dt7Q0xr1PIAriY5623cKiH7V)  
 [Standford Algorithms Playlist 2](https://www.youtube.com/playlist?list=PLXFMmlk03Dt5EMI2s2WQBsLsZl7A5HEK6)  
@@ -697,7 +703,9 @@ Answers: [docs/nextjs.md](docs/nextjs.md)
 
 | Topic | What's inside |
 |---|---|
+| [Core Java deep dive](docs/java-core.md) | HashMap and ConcurrentHashMap internals, collections Big-O, strings, generics, exceptions, class loading, JIT, Java memory model, 15 coding questions |
 | [Java](docs/java.md) · [concurrency](docs/java-concurrency.md) · [streams](docs/java-streams.md) | Java 8 → 25, JVM memory, GC, threads to virtual threads, 65 stream problems |
+| [DSA: the coding round](docs/dsa-coding-round.md) | How the round is scored, Big-O, 16 patterns, 47 problems with tested Java, a 4-week plan |
 | [OOP, SOLID, design patterns, clean code](docs/oop-clean-code.md) | 4 pillars, SOLID with bad/good code, all 23 GoF patterns, clean code, code smells |
 | [Spring and Spring Boot](docs/spring.md) | **Spring Core** (IoC, bean scopes, lifecycle, stereotypes, annotations cheat sheet), how Boot works, **AOP proxies**, **DispatcherServlet, filters vs interceptors**, Boot 2 → 4, WebFlux |
 | [Spring questions (README list)](docs/spring-questions.md) | Every Spring Core, MVC, Boot, AOP and Spring 5 question below, answered |
@@ -707,6 +715,8 @@ Answers: [docs/nextjs.md](docs/nextjs.md)
 | [SQL](docs/sql.md) · [transactions and locking](docs/databases.md) | Indexes, EXPLAIN, window functions, CTEs, MVCC, partitioning, 25 query problems |
 | [Redis](docs/redis.md) · [MongoDB](docs/mongodb.md) | Caching patterns, locks, rate limiting, cluster · schema design, indexes, aggregation, sharding |
 | [REST APIs and web services](docs/web-services.md) | HTTP semantics, status codes, API design, pagination, versioning, ETags, webhooks, SOAP |
+| [gRPC, GraphQL and WebSockets](docs/api-protocols.md) | HTTP/2, Protobuf, streaming, deadlines, gRPC load balancing, Spring gRPC, DataLoader, federation, scaling WebSockets, choosing an API style |
+| [Distributed systems](docs/distributed-systems.md) | Clocks, Raft consensus, quorums, consistency models, 2PC and TCC, CRDTs, gossip, Elasticsearch internals, RabbitMQ vs Kafka vs SQS |
 | [Kafka](docs/kafka.md) · [Microservices](docs/microservices.md) | KRaft, replication, exactly-once, DLT · 12-factor, saga, outbox, CQRS, DDD, anti-patterns |
 | [Node.js](docs/nodejs.md) | Event loop, libuv, streams, auth, databases, queues, WebSockets, 12 coding problems |
 | [Debugging Spring Boot](docs/spring-debugging.md) | Startup errors, missing beans, breakpoints inside Spring, slow apps |
@@ -728,21 +738,21 @@ Answers: [docs/java.md](docs/java.md)
 
 **Core Java questions** ([2019 answers](docs/java.md#core-java-questions-2019-answers-being-updated), being updated to Java 21/25):
 
-* Object oriented programming basics
-* Advanced object oriented concepts
-* Java Platform
-* Wrapper Classes
-* Strings
-* Advanced object oriented concepts
-* Modifiers
-* Exception handling
-* Miscellaneous topics
-* Collections
-* Advanced collections
-* Generics
-* Multi threading
-* Functional Programming - Lamdba expressions and Streams
-* New Features Java 7,8,11
+* [Object oriented programming basics](docs/java-core.md#object-oriented-programming-basics)
+* [Advanced object oriented concepts](docs/java-core.md#advanced-object-oriented-concepts)
+* [Java Platform](docs/java-core.md#java-platform)
+* [Wrapper Classes](docs/java-core.md#wrapper-classes)
+* [Strings](docs/java-core.md#strings-1)
+* [Advanced object oriented concepts](docs/java-core.md#advanced-object-oriented-concepts)
+* [Modifiers](docs/java-core.md#modifiers)
+* [Exception handling](docs/java-core.md#exception-handling)
+* [Miscellaneous topics](docs/java-core.md#miscellaneous-topics)
+* [Collections](docs/java-core.md#collections-1)
+* [Advanced collections](docs/java-core.md#advanced-collections)
+* [Generics](docs/java-core.md#generics-1)
+* [Multi threading](docs/java-core.md#multi-threading)
+* [Functional Programming - Lamdba expressions and Streams](docs/java-core.md#functional-programming---lamdba-expressions-and-streams)
+* [New Features Java 7,8,11](docs/java-core.md#new-features-java-7811)
   
 [OOPs in Java](https://www.geeksforgeeks.org/object-oriented-programming-oops-concept-in-java/)  
 [Solid Principles in Java](https://www.baeldung.com/solid-principles)
