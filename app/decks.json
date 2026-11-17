@@ -139,6 +139,18 @@
       ]
     },
     {
+      "id": "dsys",
+      "group": "System design",
+      "title": "Distributed systems",
+      "blurb": "Clocks, Raft, quorums, 2PC, CRDTs, Elasticsearch, RabbitMQ vs Kafka",
+      "sources": [
+        {
+          "path": "docs/distributed-systems.md",
+          "level": 3
+        }
+      ]
+    },
+    {
       "id": "kf",
       "group": "Backend",
       "title": "Kafka",
@@ -262,6 +274,30 @@
       ]
     },
     {
+      "id": "jcore",
+      "group": "Backend",
+      "title": "Core Java deep dive",
+      "blurb": "HashMap and ConcurrentHashMap internals, generics, exceptions, JVM, memory model",
+      "sources": [
+        {
+          "path": "docs/java-core.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "dsa",
+      "group": "Backend",
+      "title": "DSA: the coding round",
+      "blurb": "Big-O, 16 patterns, 47 problems in Java, a 4-week plan",
+      "sources": [
+        {
+          "path": "docs/dsa-coding-round.md",
+          "level": 3
+        }
+      ]
+    },
+    {
       "id": "sp",
       "group": "Backend",
       "title": "Spring and Spring Boot",
@@ -317,6 +353,18 @@
       "sources": [
         {
           "path": "docs/web-services.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "group": "Backend",
+      "title": "gRPC, GraphQL, WebSockets",
+      "blurb": "Protobuf, streaming, deadlines, load balancing, DataLoader, real-time scaling",
+      "sources": [
+        {
+          "path": "docs/api-protocols.md",
           "level": 3
         }
       ]
@@ -521,6 +569,18 @@
       "sources": [
         {
           "path": "docs/spring-debugging.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "lead",
+      "group": "Interview day",
+      "title": "Senior and staff engineering",
+      "blurb": "Design docs, tech debt, incidents, mentoring, 15 behavioral answers, Git, CI/CD, Linux",
+      "sources": [
+        {
+          "path": "docs/senior-engineering.md",
           "level": 3
         }
       ]
