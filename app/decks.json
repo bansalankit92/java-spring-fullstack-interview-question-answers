@@ -7,172 +7,540 @@
   },
   "decks": [
     {
-      "id": "sd", "group": "System design",
+      "id": "sd",
+      "group": "System design",
       "title": "System design basics",
       "blurb": "How interviewers ask, how to answer, capacity math, 22 building blocks",
-      "sources": [{ "path": "docs/system-design.md", "level": 3, "skip": ["Case studies"] }]
-    },
-    {
-      "id": "cs", "group": "System design",
-      "title": "System design case studies",
-      "blurb": "TinyURL, WhatsApp, YouTube, Hotstar, BookMyShow, payments, Uber…",
       "sources": [
-        { "path": "docs/system-design/url-shortener.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/rate-limiter.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/news-feed.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/whatsapp.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/youtube-video-streaming.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/youtube-search-typeahead.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/hotstar-live-streaming.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/bookmyshow-ticket-booking.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/amazon-order-processing.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/flash-sale.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/payment-gateway.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/bank-ledger-wallet.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/uber-ride-hailing.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/dropbox-file-storage.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/notification-service.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/job-scheduler.md", "level": 2, "chapterFromFile": true },
-        { "path": "docs/system-design/stock-exchange.md", "level": 2, "chapterFromFile": true }
+        {
+          "path": "docs/system-design.md",
+          "level": 3,
+          "skip": [
+            "Case studies"
+          ]
+        }
       ]
     },
     {
-      "id": "ms", "group": "System design",
+      "id": "cs",
+      "group": "System design",
+      "title": "System design case studies",
+      "blurb": "TinyURL, WhatsApp, YouTube, Hotstar, BookMyShow, payments, Uber…",
+      "sources": [
+        {
+          "path": "docs/system-design/url-shortener.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/rate-limiter.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/news-feed.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/whatsapp.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/youtube-video-streaming.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/youtube-search-typeahead.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/hotstar-live-streaming.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/bookmyshow-ticket-booking.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/amazon-order-processing.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/flash-sale.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/payment-gateway.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/bank-ledger-wallet.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/uber-ride-hailing.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/dropbox-file-storage.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/notification-service.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/job-scheduler.md",
+          "level": 2,
+          "chapterFromFile": true
+        },
+        {
+          "path": "docs/system-design/stock-exchange.md",
+          "level": 2,
+          "chapterFromFile": true
+        }
+      ]
+    },
+    {
+      "id": "ms",
+      "group": "System design",
       "title": "Microservices patterns",
       "blurb": "Saga, outbox, idempotency, retries, circuit breaker, gateway",
-      "sources": [{ "path": "docs/microservices.md", "level": 2 }]
+      "sources": [
+        {
+          "path": "docs/microservices.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "kf", "group": "Backend",
+      "id": "ld",
+      "group": "System design",
+      "title": "Low-level design (LLD)",
+      "blurb": "UML, a repeatable method, 20 case studies: parking lot, BookMyShow, elevator, Splitwise…",
+      "sources": [
+        {
+          "path": "docs/lld-case-studies.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "kf",
+      "group": "Backend",
       "title": "Kafka",
       "blurb": "Partitions, consumer groups, ordering, delivery, duplicates",
-      "sources": [{ "path": "docs/kafka.md", "level": 2 }]
+      "sources": [
+        {
+          "path": "docs/kafka.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "db", "group": "Backend",
+      "id": "db",
+      "group": "Backend",
       "title": "Databases",
       "blurb": "Joins, transactions, isolation levels, locking",
-      "sources": [{ "path": "docs/databases.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/databases.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "jc", "group": "Backend",
+      "id": "sq",
+      "group": "Backend",
+      "title": "SQL",
+      "blurb": "Indexes, EXPLAIN, window functions, CTEs, MVCC, 25 query problems",
+      "sources": [
+        {
+          "path": "docs/sql.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "hb",
+      "group": "Backend",
+      "title": "Hibernate and JPA",
+      "blurb": "Entity states, dirty checking, N+1, caching, locking, Hibernate 7",
+      "sources": [
+        {
+          "path": "docs/hibernate-jpa.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "rd",
+      "group": "Backend",
+      "title": "Redis",
+      "blurb": "Data types, caching patterns, locks, rate limiting, cluster",
+      "sources": [
+        {
+          "path": "docs/redis.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "mg",
+      "group": "Backend",
+      "title": "MongoDB",
+      "blurb": "Schema design, indexes, aggregation, replica sets, sharding",
+      "sources": [
+        {
+          "path": "docs/mongodb.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "jc",
+      "group": "Backend",
       "title": "Java concurrency",
       "blurb": "From threads to virtual threads, in 7 eras",
-      "sources": [{ "path": "docs/java-concurrency.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/java-concurrency.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "st", "group": "Backend",
+      "id": "st",
+      "group": "Backend",
       "title": "Java streams",
       "blurb": "Collectors, map-reduce, gatherers and 65 coding problems",
-      "sources": [{ "path": "docs/java-streams.md", "level": 3, "splitBold": ["Stream coding problems (with answers)"] }]
+      "sources": [
+        {
+          "path": "docs/java-streams.md",
+          "level": 3,
+          "splitBold": [
+            "Stream coding problems (with answers)"
+          ]
+        }
+      ]
     },
     {
-      "id": "jv", "group": "Backend",
+      "id": "oo",
+      "group": "Backend",
+      "title": "OOP, SOLID and design patterns",
+      "blurb": "4 pillars, SOLID, all 23 patterns, clean code",
+      "sources": [
+        {
+          "path": "docs/oop-clean-code.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "jv",
+      "group": "Backend",
       "title": "Java",
       "blurb": "Java 8 → 25, JVM memory, G1 vs ZGC, plus the 2019 Q&A",
-      "sources": [{ "path": "docs/java.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/java.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "sp", "group": "Backend",
+      "id": "sp",
+      "group": "Backend",
       "title": "Spring and Spring Boot",
       "blurb": "Boot 2 → 4, MVC vs WebFlux, Spring Reactive in depth",
-      "sources": [{ "path": "docs/spring.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/spring.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "se", "group": "Backend",
+      "id": "sk",
+      "group": "Backend",
+      "title": "Spring questions (README list)",
+      "blurb": "Every Spring Core, MVC, Boot, AOP question, answered short",
+      "sources": [
+        {
+          "path": "docs/spring-questions.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "se",
+      "group": "Backend",
       "title": "Spring ecosystem",
       "blurb": "Security, Data JPA, Cloud, observability, Batch, Spring AI",
-      "sources": [{ "path": "docs/spring-ecosystem.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/spring-ecosystem.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "nd", "group": "Backend",
+      "id": "tj",
+      "group": "Backend",
+      "title": "Testing Spring and Java",
+      "blurb": "JUnit 6, Mockito, slices, Testcontainers, flaky tests",
+      "sources": [
+        {
+          "path": "docs/spring-testing.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "wb",
+      "group": "Backend",
+      "title": "REST APIs and web services",
+      "blurb": "HTTP semantics, API design, pagination, versioning, SOAP",
+      "sources": [
+        {
+          "path": "docs/web-services.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "nd",
+      "group": "Backend",
       "title": "Node.js",
       "blurb": "Event loop phases, streams, workers, scaling, memory leaks",
-      "sources": [{ "path": "docs/nodejs.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/nodejs.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "re", "group": "Frontend",
+      "id": "re",
+      "group": "Frontend",
       "title": "React",
       "blurb": "Rendering, hooks, performance, architecture, state, testing",
-      "sources": [{ "path": "docs/react.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/react.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "js", "group": "Frontend",
+      "id": "js",
+      "group": "Frontend",
       "title": "JavaScript",
       "blurb": "Event loop, closures, promises, modern JS, 30 coding problems",
-      "sources": [{ "path": "docs/javascript.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/javascript.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "ts", "group": "Frontend",
+      "id": "ts",
+      "group": "Frontend",
       "title": "TypeScript",
       "blurb": "Narrowing, generics, utility types, tsconfig, TS 7",
-      "sources": [{ "path": "docs/typescript.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/typescript.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "cx", "group": "Frontend",
+      "id": "cx",
+      "group": "Frontend",
       "title": "CSS and Tailwind",
       "blurb": "Box model, flexbox, grid, modern CSS, Tailwind v4",
-      "sources": [{ "path": "docs/css-tailwind.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/css-tailwind.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "ui", "group": "Frontend",
+      "id": "ui",
+      "group": "Frontend",
       "title": "Frontend UI and web",
       "blurb": "Browser rendering, accessibility, Core Web Vitals, security, frontend system design",
-      "sources": [{ "path": "docs/frontend-ui.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/frontend-ui.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "nx", "group": "Frontend",
+      "id": "nx",
+      "group": "Frontend",
       "title": "Next.js",
       "blurb": "App Router, Server Components, rendering, BFF",
-      "sources": [{ "path": "docs/nextjs.md", "level": 2 }]
+      "sources": [
+        {
+          "path": "docs/nextjs.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "ai", "group": "AI and LLMs",
+      "id": "jt",
+      "group": "Frontend",
+      "title": "Testing JS, React and Node",
+      "blurb": "Vitest, Testing Library, MSW, Playwright, CI",
+      "sources": [
+        {
+          "path": "docs/js-testing.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "group": "AI and LLMs",
       "title": "AI and LLM basics",
       "blurb": "How LLMs work, prompting, tool calling, agents, MCP, evals, cost",
-      "sources": [{ "path": "docs/ai-llm-basics.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/ai-llm-basics.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "rg", "group": "AI and LLMs",
+      "id": "rg",
+      "group": "AI and LLMs",
       "title": "RAG",
       "blurb": "Chunking, embeddings, vector DBs, hybrid search, evaluation",
-      "sources": [{ "path": "docs/ai-rag.md", "level": 2 }]
+      "sources": [
+        {
+          "path": "docs/ai-rag.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "it", "group": "AI and LLMs",
+      "id": "it",
+      "group": "AI and LLMs",
       "title": "Inference, fine-tuning, local models",
       "blurb": "GPU math, quantization, Ollama, vLLM, LoRA on your own docs",
-      "sources": [{ "path": "docs/ai-inference-training.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/ai-inference-training.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "ap", "group": "AI and LLMs",
+      "id": "ap",
+      "group": "AI and LLMs",
       "title": "AI projects",
       "blurb": "OCR, astrology assistant and a granth assistant, end to end",
-      "sources": [{ "path": "docs/ai-projects.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/ai-projects.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "ac", "group": "AI and LLMs",
+      "id": "ac",
+      "group": "AI and LLMs",
       "title": "Coding with AI assistants",
       "blurb": "The workflow that works, context, reviewing AI code, interviews",
-      "sources": [{ "path": "docs/ai-coding-assistants.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/ai-coding-assistants.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "pr", "group": "Production",
+      "id": "dk",
+      "group": "Production",
+      "title": "Docker and Kubernetes",
+      "blurb": "Images, JVM in containers, pods, probes, autoscaling, troubleshooting",
+      "sources": [
+        {
+          "path": "docs/docker-kubernetes.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "cl",
+      "group": "Production",
+      "title": "Cloud: AWS, GCP, Azure",
+      "blurb": "Service names on all 3 clouds, networking, IAM, DR, cost",
+      "sources": [
+        {
+          "path": "docs/cloud.md",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": "pr",
+      "group": "Production",
       "title": "Production-ready apps",
       "blurb": "Logs, metrics, traces, APM, Grafana, ELK, incidents step by step",
-      "sources": [{ "path": "docs/production-ready.md", "level": 3 }]
+      "sources": [
+        {
+          "path": "docs/production-ready.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "sb", "group": "Production",
+      "id": "sb",
+      "group": "Production",
       "title": "Debugging Spring Boot",
       "blurb": "Startup errors, missing beans, breakpoints inside Spring, slow apps",
-      "sources": [{ "path": "docs/spring-debugging.md", "level": 2 }]
+      "sources": [
+        {
+          "path": "docs/spring-debugging.md",
+          "level": 3
+        }
+      ]
     },
     {
-      "id": "iv", "group": "Interview day",
+      "id": "iv",
+      "group": "Interview day",
       "title": "Interview day",
-      "blurb": "Crash course, one-page sheet, behavioral round",
-      "sources": [{ "path": "README.md", "level": 3, "only": ["Crash course (last-minute preparation)", "Behavioral questions"] }]
+      "blurb": "Crash course, one-page sheet, behavioral round, questions to ask them",
+      "sources": [
+        {
+          "path": "README.md",
+          "level": 3,
+          "only": [
+            "Crash course (last-minute preparation)",
+            "Behavioral questions",
+            "Questions to ask the interviewer"
+          ]
+        }
+      ]
     }
   ]
 }

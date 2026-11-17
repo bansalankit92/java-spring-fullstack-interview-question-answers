@@ -215,7 +215,7 @@
     $("#resetBtn").addEventListener("click", function () {
       if (!armed) { armed = true; this.textContent = "Tap again to reset everything"; return; }
       // Reset clears progress but keeps settings (theme, code wrap).
-      st = { read: {}, bm: [], last: null, plan: { type: st.plan.type, done: {} }, crash: {}, theme: st.theme, wrap: st.wrap }; save(); applyWrap(); toast("Progress reset"); renderHome();
+      st = { read: {}, bm: [], last: null, plan: { type: st.plan.type, done: {} }, crash: {}, theme: st.theme, wrap: st.wrap, area: st.area }; save(); applyWrap(); toast("Progress reset"); renderHome();
     });
   }
 
@@ -416,10 +416,22 @@
 
   // ---------- revise (crash course) ----------
   var V = { f: "todo", deck: "all", i: 0, flipped: false, shuffle: false, list: [] };
+  // Areas split flashcards by deck group: Backend (incl. system design, production), Frontend, AI.
+  var AREAS = [["all", "All areas"], ["be", "Backend"], ["fe", "Frontend"], ["ai", "AI"]];
+  function curArea() { var a = st.area; return AREAS.some(function (x) { return x[0] === a; }) ? a : "all"; }
+  function areaOf(deckId) {
+    var g = (DECK[deckId] && DECK[deckId].group) || "";
+    if (g === "Frontend") return "fe";
+    if (g === "AI and LLMs") return "ai";
+    if (g === "Interview day") return "iv";
+    return "be";
+  }
+  function inArea(deckId) { var a = curArea(); return a === "all" || areaOf(deckId) === a; }
   function revList() {
     var top = DATA.top20 || [];
     var l = DATA.crash.filter(function (x) {
       if (!CARDS[x.id]) return false;
+      if (!inArea(x.d)) return false;
       if (V.deck !== "all" && x.d !== V.deck) return false;
       if (V.f === "todo") return st.crash[x.id] !== "known";
       if (V.f === "top") return top.indexOf(x.id) >= 0;
@@ -432,8 +444,10 @@
   function renderRevise(keepList) {
     if (!keepList) { V.list = revList(); V.i = 0; V.flipped = false; }
     if (V.i >= V.list.length) V.i = 0;
-    var known = DATA.crash.filter(function (x) { return st.crash[x.id] === "known"; }).length;
-    var decksWith = DECKS.filter(function (d) { return DATA.crash.some(function (x) { return x.d === d.id; }); });
+    var pool = DATA.crash.filter(function (x) { return CARDS[x.id] && inArea(x.d); });
+    var known = pool.filter(function (x) { return st.crash[x.id] === "known"; }).length;
+    var decksWith = DECKS.filter(function (d) { return inArea(d.id) && pool.some(function (x) { return x.d === d.id; }); });
+    var area = curArea();
     var chip = function (f, label) { return '<button class="chip" type="button" data-f="' + f + '" aria-pressed="' + (V.f === f) + '">' + label + "</button>"; };
     var x = V.list[V.i], card;
     if (!x) {
@@ -447,15 +461,17 @@
     }
     main.innerHTML =
       '<div><h1 style="font-size:26px">Crash revision</h1><p style="margin:4px 0 0;color:var(--muted)">One topic at a time. Read the title, answer out loud, then flip.</p></div>' +
+      '<div class="seg" role="group" aria-label="Area">' + AREAS.map(function (a) { return '<button type="button" data-area="' + a[0] + '" aria-pressed="' + (a[0] === area) + '">' + a[1] + "</button>"; }).join("") + "</div>" +
       '<div class="chips">' + chip("todo", "Not known yet") + chip("all", "All") + chip("top", "Top 20") + chip("bm", "Bookmarked") +
       '<button class="chip" type="button" id="shuf" aria-pressed="' + V.shuffle + '">Shuffle</button>' +
       '<select class="chip" id="revDeck" aria-label="Topic"><option value="all">All topics</option>' +
       decksWith.map(function (d) { return '<option value="' + d.id + '"' + (V.deck === d.id ? " selected" : "") + ">" + esc(d.title) + "</option>"; }).join("") + "</select></div>" +
-      '<div class="rev-stat"><span>' + (V.list.length ? V.i + 1 : 0) + " / " + V.list.length + "</span><span>" + known + " of " + DATA.crash.length + " known</span></div>" +
+      '<div class="rev-stat"><span>' + (V.list.length ? V.i + 1 : 0) + " / " + V.list.length + "</span><span>" + known + " of " + pool.length + " known" + (area === "all" ? "" : " in " + AREAS.filter(function (a) { return a[0] === area; })[0][1]) + "</span></div>" +
       card +
       (x ? '<div class="rev-actions"><button class="big again" type="button" id="againBtn">Revise again</button><button class="big got" type="button" id="gotBtn">I know this</button></div>' : "");
     if (x) enhance(main);
     $$(".chips [data-f]").forEach(function (b) { b.addEventListener("click", function () { V.f = b.dataset.f; renderRevise(); }); });
+    $$("[data-area]").forEach(function (b) { b.addEventListener("click", function () { st.area = b.dataset.area; save(); V.deck = "all"; renderRevise(); }); });
     $("#shuf").addEventListener("click", function () { V.shuffle = !V.shuffle; renderRevise(); });
     $("#revDeck").addEventListener("change", function () { V.deck = this.value; renderRevise(); });
     var f = $("#flash");

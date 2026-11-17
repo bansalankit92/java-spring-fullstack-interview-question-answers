@@ -205,10 +205,21 @@ for (const c of allCards) {
   byFile.get(c.rel).push(c);
 }
 const fromFileSrc = new Set(cfg.decks.flatMap((d) => d.sources.filter((s) => s.chapterFromFile).map((s) => s.path)));
+// A topic's "In one line" and "Say this" can land in different cards when a long
+// section is split at its ### headings. Pair a card that has only the one-liner with
+// the next card in the same chapter that has only the "Say this" block.
+let pending = null;
 for (const c of allCards) {
   if (fromFileSrc.has(c.rel)) continue;
   const one = extractOne(c.md), say = extractSay(c.md);
+  if (pending && (pending.c.rel !== c.rel || pending.c.chapter !== c.chapter || one)) pending = null;
   if (one && say) crash.push({ id: c.id, t: c.title, d: c.deck, one: rewrite(c.rel, one), say: rewrite(c.rel, say) });
+  else if (one) pending = { c, one };
+  else if (say && pending) {
+    const p = pending.c;
+    crash.push({ id: p.id, t: p.title, d: p.deck, one: rewrite(p.rel, pending.one), say: rewrite(c.rel, say) });
+    pending = null;
+  }
 }
 for (const rel of fromFileSrc) {
   const cards = byFile.get(rel) || [];
