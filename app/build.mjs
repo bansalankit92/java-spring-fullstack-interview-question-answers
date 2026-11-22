@@ -298,7 +298,33 @@ const html = fs.readFileSync(path.join(APP, "index.html"), "utf8")
   .replaceAll("__BUILD_DATE__", today)
   .replaceAll("__CARD_COUNT__", String(allCards.length));
 fs.writeFileSync(path.join(DIST, "index.html"), html);
-fs.writeFileSync(path.join(DIST, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}sitemap.xml\n`);
+fs.writeFileSync(path.join(DIST, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}sitemap.xml\n# For AI assistants: ${SITE}llms.txt\n`);
+
+// llms.txt (https://llmstxt.org): the app renders cards with JavaScript, which most AI crawlers do not run.
+// This file points them straight at the raw markdown answers instead.
+const rawBase = cfg.repoUrl.replace("https://github.com/", "https://raw.githubusercontent.com/").replace("/blob/", "/");
+const llms = [
+  "# Interview Prep 2026",
+  "",
+  `> Free interview questions and answers in simple English for backend, full-stack and AI engineers preparing for senior interviews in 2026. ${allCards.length} study cards across ${decksOut.length} topics: system design case studies, microservices, Java 8–25, Spring Boot, Kafka, databases, React, Next.js and AI/LLMs. Each answer has a real-life story, a diagram where it helps and a ready-to-say interview line.`,
+  "",
+  `Web app: ${SITE}. Source and full text: ${repoHome} (MIT license). Author: Ankit Bansal (https://ankitbansal.dev/).`,
+  "",
+  ...[...new Set(cfg.decks.map((d) => d.group || "Topics"))].flatMap((g) => [
+    `## ${g}`,
+    "",
+    ...cfg.decks.filter((d) => (d.group || "Topics") === g).flatMap((d) => {
+      const blurb = (decksOut.find((x) => x.id === d.id) || d).blurb;
+      if (d.sources.length === 1) return [`- [${d.title}](${rawBase}/${d.sources[0].path}): ${blurb}`];
+      return d.sources.map((s) => {
+        const h1 = scanHeadings(read(s.path).split("\n")).find((h) => h.level === 1);
+        return `- [${d.title}: ${h1 ? h1.text : path.basename(s.path, ".md")}](${rawBase}/${s.path})`;
+      });
+    }),
+    "",
+  ]),
+].join("\n");
+fs.writeFileSync(path.join(DIST, "llms.txt"), llms);
 fs.writeFileSync(path.join(DIST, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${SITE}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n</urlset>\n`);
 

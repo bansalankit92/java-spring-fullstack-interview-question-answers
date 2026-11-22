@@ -1,4 +1,4 @@
-/* Prep Cards: read the guide one card at a time.
+/* Interview Prep 2026: read the guide one card at a time.
    Data comes from content/data.json (built by build.mjs). Progress lives in localStorage only. */
 (function () {
   "use strict";
@@ -515,7 +515,7 @@
         var od = (o.plan && o.plan.done) || {};
         Object.keys(od).forEach(function (k) { st.plan.done[k] = Array.from(new Set((st.plan.done[k] || []).concat(od[k]))); });
         save(); toast("Progress imported"); renderHome();
-      } catch (err) { toast("That file is not a Prep Cards progress file"); }
+      } catch (err) { toast("That file is not an Interview Prep progress file"); }
     };
     r.readAsText(file);
   }

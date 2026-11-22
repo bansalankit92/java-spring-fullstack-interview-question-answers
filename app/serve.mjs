@@ -19,4 +19,4 @@ http.createServer((req, res) => {
   if (!inside || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(DIST, "index.html");
   res.writeHead(200, { "Content-Type": (TYPES[path.extname(file)] || "application/octet-stream") + "; charset=utf-8" });
   fs.createReadStream(file).pipe(res);
-}).listen(PORT, () => console.log(`Prep Cards on http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`Interview Prep 2026 on http://localhost:${PORT}`));

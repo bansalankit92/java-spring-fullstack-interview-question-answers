@@ -1,4 +1,4 @@
-/* Prep Cards. Layout: one narrow reading column (phone first), full-screen swipe reader on top, bottom tab bar.
+/* Interview Prep 2026. Layout: one narrow reading column (phone first), full-screen swipe reader on top, bottom tab bar.
    Look: index cards, whiteboard-marker blue, highlighter yellow for "Say this in the interview". */
 :root {
   --bg: #EDF1F7; --surface: #FFFFFF; --surface-2: #E2E8F2; --ink: #142033; --muted: #586780; --line: #D2DAE7;
@@ -50,7 +50,7 @@ img { max-width: 100%; height: auto; }
 .brand-name { font: 700 22px var(--display); }
 .top-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .brand { min-width: 0; }
-.brand-name { white-space: nowrap; }
+.brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: clamp(17px, 5vw, 22px); }
 .icon-btn.fill svg { fill: var(--ink); stroke: none; width: 19px; height: 19px; }
 .icon-btn:hover { border-color: var(--muted); }
 .ghost { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--muted); }

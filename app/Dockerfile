@@ -1,4 +1,4 @@
-# Prep Cards: static site served by nginx.
+# Interview Prep 2026: static site served by nginx.
 # Build context MUST be the repo root (the build reads ../docs and ../README.md):
 #   docker build -f app/Dockerfile -t prep-cards .
 #   docker run -p 8080:80 prep-cards

@@ -1,4 +1,4 @@
-# Prep Cards
+# Interview Prep 2026 (app)
 
 Live: **https://interviewprep.ankitbansal.dev/**
 

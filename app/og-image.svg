@@ -15,8 +15,8 @@
   <!-- text -->
   <rect x="80" y="92" width="64" height="48" rx="9" fill="#FFFFFF" stroke="#142033" stroke-width="3" transform="rotate(-5 112 116)"/>
   <rect x="92" y="110" width="40" height="9" fill="#FFE766" transform="rotate(-5 112 116)"/>
-  <text x="164" y="130" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="40" font-weight="700" fill="#142033">Prep Cards</text>
-  <text x="80" y="250" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="58" font-weight="800" fill="#142033">Interview prep,</text>
+  <text x="164" y="130" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="40" font-weight="700" fill="#142033">Interview Prep 2026</text>
+  <text x="80" y="250" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="58" font-weight="800" fill="#142033">Interview questions,</text>
   <text x="80" y="322" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="58" font-weight="800" fill="#2350D8">one card at a time</text>
   <text x="80" y="398" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="26" fill="#586780">System design · Microservices · Java · Spring Boot</text>
   <text x="80" y="438" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="26" fill="#586780">Kafka · React · AI and LLMs — in simple English</text>
