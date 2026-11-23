@@ -1143,16 +1143,79 @@ Fixes:
 
 ### Partitioning and sharding
 
-**In one line:** Sharding splits one big table across many database machines. Each machine holds only part of the data and writes.
+**In one line:** Partitioning splits one big table into smaller parts. Sharding is partitioning where the parts live on **different machines**. So every shard is a partition, but not every partition is a shard.
 
 **Story:** A big university exam has 50,000 students.
-One hall cannot fit everyone. So: roll numbers 1–10,000 in Hall A, 10,001–20,000 in Hall B, and so on.
-Each student knows which hall to go to from the roll number.
-The roll number is the **shard key**.
+First, the college splits the students into rooms inside **one building**: room 1 for roll numbers 1–10,000, room 2 for the next 10,000. That is **partitioning**. Still one building, one gate, one office.
+Later, even the building is too small. So the college uses **five buildings** across the city. Each student knows which building to go to from the roll number. That is **sharding**.
+The roll number is the **partition key** (also called the **shard key**).
 
 **Words first:**
-- **Partitioning:** splitting a table into parts. Can be on one machine (like PostgreSQL table partitions by month).
-- **Sharding:** the parts live on **different machines**. Each part is a **shard**.
+- **Partition:** one part of a big table. The rule that decides the part is the **partition key**.
+- **Partitioning:** splitting a table into parts. Usually on **one machine** (like PostgreSQL table partitions by month).
+- **Sharding:** the parts live on **different machines**. Each part is a **shard**. Same idea as partitioning, but across machines.
+- Some databases use the word "partition" for shards too. Cassandra, DynamoDB and Kafka all say "partition" for data spread across machines.
+
+#### Part 1: Partitioning (one machine)
+
+**Two ways to split a table:**
+- **Horizontal partitioning:** split by **rows**. Orders of January in one part, February in another. All parts have the same columns. This is what people usually mean by "partitioning".
+- **Vertical partitioning:** split by **columns**. Keep small, hot columns (`id`, `name`, `price`) in one table, and big, rarely read columns (`description`, `image_blob`) in another table with the same `id`. Rows get smaller, so more fit in memory.
+
+```mermaid
+flowchart TD
+    T["orders table (500 million rows)"] --> H["Horizontal: split by rows"]
+    T --> V["Vertical: split by columns"]
+    H --> H1["orders_2026_01"]
+    H --> H2["orders_2026_02"]
+    H --> H3["orders_2026_03"]
+    V --> V1["orders_core: id, customer_id, total, status"]
+    V --> V2["orders_details: id, notes, gift_message"]
+```
+
+**Partition rules (same three as sharding):**
+- **Range:** by date or number range. Most common: one partition per month.
+- **List:** by fixed values, like `region IN ('north', 'south')`.
+- **Hash:** spread rows evenly by a hash of a key, like `customer_id`.
+
+**Why partition a table on one machine?**
+- **Partition pruning:** `WHERE created_at >= '2026-03-01'` reads only the March partition, not the whole table.
+- **Fast clean-up:** delete old data by dropping a whole partition (`DROP TABLE orders_2024_01`). This is instant. A big `DELETE` is slow and leaves dead rows.
+- **Smaller indexes per partition**, so index upkeep and `VACUUM` are lighter.
+
+**Limits:**
+- All partitions still share **one machine**: same CPU, disk and write limit. Partitioning does **not** give more write capacity.
+- Queries that do not filter on the partition key must scan **every** partition.
+- In PostgreSQL, a primary key or unique constraint must include the partition key.
+
+```sql
+CREATE TABLE orders (
+    id          bigint      NOT NULL,
+    customer_id bigint      NOT NULL,
+    created_at  timestamptz NOT NULL,
+    total       numeric(12,2),
+    PRIMARY KEY (id, created_at)          -- must include the partition key
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE orders_2026_03 PARTITION OF orders
+    FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
+```
+
+More detail (MySQL, `pg_partman`, default partitions): [SQL partitioning](sql.md#partitioning).
+
+**Partitioning vs sharding:**
+
+| | Partitioning | Sharding |
+|---|---|---|
+| Where the parts live | One database server | Many database servers |
+| Who routes queries | The database does it for you | The app, or a proxy like Vitess or Citus |
+| Fixes | Big tables, slow scans, slow clean-up of old data | Too many writes or too much data for one machine |
+| Joins and transactions | Work as normal | Hard across shards |
+| Cost to run | Low | High: more machines, resharding, monitoring |
+
+**Rule of thumb:** partition first. Shard only when one machine cannot take the writes or hold the data.
+
+#### Part 2: Sharding (many machines)
 
 **How it works:**
 1. Pick a **shard key**, like `customer_id`.
@@ -1226,6 +1289,7 @@ int shardFor(long customerId, int shardCount) {
 
 **Say this in the interview:**
 > "At this scale, one database is enough, so I would not shard yet.
+> If the orders table gets very big, I first partition it by month on the same server. Queries for recent orders read one partition, and I drop old partitions to remove old data.
 > If writes grow beyond one machine, I shard by customer_id, because most queries are per customer.
 > I start with 1,024 logical shards on a few machines, so I can move shards later without rehashing all the data."
 
@@ -1233,6 +1297,8 @@ int shardFor(long customerId, int shardCount) {
 - **How do you get unique IDs across shards?** Use UUIDs, or a Snowflake-style ID (time + machine id + counter). Don't use auto-increment per shard.
 - **How do you query by another field, like order_id?** Put the shard key inside the order ID. Or keep a small lookup table `order_id → customer_id`.
 - **Sharding vs partitioning in PostgreSQL?** PostgreSQL partitioning splits a table on one server. For many servers, use Citus or do it in the app.
+- **Does partitioning help with write load?** Not much. All partitions are still on one machine, with the same CPU and disk. It helps with big scans and clean-up. For more write capacity you need sharding.
+- **Can you use both?** Yes. A common setup: shard by `customer_id` across machines, and inside each shard, partition the orders table by month.
 
 ### Consistent hashing
 
